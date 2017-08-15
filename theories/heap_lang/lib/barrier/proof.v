@@ -2,7 +2,7 @@ From iris.program_logic Require Export weakestpre.
 From iris.heap_lang Require Export lang.
 From iris.heap_lang.lib.barrier Require Export barrier.
 From stdpp Require Import functions.
-From iris.base_logic Require Import big_op lib.saved_prop lib.sts.
+From iris.base_logic.lib Require Import saved_prop sts.
 From iris.heap_lang Require Import proofmode.
 From iris.heap_lang.lib.barrier Require Import protocol.
 Set Default Proof Using "Type".
@@ -55,14 +55,13 @@ Proof. apply _. Qed.
 (** Setoids *)
 Global Instance ress_ne n : Proper (dist n ==> (=) ==> dist n) ress.
 Proof. solve_proper. Qed.
-Global Instance state_to_prop_ne s :
-  NonExpansive (state_to_prop s).
+Global Instance state_to_prop_ne s : NonExpansive (state_to_prop s).
 Proof. solve_proper. Qed.
 Global Instance barrier_inv_ne n l :
   Proper (dist n ==> eq ==> dist n) (barrier_inv l).
 Proof. solve_proper. Qed.
 Global Instance barrier_ctx_ne γ l : NonExpansive (barrier_ctx γ l).
-Proof. solve_proper. Qed. 
+Proof. solve_proper. Qed.
 Global Instance send_ne l : NonExpansive (send l).
 Proof. solve_proper. Qed.
 Global Instance recv_ne l : NonExpansive (recv l).
@@ -91,7 +90,7 @@ Qed.
 Lemma newbarrier_spec (P : iProp Σ) :
   {{{ True }}} newbarrier #() {{{ l, RET #l; recv l P ∗ send l P }}}.
 Proof.
-  iIntros (Φ) "HΦ".
+  iIntros (Φ) "_ HΦ".
   rewrite -wp_fupd /newbarrier /=. wp_seq. wp_alloc l as "Hl".
   iApply ("HΦ" with "[> -]").
   iMod (saved_prop_alloc (F:=idCF) P) as (γ) "#?".

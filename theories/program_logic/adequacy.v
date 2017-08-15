@@ -1,6 +1,6 @@
 From iris.program_logic Require Export weakestpre.
 From iris.algebra Require Import gmap auth agree gset coPset.
-From iris.base_logic Require Import big_op soundness.
+From iris.base_logic Require Import soundness.
 From iris.base_logic.lib Require Import wsat.
 From iris.proofmode Require Import tactics.
 Set Default Proof Using "Type".
@@ -164,33 +164,33 @@ End adequacy.
 
 Theorem wp_adequacy Σ Λ `{invPreG Σ} e σ φ :
   (∀ `{Hinv : invG Σ},
-     True ={⊤}=∗ ∃ stateI : state Λ → iProp Σ,
+     (|={⊤}=> ∃ stateI : state Λ → iProp Σ,
        let _ : irisG Λ Σ := IrisG _ _ Hinv stateI in
-       stateI σ ∗ WP e {{ v, ⌜φ v⌝ }}) →
+       stateI σ ∗ WP e {{ v, ⌜φ v⌝ }})%I) →
   adequate e σ φ.
 Proof.
   intros Hwp; split.
   - intros t2 σ2 v2 [n ?]%rtc_nsteps.
     eapply (soundness (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
     rewrite Nat_iter_S. iMod wsat_alloc as (Hinv) "[Hw HE]".
-    rewrite fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
+    rewrite fupd_eq in Hwp. iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
     iDestruct "Hwp" as (Istate) "[HI Hwp]".
     iModIntro. iNext. iApply (@wptp_result _ _ (IrisG _ _ Hinv Istate)); eauto.
-    by iFrame.
+    iFrame; auto.
   - intros t2 σ2 e2 [n ?]%rtc_nsteps ?.
     eapply (soundness (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
     rewrite Nat_iter_S. iMod wsat_alloc as (Hinv) "[Hw HE]".
     rewrite fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
     iDestruct "Hwp" as (Istate) "[HI Hwp]".
     iModIntro. iNext. iApply (@wptp_safe _ _ (IrisG _ _ Hinv Istate)); eauto.
-    by iFrame.
+    iFrame; auto.
 Qed.
 
 Theorem wp_invariance Σ Λ `{invPreG Σ} e σ1 t2 σ2 φ :
   (∀ `{Hinv : invG Σ},
-     True ={⊤}=∗ ∃ stateI : state Λ → iProp Σ,
+     (|={⊤}=> ∃ stateI : state Λ → iProp Σ,
        let _ : irisG Λ Σ := IrisG _ _ Hinv stateI in
-       stateI σ1 ∗ WP e {{ _, True }} ∗ (stateI σ2 ={⊤,∅}=∗ ⌜φ⌝)) →
+       stateI σ1 ∗ WP e {{ _, True }} ∗ (stateI σ2 ={⊤,∅}=∗ ⌜φ⌝))%I) →
   rtc step ([e], σ1) (t2, σ2) →
   φ.
 Proof.
@@ -200,5 +200,5 @@ Proof.
   rewrite {1}fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
   iDestruct "Hwp" as (Istate) "(HIstate & Hwp & Hclose)".
   iModIntro. iNext. iApply (@wptp_invariance _ _ (IrisG _ _ Hinv Istate)); eauto.
-  by iFrame.
+  iFrame; auto.
 Qed.

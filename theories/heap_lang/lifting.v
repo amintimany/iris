@@ -23,12 +23,12 @@ Global Opaque iris_invG.
 
 (** Override the notations so that scopes and coercions work out *)
 Notation "l ↦{ q } v" := (mapsto (L:=loc) (V:=val) l q v%V)
-  (at level 20, q at level 50, format "l  ↦{ q }  v") : uPred_scope.
+  (at level 20, q at level 50, format "l  ↦{ q }  v") : bi_scope.
 Notation "l ↦ v" :=
-  (mapsto (L:=loc) (V:=val) l 1 v%V) (at level 20) : uPred_scope.
+  (mapsto (L:=loc) (V:=val) l 1 v%V) (at level 20) : bi_scope.
 Notation "l ↦{ q } -" := (∃ v, l ↦{q} v)%I
-  (at level 20, q at level 50, format "l  ↦{ q }  -") : uPred_scope.
-Notation "l ↦ -" := (l ↦{1} -)%I (at level 20) : uPred_scope.
+  (at level 20, q at level 50, format "l  ↦{ q }  -") : bi_scope.
+Notation "l ↦ -" := (l ↦{1} -)%I (at level 20) : bi_scope.
 
 (** The tactic [inv_head_step] performs inversion on hypotheses of the shape
 [head_step]. The tactic will discharge head-reductions starting from values, and
@@ -166,7 +166,7 @@ Lemma wp_alloc E e v :
   to_val e = Some v →
   {{{ True }}} Alloc e @ E {{{ l, RET LitV (LitLoc l); l ↦ v }}}.
 Proof.
-  iIntros (<-%of_to_val Φ) "HΦ". iApply wp_lift_atomic_head_step_no_fork; auto.
+  iIntros (<-%of_to_val Φ) "_ HΦ". iApply wp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1) "Hσ !>"; iSplit; first by auto.
   iNext; iIntros (v2 σ2 efs Hstep); inv_head_step.
   iMod (@gen_heap_alloc with "Hσ") as "[Hσ Hl]"; first done.
