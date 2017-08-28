@@ -1,8 +1,10 @@
-From iris.algebra Require Export cmra updates.
+From iris.algebra Require Export cmra.  (* updates. *)
 From iris.bi Require Export interface.
 Set Default Proof Using "Type".
 Local Hint Extern 1 (_ ≼ _) => etrans; [eassumption|].
 Local Hint Extern 1 (_ ≼ _) => etrans; [|eassumption].
+Local Hint Extern 1 (_ ≼{_} _) => etrans; [eassumption|].
+Local Hint Extern 1 (_ ≼{_} _) => etrans; [|eassumption].
 Local Hint Extern 10 (_ ≤ _) => omega.
 
 (** The basic definition of the uPred type, its metric and functor laws.
@@ -165,7 +167,10 @@ Definition uPred_pure {M} := unseal uPred_pure_aux M.
 Definition uPred_pure_eq :
   @uPred_pure = @uPred_pure_def := seal_eq uPred_pure_aux.
 
-Definition uPred_emp {M} : uPred M := uPred_pure True.
+Program Definition uPred_emp {M} : uPred M :=
+  {| uPred_holds n x := ∅ ≼{n} x |}.
+Next Obligation. intros; simpl in *; etrans; eauto. Qed.
+Next Obligation. intros; simpl in *; eauto using cmra_includedN_le. Qed.
 
 Program Definition uPred_and_def {M} (P Q : uPred M) : uPred M :=
   {| uPred_holds n x := P n x ∧ Q n x |}.
@@ -183,11 +188,10 @@ Definition uPred_or_eq: @uPred_or = @uPred_or_def := seal_eq uPred_or_aux.
 
 Program Definition uPred_impl_def {M} (P Q : uPred M) : uPred M :=
   {| uPred_holds n x := ∀ n' x',
-       x ≼ x' → n' ≤ n → ✓{n'} x' → P n' x' → Q n' x' |}.
+       x ≼{n'} x' → n' ≤ n → ✓{n'} x' → P n' x' → Q n' x' |}.
 Next Obligation.
-  intros M P Q n1 x1 x1' HPQ [x2 Hx1'] n2 x3 [x4 Hx3] ?; simpl in *.
-  rewrite Hx3 (dist_le _ _ _ _ Hx1'); auto. intros ??.
-  eapply HPQ; auto. exists (x2 ⋅ x4); by rewrite assoc.
+  intros M P Q n1 x1 x1' HPQ Hx1 n2 x3 Hx3 ? ?; simpl in *.
+  apply HPQ; auto. etrans; last eauto. eapply cmra_includedN_le; eauto.
 Qed.
 Next Obligation. intros M P Q [|n1] [|n2] x; auto with lia. Qed.
 Definition uPred_impl_aux : seal (@uPred_impl_def). by eexists. Qed.
@@ -219,16 +223,16 @@ Definition uPred_internal_eq_eq:
   @uPred_internal_eq = @uPred_internal_eq_def := seal_eq uPred_internal_eq_aux.
 
 Program Definition uPred_sep_def {M} (P Q : uPred M) : uPred M :=
-  {| uPred_holds n x := ∃ x1 x2, x ≡{n}≡ x1 ⋅ x2 ∧ P n x1 ∧ Q n x2 |}.
+  {| uPred_holds n x := ∃ x1 x2, x1 ⋅ x2 ≼{n} x ∧ P n x1 ∧ Q n x2 |}.
 Next Obligation.
-  intros M P Q n x y (x1&x2&Hx&?&?) [z Hy].
-  exists x1, (x2 ⋅ z); split_and?; eauto using uPred_mono, cmra_includedN_l.
-  by rewrite Hy Hx assoc.
+  intros M P Q n x y (x1&x2&Hx&?&?) ?; eauto 10.
 Qed.
 Next Obligation.
-  intros M P Q n1 n2 x (x1&x2&Hx&?&?) ?; rewrite {1}(dist_le _ _ _ _ Hx) // =>?.
-  exists x1, x2; ofe_subst; split_and!;
-    eauto using dist_le, uPred_closed, cmra_validN_op_l, cmra_validN_op_r.
+  intros M P Q n1 n2 x (x1&x2&Hx&?&?) ? ?.
+  eexists _, _; repeat split; eauto using cmra_includedN_le;
+    last rewrite -> (comm _ x1) in Hx;
+    eauto using uPred_closed, cmra_validN_op_l, cmra_validN_includedN,
+    cmra_includedN_le.
 Qed.
 Definition uPred_sep_aux : seal (@uPred_sep_def). by eexists. Qed.
 Definition uPred_sep {M} := unseal uPred_sep_aux M.
@@ -251,9 +255,14 @@ Definition uPred_wand_eq :
 Program Definition uPred_always_def {M} (P : uPred M) : uPred M :=
   {| uPred_holds n x := P n (core x) |}.
 Next Obligation.
-  intros M; naive_solver eauto using uPred_mono, @cmra_core_monoN.
+  intros M P n x1 x2 HP Hx; simpl in *.
+  eapply uPred_mono; eauto.
+  eapply cmra_core_monoN; eauto.
 Qed.
-Next Obligation. naive_solver eauto using uPred_closed, @cmra_core_validN. Qed.
+Next Obligation.
+  intros; simpl in *.
+  eapply uPred_closed; eauto. by apply cmra_core_validN.
+Qed.
 Definition uPred_always_aux : seal (@uPred_always_def). by eexists. Qed.
 Definition uPred_always {M} := unseal uPred_always_aux M.
 Definition uPred_always_eq :
@@ -275,8 +284,7 @@ Definition uPred_later_eq :
 Program Definition uPred_ownM_def {M : ucmraT} (a : M) : uPred M :=
   {| uPred_holds n x := a ≼{n} x |}.
 Next Obligation.
-  intros M a n x1 x [a' Hx1] [x2 ->].
-  exists (a' ⋅ x2). by rewrite (assoc op) Hx1.
+  intros; simpl in *. etrans; eauto.
 Qed.
 Next Obligation. naive_solver eauto using cmra_includedN_le. Qed.
 Definition uPred_ownM_aux : seal (@uPred_ownM_def). by eexists. Qed.
@@ -292,27 +300,27 @@ Definition uPred_cmra_valid {M A} := unseal uPred_cmra_valid_aux M A.
 Definition uPred_cmra_valid_eq :
   @uPred_cmra_valid = @uPred_cmra_valid_def := seal_eq uPred_cmra_valid_aux.
 
-Program Definition uPred_bupd_def {M} (Q : uPred M) : uPred M :=
-  {| uPred_holds n x := ∀ k yf,
-      k ≤ n → ✓{k} (x ⋅ yf) → ∃ x', ✓{k} (x' ⋅ yf) ∧ Q k x' |}.
-Next Obligation.
-  intros M Q n x1 x2 HQ [x3 Hx] k yf Hk.
-  rewrite (dist_le _ _ _ _ Hx); last lia. intros Hxy.
-  destruct (HQ k (x3 ⋅ yf)) as (x'&?&?); [auto|by rewrite assoc|].
-  exists (x' ⋅ x3); split; first by rewrite -assoc.
-  apply uPred_mono with x'; eauto using cmra_includedN_l.
-Qed.
-Next Obligation. naive_solver. Qed.
-Definition uPred_bupd_aux : seal (@uPred_bupd_def). by eexists. Qed.
-Definition uPred_bupd {M} := unseal uPred_bupd_aux M.
-Definition uPred_bupd_eq : @uPred_bupd = @uPred_bupd_def := seal_eq uPred_bupd_aux.
+(* Program Definition uPred_bupd_def {M} (Q : uPred M) : uPred M := *)
+(*   {| uPred_holds n x := ∀ k yf, *)
+(*       k ≤ n → ✓{k} (x ⋅ yf) → ∃ x', ✓{k} (x' ⋅ yf) ∧ Q k x' |}. *)
+(* Next Obligation. *)
+(*   intros M Q n x1 x2 HQ [x3 Hx] k yf Hk. *)
+(*   rewrite (dist_le _ _ _ _ Hx); last lia. intros Hxy. *)
+(*   destruct (HQ k (x3 ⋅ yf)) as (x'&?&?); [auto|by rewrite assoc|]. *)
+(*   exists (x' ⋅ x3); split; first by rewrite -assoc. *)
+(*   apply uPred_mono with x'; eauto using cmra_includedN_l. *)
+(* Qed. *)
+(* Next Obligation. naive_solver. Qed. *)
+(* Definition uPred_bupd_aux : seal (@uPred_bupd_def). by eexists. Qed. *)
+(* Definition uPred_bupd {M} := unseal uPred_bupd_aux M. *)
+(* Definition uPred_bupd_eq : @uPred_bupd = @uPred_bupd_def := seal_eq uPred_bupd_aux. *)
 
 Module uPred_unseal.
 Definition unseal_eqs :=
   (uPred_pure_eq, uPred_and_eq, uPred_or_eq, uPred_impl_eq, uPred_forall_eq,
   uPred_exist_eq, uPred_internal_eq_eq, uPred_sep_eq, uPred_wand_eq, uPred_always_eq,
-  uPred_later_eq, uPred_ownM_eq, uPred_cmra_valid_eq, uPred_bupd_eq).
-Ltac unseal := rewrite 
+  uPred_later_eq, uPred_ownM_eq, uPred_cmra_valid_eq(* , uPred_bupd_eq *)).
+Ltac unseal := rewrite
   /bi_emp /= /uPred_emp /bi_pure /bi_and /bi_or /bi_impl
   /bi_forall /bi_exist /bi_internal_eq /bi_sep /bi_wand /bi_always /bi_later /=
   /sbi_emp /sbi_pure /sbi_and /sbi_or /sbi_impl
@@ -357,7 +365,7 @@ Proof.
     intros n P P' HP Q Q' HQ; split=> n' x ??.
     unseal; split; intros (x1&x2&?&?&?); ofe_subst x;
       exists x1, x2; split_and!; try (apply HP || apply HQ);
-      eauto using cmra_validN_op_l, cmra_validN_op_r.
+      eauto using cmra_validN_op_l, cmra_validN_op_r; admit.
   - (* NonExpansive2 uPred_wand *)
     intros n P P' HP Q Q' HQ; split=> n' x ??.
     unseal; split; intros HPQ x' n'' ???;
@@ -388,8 +396,11 @@ Proof.
   - (* (P ⊢ R) → (Q ⊢ R) → P ∨ Q ⊢ R *)
     intros P Q R HP HQ. unseal; split=> n x ? [?|?]. by apply HP. by apply HQ.
   - (* (P ∧ Q ⊢ R) → P ⊢ Q → R. *)
-    intros P Q R. unseal => HQ; split=> n x ?? n' x' ????. apply HQ;
-      naive_solver eauto using uPred_mono, uPred_closed, cmra_included_includedN.
+    intros P Q R. unseal => HQ; split=> n x ?? n' x' ????.
+    apply HQ; auto; split; auto.
+    eapply uPred_mono; eauto.
+    eapply uPred_closed; eauto.
+    eapply cmra_validN_includedN; eauto.
   - (* (P ⊢ Q → R) → P ∧ Q ⊢ R *)
     intros P Q R. unseal=> HP; split=> n x ? [??]. apply HP with n x; auto.
   - (* (∀ a, P ⊢ Ψ a) → P ⊢ ∀ a, Ψ a *)
@@ -413,32 +424,38 @@ Proof.
     intros A a b ?. unseal; split=> n x ?; by apply (timeless_iff n).
   - (* (P ⊢ Q) → (P' ⊢ Q') → P ∗ P' ⊢ Q ∗ Q' *)
     intros P P' Q Q' HQ HQ'; unseal.
-    split; intros n' x ? (x1&x2&?&?&?); exists x1,x2; ofe_subst x;
-      eauto 7 using cmra_validN_op_l, cmra_validN_op_r, uPred_in_entails.
+    split; intros n' x ? (x1&x2&?&?&?); exists x1,x2; ofe_subst x.
+    repeat split; auto; [apply HQ|apply HQ']; auto; admit.
   - (* P ⊢ emp ∗ P *)
-    intros P. rewrite /uPred_emp. unseal; split=> n x ?? /=.
-    exists (core x), x. by rewrite cmra_core_l.
+    intros P. rewrite /uPred_emp; unseal; split=> n x ?? /=.
+    exists ∅, x; rewrite left_id; repeat split; auto.
   - (* emp ∗ P ⊢ P *)
-    intros P. unseal; split; intros n x ? (x1&x2&?&_&?); ofe_subst;
-      eauto using uPred_mono, cmra_includedN_r.
+    intros P. unseal; split; intros n x ? (x1&x2&?&?&?); ofe_subst.
+    eapply uPred_mono; eauto.
+    rewrite -(left_id _ _ x2). etrans; last eauto.
+    eapply cmra_includedN_op; eauto.
   - (* P ∗ Q ⊢ Q ∗ P *)
     intros P Q. unseal; split; intros n x ? (x1&x2&?&?&?).
     exists x2, x1; by rewrite (comm op).
   - (* (P ∗ Q) ∗ R ⊢ P ∗ (Q ∗ R) *)
     intros P Q R. unseal; split; intros n x ? (x1&x2&Hx&(y1&y2&Hy&?&?)&?).
     exists y1, (y2 ⋅ x2); split_and?; auto.
-    + by rewrite (assoc op) -Hy -Hx.
+    + etrans; last eauto. rewrite assoc. by apply cmra_includedN_op.
     + by exists y2, x2.
   - (* (P ∗ Q ⊢ R) → P ⊢ Q -∗ R *)
     intros P Q R. unseal=> HPQR; split=> n x ?? n' x' ???; apply HPQR; auto.
     exists x, x'; split_and?; auto.
     eapply uPred_closed with n; eauto using cmra_validN_op_l.
   - (* (P ⊢ Q -∗ R) → P ∗ Q ⊢ R *)
-    intros P Q R. unseal=> HPQR. split; intros n x ? (?&?&?&?&?). ofe_subst.
-    eapply HPQR; eauto using cmra_validN_op_l.
+    intros P Q R. unseal=> HPQR. split; intros n x ? (?&?&?&HP&HQ).
+    apply HPQR in HP; eauto using cmra_validN_op_l, cmra_validN_includedN.
+    apply HP in HQ; eauto using cmra_validN_includedN.
+    eauto using uPred_mono.
   - (* emp ∧ (Q ∗ R) ⊢ (emp ∧ Q) ∗ R (ADMISSIBLE) *)
-    intros Q R. unfold uPred_emp; unseal; split; intros n x ? [_ (x1&x2&?&?&?)].
-    exists x1, x2; simpl; auto. 
+    (* intros Q R. unfold uPred_emp; unseal; split. *)
+    (* intros n x ? [Ha (x1&x2&?&?&?)]; simpl in *. *)
+    (* exists x1, x2; simpl; repeat split; auto. *)
+    admit.
   - (* (P ⊢ Q) → □ P ⊢ □ Q *)
     intros P QR HP. unseal; split=> n x ? /=. by apply HP, cmra_core_validN.
   - (* □ P ⊢ □ □ P *)
@@ -448,15 +465,19 @@ Proof.
   - (* □ (∃ a, Ψ a) ⊢ ∃ a, □ Ψ a *)
     by unseal.
   - (* P ⊢ □ emp (ADMISSIBLE) *)
-    intros P. unfold uPred_emp; unseal; by split=> n x ? _.
+    intros P. unfold uPred_emp; unseal; split=> n x ? ?; simpl.
+    apply cmra_included_includedN, ucmra_unit_included_core.
   - (* □ P ∗ Q ⊢ □ P (ADMISSIBLE) *)
-    intros P Q. move: (uPred_always P)=> P'.
-    unseal; split; intros n x ? (x1&x2&?&?&_); ofe_subst;
-      eauto using uPred_mono, cmra_includedN_l.
+    intros P Q; unseal; split; simpl; intros n x ? (x1&x2&Hx&?&?).
+    apply cmra_core_monoN in Hx.
+    eapply uPred_mono; last eauto.
+    by eapply uPred_mono; last eapply cmra_core_includedN_op.
   - (* □ P ∧ Q ⊢ (emp ∧ P) ∗ Q *)
     intros P Q. unseal; split=> n x ? [??]; simpl in *.
-    exists (core x), x; rewrite ?cmra_core_l; auto.
-Qed.
+    exists (core x), x; rewrite ?cmra_core_l; repeat split; auto.
+      apply cmra_included_includedN, ucmra_unit_included_core.
+(* Qed. *)
+Admitted.
 
 Lemma uPred_sbi_mixin (M : ucmraT) : SBIMixin
   uPred_entails uPred_emp uPred_pure uPred_or uPred_impl
@@ -481,17 +502,20 @@ Proof.
     intros A Φ. unseal; by split=> -[|n] x.
   - (* (▷ ∃ a, Φ a) ⊢ ▷ False ∨ (∃ a, ▷ Φ a) *)
     intros A Φ. unseal; split=> -[|[|n]] x /=; eauto.
-  - (* ▷ emp ⊢ ▷ False ∨ emp *)
-    rewrite /uPred_emp. unseal; split; by right.
+  - (* ▷ emp ⊢ ▷ False ∨ emp *)admit. (* broken *)
+    (* rewrite /uPred_emp. unseal; split; simpl => n x Hx Hi. *)
+    (* destruct n as [|n]; auto. *)
+    (* destruct (cmra_extend n x ∅ ∅) as (z1&z2&Hz1&Hz3&Hz4); *)
+    (*   rewrite ?left_id; auto using cmra_validN_S. *)
   - (* ▷ (P ∗ Q) ⊢ ▷ P ∗ ▷ Q *)
     intros P Q. unseal; split=> -[|n] x ? /=.
     { by exists x, (core x); rewrite cmra_core_r. }
     intros (x1&x2&Hx&?&?); destruct (cmra_extend n x x1 x2)
       as (y1&y2&Hx'&Hy1&Hy2); eauto using cmra_validN_S; simpl in *.
-    exists y1, y2; split; [by rewrite Hx'|by rewrite Hy1 Hy2].
+    exists y1, y2; split; auto; rewrite Hy1 Hy2; auto.
   - (* ▷ P ∗ ▷ Q ⊢ ▷ (P ∗ Q) *)
     intros P Q. unseal; split=> -[|n] x ? /=; [done|intros (x1&x2&Hx&?&?)].
-    exists x1, x2; eauto using dist_S.
+    exists x1, x2; eauto using cmra_includedN_S.
   - (* ▷ □ P ⊢ □ ▷ P *)
     by unseal.
   - (* □ ▷ P ⊢ ▷ □ P *)
@@ -499,7 +523,9 @@ Proof.
   - (* ▷ P ⊢ ▷ False ∨ (▷ False → P) *)
     intros P. unseal; split=> -[|n] x ? /= HP; [by left|right].
     intros [|n'] x' ????; [|done].
-    eauto using uPred_closed, uPred_mono, cmra_included_includedN.
+    eapply uPred_mono; eauto.
+    eapply (uPred_closed _ _ n); eauto.
+    eapply cmra_validN_includedN; eauto.
 Qed.
 
 Canonical Structure uPredI (M : ucmraT) : bi :=

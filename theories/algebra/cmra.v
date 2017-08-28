@@ -1,6 +1,8 @@
 From iris.algebra Require Export ofe monoid.
 Set Default Proof Using "Type".
 
+Hint Extern 10 => eassumption : typeclass_instances.
+
 Class PCore (A : Type) := pcore : A → option A.
 Instance: Params (@pcore) 2.
 
@@ -14,11 +16,17 @@ Notation "(⋅)" := op (only parsing) : C_scope.
    hold:
      x ≼ y ↔ x.1 ≼ y.1 ∧ x.2 ≼ y.2
 *)
-Definition included `{Equiv A, Op A} (x y : A) := ∃ z, y ≡ x ⋅ z.
+(* Definition included `{Equiv A, Op A} (x y : A) := ∃ z, y ≡ x ⋅ z. *)
+(* Infix "≼" := included (at level 70) : C_scope. *)
+(* Notation "(≼)" := included (only parsing) : C_scope. *)
+(* Hint Extern 0 (_ ≼ _) => reflexivity. *)
+(* Instance: Params (@included) 3. *)
+
+Class Included A := included : A → A → Prop.
 Infix "≼" := included (at level 70) : C_scope.
 Notation "(≼)" := included (only parsing) : C_scope.
 Hint Extern 0 (_ ≼ _) => reflexivity.
-Instance: Params (@included) 3.
+Instance: Params (@included) 2.
 
 Class ValidN (A : Type) := validN : nat → A → Prop.
 Instance: Params (@validN) 3.
@@ -29,18 +37,30 @@ Class Valid (A : Type) := valid : A → Prop.
 Instance: Params (@valid) 2.
 Notation "✓ x" := (valid x) (at level 20) : C_scope.
 
-Definition includedN `{Dist A, Op A} (n : nat) (x y : A) := ∃ z, y ≡{n}≡ x ⋅ z.
+(* Definition includedN `{Dist A, Op A} (n : nat) (x y : A) := ∃ z, y ≡{n}≡ x ⋅ z. *)
+(* Notation "x ≼{ n } y" := (includedN n x y) *)
+(*   (at level 70, n at next level, format "x  ≼{ n }  y") : C_scope. *)
+(* Instance: Params (@includedN) 4. *)
+(* Hint Extern 0 (_ ≼{_} _) => reflexivity. *)
+
+Class IncludedN A := includedN : nat → A → A → Prop.
 Notation "x ≼{ n } y" := (includedN n x y)
   (at level 70, n at next level, format "x  ≼{ n }  y") : C_scope.
-Instance: Params (@includedN) 4.
+Notation "(≼{ n })" := (includedN n) (only parsing) : C_scope.
+Instance: Params (@includedN) 3.
 Hint Extern 0 (_ ≼{_} _) => reflexivity.
 
-Record CMRAMixin A `{Dist A, Equiv A, PCore A, Op A, Valid A, ValidN A} := {
+Class Increasing `{Op A, Included A} (x : A) := increasing : ∀ y, y ≼ x ⋅ y.
+Arguments increasing {_ _ _} _ {_}.
+
+Record CMRAMixin A `{Dist A, Equiv A, PCore A, Op A, Valid A, ValidN A,
+                     Included A, IncludedN A} := {
   (* setoids *)
   mixin_cmra_op_ne (x : A) : NonExpansive (op x);
   mixin_cmra_pcore_ne n x y cx :
     x ≡{n}≡ y → pcore x = Some cx → ∃ cy, pcore y = Some cy ∧ cx ≡{n}≡ cy;
   mixin_cmra_validN_ne n : Proper (dist n ==> impl) (validN n);
+  mixin_cmra_pcore_increasing x cx : pcore x = Some cx → Increasing cx;
   (* valid *)
   mixin_cmra_valid_validN x : ✓ x ↔ ∀ n, ✓{n} x;
   mixin_cmra_validN_S n x : ✓{S n} x → ✓{n} x;
@@ -49,12 +69,21 @@ Record CMRAMixin A `{Dist A, Equiv A, PCore A, Op A, Valid A, ValidN A} := {
   mixin_cmra_comm : Comm (≡) (⋅);
   mixin_cmra_pcore_l x cx : pcore x = Some cx → cx ⋅ x ≡ x;
   mixin_cmra_pcore_idemp x cx : pcore x = Some cx → pcore cx ≡ Some cx;
-  mixin_cmra_pcore_mono x y cx :
-    x ≼ y → pcore x = Some cx → ∃ cy, pcore y = Some cy ∧ cx ≼ cy;
+  mixin_cmra_pcore_monoN n x y cx :
+    x ≼{n} y → pcore x = Some cx → ∃ cy, pcore y = Some cy ∧ cx ≼{n} cy;
   mixin_cmra_validN_op_l n x y : ✓{n} (x ⋅ y) → ✓{n} x;
   mixin_cmra_extend n x y1 y2 :
-    ✓{n} x → x ≡{n}≡ y1 ⋅ y2 →
-    ∃ z1 z2, x ≡ z1 ⋅ z2 ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2
+    ✓{n} x → y1 ⋅ y2 ≼{n} x →
+    ∃ z1 z2, z1 ⋅ z2 ≼{S n} x ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2;
+  (* included *)
+  mixin_cmra_dist_includedN n x y : x ≡{n}≡ y → x ≼{n} y;
+  mixin_cmra_includedN_S n x y : x ≼{S n} y → x ≼{n} y;
+  mixin_cmra_includedN_trans n : Transitive (≼{n});
+  mixin_cmra_includedN_op n x x' y : x ≼{n} x' → x ⋅ y ≼{n} x' ⋅ y;
+  mixin_cmra_validN_includedN n x y : ✓{n} x → y ≼{n} x → ✓{n} y;
+  mixin_cmra_included_includedN x y : x ≼ y ↔ (∀ n, x ≼{n} y);
+  mixin_cmra_pcore_included_op x cx y :
+    pcore x = Some cx → ∃ cxy, pcore (x ⋅ y) = Some cxy ∧ cx ≼ cxy
 }.
 
 (** Bundeled version *)
@@ -66,11 +95,13 @@ Structure cmraT := CMRAT' {
   cmra_op : Op cmra_car;
   cmra_valid : Valid cmra_car;
   cmra_validN : ValidN cmra_car;
+  cmra_included : Included cmra_car;
+  cmra_includedN : IncludedN cmra_car;
   cmra_ofe_mixin : OfeMixin cmra_car;
   cmra_mixin : CMRAMixin cmra_car;
   _ : Type
 }.
-Arguments CMRAT' _ {_ _ _ _ _ _} _ _ _.
+Arguments CMRAT' _ {_ _ _ _ _ _ _ _} _ _ _.
 (* Given [m : CMRAMixin A], the notation [CMRAT A m] provides a smart
 constructor, which uses [ofe_mixin_of A] to infer the canonical OFE mixin of
 the type [A], so that it does not have to be given manually. *)
@@ -83,6 +114,8 @@ Arguments cmra_pcore : simpl never.
 Arguments cmra_op : simpl never.
 Arguments cmra_valid : simpl never.
 Arguments cmra_validN : simpl never.
+Arguments cmra_included : simpl never.
+Arguments cmra_includedN : simpl never.
 Arguments cmra_ofe_mixin : simpl never.
 Arguments cmra_mixin : simpl never.
 Add Printing Constructor cmraT.
@@ -90,10 +123,13 @@ Hint Extern 0 (PCore _) => eapply (@cmra_pcore _) : typeclass_instances.
 Hint Extern 0 (Op _) => eapply (@cmra_op _) : typeclass_instances.
 Hint Extern 0 (Valid _) => eapply (@cmra_valid _) : typeclass_instances.
 Hint Extern 0 (ValidN _) => eapply (@cmra_validN _) : typeclass_instances.
+Hint Extern 0 (Included _) => eapply (@cmra_included _) : typeclass_instances.
+Hint Extern 0 (IncludedN _) => eapply (@cmra_includedN _) : typeclass_instances.
 Coercion cmra_ofeC (A : cmraT) : ofeT := OfeT A (cmra_ofe_mixin A).
 Canonical Structure cmra_ofeC.
 
-Definition cmra_mixin_of' A {Ac : cmraT} (f : Ac → A) : CMRAMixin Ac := cmra_mixin Ac.
+Definition cmra_mixin_of' A {Ac : cmraT} (f : Ac → A) : CMRAMixin Ac :=
+  cmra_mixin Ac.
 Notation cmra_mixin_of A :=
   ltac:(let H := eval hnf in (cmra_mixin_of' A id) in exact H) (only parsing).
 
@@ -106,6 +142,8 @@ Section cmra_mixin.
   Lemma cmra_pcore_ne n x y cx :
     x ≡{n}≡ y → pcore x = Some cx → ∃ cy, pcore y = Some cy ∧ cx ≡{n}≡ cy.
   Proof. apply (mixin_cmra_pcore_ne _ (cmra_mixin A)). Qed.
+  Global Instance cmra_pcore_increasing x cx : pcore x = Some cx → Increasing cx.
+  Proof. apply (mixin_cmra_pcore_increasing _ (cmra_mixin A)). Qed.
   Global Instance cmra_validN_ne n : Proper (dist n ==> impl) (@validN A _ n).
   Proof. apply (mixin_cmra_validN_ne _ (cmra_mixin A)). Qed.
   Lemma cmra_valid_validN x : ✓ x ↔ ∀ n, ✓{n} x.
@@ -120,15 +158,30 @@ Section cmra_mixin.
   Proof. apply (mixin_cmra_pcore_l _ (cmra_mixin A)). Qed.
   Lemma cmra_pcore_idemp x cx : pcore x = Some cx → pcore cx ≡ Some cx.
   Proof. apply (mixin_cmra_pcore_idemp _ (cmra_mixin A)). Qed.
-  Lemma cmra_pcore_mono x y cx :
-    x ≼ y → pcore x = Some cx → ∃ cy, pcore y = Some cy ∧ cx ≼ cy.
-  Proof. apply (mixin_cmra_pcore_mono _ (cmra_mixin A)). Qed.
+  Lemma cmra_pcore_monoN n x y cx :
+    x ≼{n} y → pcore x = Some cx → ∃ cy, pcore y = Some cy ∧ cx ≼{n} cy.
+  Proof. apply (mixin_cmra_pcore_monoN _ (cmra_mixin A)). Qed.
   Lemma cmra_validN_op_l n x y : ✓{n} (x ⋅ y) → ✓{n} x.
   Proof. apply (mixin_cmra_validN_op_l _ (cmra_mixin A)). Qed.
   Lemma cmra_extend n x y1 y2 :
-    ✓{n} x → x ≡{n}≡ y1 ⋅ y2 →
-    ∃ z1 z2, x ≡ z1 ⋅ z2 ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2.
+    ✓{n} x → y1 ⋅ y2 ≼{n} x →
+    ∃ z1 z2, z1 ⋅ z2 ≼{S n} x ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2.
   Proof. apply (mixin_cmra_extend _ (cmra_mixin A)). Qed.
+  Lemma cmra_dist_includedN n x y : x ≡{n}≡ y → x ≼{n} y.
+  Proof. apply (mixin_cmra_dist_includedN _ (cmra_mixin A)). Qed.
+  Lemma cmra_includedN_S n x y : x ≼{S n} y → x ≼{n} y.
+  Proof. apply (mixin_cmra_includedN_S _ (cmra_mixin A)). Qed.
+  Global Instance cmra_includedN_trans n : Transitive (@includedN A _ n).
+  Proof. apply (mixin_cmra_includedN_trans _ (cmra_mixin A)). Qed.
+  Lemma cmra_includedN_op n x x' y : x ≼{n} x' → x ⋅ y ≼{n} x' ⋅ y.
+  Proof. apply (mixin_cmra_includedN_op _ (cmra_mixin A)). Qed.
+  Lemma cmra_validN_includedN n x y : ✓{n} x → y ≼{n} x → ✓{n} y.
+  Proof. apply (mixin_cmra_validN_includedN _ (cmra_mixin A)). Qed.
+  Lemma cmra_included_includedN x y : x ≼ y ↔ (∀ n, x ≼{n} y).
+  Proof. apply (mixin_cmra_included_includedN _ (cmra_mixin A)). Qed.
+  Lemma cmra_pcore_included_op x cx y :
+    pcore x = Some cx → ∃ cxy, pcore (x ⋅ y) = Some cxy ∧ cx ≼ cxy.
+  Proof. apply (mixin_cmra_pcore_included_op _ (cmra_mixin A)). Qed.
 End cmra_mixin.
 
 Definition opM {A : cmraT} (x : A) (my : option A) :=
@@ -175,7 +228,7 @@ Arguments core' _ _ _ /.
 (** * CMRAs with a unit element *)
 (** We use the notation ∅ because for most instances (maps, sets, etc) the
 `empty' element is the unit. *)
-Record UCMRAMixin A `{Dist A, Equiv A, PCore A, Op A, Valid A, Empty A} := {
+Record UCMRAMixin A `{Dist A, Equiv A, PCore A, Op A, Valid A, Empty A, Included A} := {
   mixin_ucmra_unit_valid : ✓ ∅;
   mixin_ucmra_unit_left_id : LeftId (≡) ∅ (⋅);
   mixin_ucmra_pcore_unit : pcore ∅ ≡ Some ∅
@@ -191,11 +244,13 @@ Structure ucmraT := UCMRAT' {
   ucmra_validN : ValidN ucmra_car;
   ucmra_empty : Empty ucmra_car;
   ucmra_ofe_mixin : OfeMixin ucmra_car;
+  ucmra_included : Included ucmra_car;
+  ucmra_includedN : IncludedN ucmra_car;
   ucmra_cmra_mixin : CMRAMixin ucmra_car;
   ucmra_mixin : UCMRAMixin ucmra_car;
   _ : Type;
 }.
-Arguments UCMRAT' _ {_ _ _ _ _ _ _} _ _ _ _.
+Arguments UCMRAT' _ {_ _ _ _ _ _ _ _ _} _ _ _ _.
 Notation UCMRAT A m :=
   (UCMRAT' A (ofe_mixin_of A%type) (cmra_mixin_of A%type) m A) (only parsing).
 Arguments ucmra_car : simpl never.
@@ -205,6 +260,8 @@ Arguments ucmra_pcore : simpl never.
 Arguments ucmra_op : simpl never.
 Arguments ucmra_valid : simpl never.
 Arguments ucmra_validN : simpl never.
+Arguments ucmra_included : simpl never.
+Arguments ucmra_includedN : simpl never.
 Arguments ucmra_ofe_mixin : simpl never.
 Arguments ucmra_cmra_mixin : simpl never.
 Arguments ucmra_mixin : simpl never.
@@ -239,11 +296,13 @@ Class CMRAMorphism {A B : cmraT} (f : A → B) := {
   cmra_morphism_ne :> NonExpansive f;
   cmra_morphism_validN n x : ✓{n} x → ✓{n} f x;
   cmra_morphism_pcore x : pcore (f x) ≡ f <$> pcore x;
-  cmra_morphism_op x y : f x ⋅ f y ≡ f (x ⋅ y)
+  cmra_morphism_op x y : f x ⋅ f y ≡ f (x ⋅ y);
+  cmra_morphism_monoN n x y : x ≼{n} y → f x ≼{n} f y
 }.
 Arguments cmra_morphism_validN {_ _} _ {_} _ _ _.
 Arguments cmra_morphism_pcore {_ _} _ {_} _.
 Arguments cmra_morphism_op {_ _} _ {_} _ _.
+Arguments cmra_morphism_monoN {_ _} _ {_} _ _ _.
 
 (** * Properties **)
 Section cmra.
@@ -251,6 +310,10 @@ Context {A : cmraT}.
 Implicit Types x y z : A.
 Implicit Types xs ys zs : list A.
 
+Global Instance cmra_includedN_refl n : Reflexive (cmra_includedN A n).
+Proof.
+  intros ?; by apply cmra_dist_includedN.
+Qed.
 (** ** Setoids *)
 Global Instance cmra_pcore_ne' : NonExpansive (@pcore A _).
 Proof.
@@ -277,28 +340,40 @@ Proof. by split; apply cmra_validN_ne. Qed.
 Global Instance cmra_validN_proper : Proper ((≡) ==> iff) (@validN A _ n) | 1.
 Proof. by intros n x1 x2 Hx; apply cmra_validN_ne', equiv_dist. Qed.
 
+Lemma cmra_included_op x x' y : x ≼ x' → x ⋅ y ≼ x' ⋅ y.
+Proof.
+  intros. apply cmra_included_includedN =>?.
+  by eapply cmra_includedN_op, cmra_included_includedN.
+Qed.
+
 Global Instance cmra_valid_proper : Proper ((≡) ==> iff) (@valid A _).
 Proof.
   intros x y Hxy; rewrite !cmra_valid_validN.
   by split=> ? n; [rewrite -Hxy|rewrite Hxy].
 Qed.
 Global Instance cmra_includedN_ne n :
-  Proper (dist n ==> dist n ==> iff) (@includedN A _ _ n) | 1.
+  Proper (dist n ==> dist n ==> iff) (@includedN A _ n) | 1.
 Proof.
-  intros x x' Hx y y' Hy.
-  by split; intros [z ?]; exists z; [rewrite -Hx -Hy|rewrite Hx Hy].
+  intros x x' Hx y y' Hy. split => Hxy.
+  - trans x; first by apply cmra_dist_includedN.
+    trans y; trivial; by apply cmra_dist_includedN.
+  - trans x'; first by apply cmra_dist_includedN.
+    trans y'; trivial; by apply cmra_dist_includedN.
 Qed.
 Global Instance cmra_includedN_proper n :
-  Proper ((≡) ==> (≡) ==> iff) (@includedN A _ _ n) | 1.
+  Proper ((≡) ==> (≡) ==> iff) (@includedN A _ n) | 1.
 Proof.
   intros x x' Hx y y' Hy; revert Hx Hy; rewrite !equiv_dist=> Hx Hy.
-  by rewrite (Hx n) (Hy n).
+  by apply cmra_includedN_ne.
 Qed.
 Global Instance cmra_included_proper :
-  Proper ((≡) ==> (≡) ==> iff) (@included A _ _) | 1.
+  Proper ((≡) ==> (≡) ==> iff) (@included A _) | 1.
 Proof.
   intros x x' Hx y y' Hy.
-  by split; intros [z ?]; exists z; [rewrite -Hx -Hy|rewrite Hx Hy].
+  split; intros Hxy; apply cmra_included_includedN => n;
+    eapply (cmra_included_includedN) in Hxy.
+  - eapply cmra_includedN_proper; [symmetry| symmetry|]; eauto.
+  - eapply cmra_includedN_proper; eauto.
 Qed.
 Global Instance cmra_opM_ne : NonExpansive2 (@opM A).
 Proof. destruct 2; by ofe_subst. Qed.
@@ -365,74 +440,98 @@ Lemma exclusive_r x `{!Exclusive x} y : ✓ (y ⋅ x) → False.
 Proof. rewrite comm. by apply exclusive_l. Qed.
 Lemma exclusiveN_opM n x `{!Exclusive x} my : ✓{n} (x ⋅? my) → my = None.
 Proof. destruct my as [y|]. move=> /(exclusiveN_l _ x) []. done. Qed.
-Lemma exclusive_includedN n x `{!Exclusive x} y : x ≼{n} y → ✓{n} y → False.
-Proof. intros [? ->]. by apply exclusiveN_l. Qed.
-Lemma exclusive_included x `{!Exclusive x} y : x ≼ y → ✓ y → False.
-Proof. intros [? ->]. by apply exclusive_l. Qed.
+(* Lemma exclusive_includedN n x `{!Exclusive x} y : x ≼{n} y → ✓{n} y → False. *)
+(* Proof. intros [? ->]. by apply exclusiveN_l. Qed. *)
+(* Lemma exclusive_included x `{!Exclusive x} y : x ≼ y → ✓ y → False. *)
+(* Proof. intros [? ->]. by apply exclusive_l. Qed. *)
 
 (** ** Order *)
-Lemma cmra_included_includedN n x y : x ≼ y → x ≼{n} y.
-Proof. intros [z ->]. by exists z. Qed.
-Global Instance cmra_includedN_trans n : Transitive (@includedN A _ _ n).
+(* Lemma cmra_included_includedN n x y : x ≼ y → x ≼{n} y. *)
+(* Proof. intros [z ->]. by exists z. Qed. *)
+(* Global Instance cmra_includedN_trans n : Transitive (@includedN A _ n). *)
+(* Proof. *)
+(*   apply mixin *)
+(*   intros x y z Hxy Hyz. [z1 Hy] [z2 Hz]; exists (z1 ⋅ z2). by rewrite assoc -Hy -Hz. *)
+(* Qed. *)
+Global Instance cmra_included_trans: Transitive (@included A _).
 Proof.
-  intros x y z [z1 Hy] [z2 Hz]; exists (z1 ⋅ z2). by rewrite assoc -Hy -Hz.
-Qed.
-Global Instance cmra_included_trans: Transitive (@included A _ _).
-Proof.
-  intros x y z [z1 Hy] [z2 Hz]; exists (z1 ⋅ z2). by rewrite assoc -Hy -Hz.
+  intros x y z Hxy Hyz; apply cmra_included_includedN => n;
+    eapply (@cmra_includedN_trans _ _ _ y); by eapply cmra_included_includedN.
 Qed.
 Lemma cmra_valid_included x y : ✓ y → x ≼ y → ✓ x.
-Proof. intros Hyv [z ?]; setoid_subst; eauto using cmra_valid_op_l. Qed.
-Lemma cmra_validN_includedN n x y : ✓{n} y → x ≼{n} y → ✓{n} x.
-Proof. intros Hyv [z ?]; ofe_subst y; eauto using cmra_validN_op_l. Qed.
+Proof.
+  intros Hyv Hxy; apply cmra_valid_validN => n.
+  eapply cmra_valid_validN in Hyv; eapply cmra_included_includedN in Hxy;
+    by eapply cmra_validN_includedN.
+Qed.
+(* Lemma cmra_validN_includedN n x y : ✓{n} y → x ≼{n} y → ✓{n} x. *)
+(* Proof. intros Hyv [z ?]; ofe_subst y; eauto using cmra_validN_op_l. Qed. *)
 Lemma cmra_validN_included n x y : ✓{n} y → x ≼ y → ✓{n} x.
-Proof. intros Hyv [z ?]; setoid_subst; eauto using cmra_validN_op_l. Qed.
+Proof.
+  intros; eapply cmra_validN_includedN;
+    last eapply cmra_included_includedN; eauto.
+Qed.
 
-Lemma cmra_includedN_S n x y : x ≼{S n} y → x ≼{n} y.
-Proof. by intros [z Hz]; exists z; apply dist_S. Qed.
+(* Lemma cmra_includedN_S n x y : x ≼{S n} y → x ≼{n} y. *)
+(* Proof. by intros [z Hz]; exists z; apply dist_S. Qed. *)
 Lemma cmra_includedN_le n n' x y : x ≼{n} y → n' ≤ n → x ≼{n'} y.
 Proof. induction 2; auto using cmra_includedN_S. Qed.
 
-Lemma cmra_includedN_l n x y : x ≼{n} x ⋅ y.
-Proof. by exists y. Qed.
-Lemma cmra_included_l x y : x ≼ x ⋅ y.
-Proof. by exists y. Qed.
-Lemma cmra_includedN_r n x y : y ≼{n} x ⋅ y.
-Proof. rewrite (comm op); apply cmra_includedN_l. Qed.
-Lemma cmra_included_r x y : y ≼ x ⋅ y.
-Proof. rewrite (comm op); apply cmra_included_l. Qed.
+(* Lemma cmra_includedN_l n x y : x ≼{n} x ⋅ y. *)
+(* Proof. by exists y. Qed. *)
+(* Lemma cmra_included_l x y : x ≼ x ⋅ y. *)
+(* Proof. by exists y. Qed. *)
+(* Lemma cmra_includedN_r n x y : y ≼{n} x ⋅ y. *)
+(* Proof. rewrite (comm op); apply cmra_includedN_l. Qed. *)
+(* Lemma cmra_included_r x y : y ≼ x ⋅ y. *)
+(* Proof. rewrite (comm op); apply cmra_included_l. Qed. *)
 
-Lemma cmra_pcore_mono' x y cx :
-  x ≼ y → pcore x ≡ Some cx → ∃ cy, pcore y = Some cy ∧ cx ≼ cy.
+Lemma cmra_pcore_mono' n x y cx :
+  x ≼{n} y → pcore x ≡ Some cx → ∃ cy, pcore y = Some cy ∧ cx ≼{n} cy.
 Proof.
   intros ? (cx'&?&Hcx)%equiv_Some_inv_r'.
-  destruct (cmra_pcore_mono x y cx') as (cy&->&?); auto.
+  destruct (cmra_pcore_monoN n x y cx') as (cy&->&?); auto.
   exists cy; by rewrite Hcx.
 Qed.
-Lemma cmra_pcore_monoN' n x y cx :
-  x ≼{n} y → pcore x ≡{n}≡ Some cx → ∃ cy, pcore y = Some cy ∧ cx ≼{n} cy.
+
+Lemma cmra_pcore_included_op' x cx y :
+  pcore x ≡ Some cx → ∃ cxy, pcore (x ⋅ y) = Some cxy ∧ cx ≼ cxy.
 Proof.
-  intros [z Hy] (cx'&?&Hcx)%dist_Some_inv_r'.
-  destruct (cmra_pcore_mono x (x ⋅ z) cx')
-    as (cy&Hxy&?); auto using cmra_included_l.
-  assert (pcore y ≡{n}≡ Some cy) as (cy'&?&Hcy')%dist_Some_inv_r'.
-  { by rewrite Hy Hxy. }
-  exists cy'; split; first done.
-  rewrite Hcx -Hcy'; auto using cmra_included_includedN.
+  intros (cx'&?&Hcx)%equiv_Some_inv_r'.
+  destruct (cmra_pcore_included_op x cx' y) as (cy&->&?); auto.
+  exists cy; by rewrite Hcx.
 Qed.
-Lemma cmra_included_pcore x cx : pcore x = Some cx → cx ≼ x.
-Proof. exists x. by rewrite cmra_pcore_l. Qed.
+(* Lemma cmra_pcore_monoN' n x y cx : *)
+(*   x ≼{n} y → pcore x ≡{n}≡ Some cx → ∃ cy, pcore y = Some cy ∧ cx ≼{n} cy. *)
+(* Proof. *)
+(*   intros [z Hy] (cx'&?&Hcx)%dist_Some_inv_r'. *)
+(*   destruct (cmra_pcore_mono x (x ⋅ z) cx') *)
+(*     as (cy&Hxy&?); auto using cmra_included_l. *)
+(*   assert (pcore y ≡{n}≡ Some cy) as (cy'&?&Hcy')%dist_Some_inv_r'. *)
+(*   { by rewrite Hy Hxy. } *)
+(*   exists cy'; split; first done. *)
+(*   rewrite Hcx -Hcy'; auto using cmra_included_includedN. *)
+(* Qed. *)
+(* Lemma cmra_included_pcore x cx : pcore x = Some cx → cx ≼ x. *)
+(* Proof. exists x. by rewrite cmra_pcore_l. Qed. *)
 
 Lemma cmra_monoN_l n x y z : x ≼{n} y → z ⋅ x ≼{n} z ⋅ y.
-Proof. by intros [z1 Hz1]; exists z1; rewrite Hz1 (assoc op). Qed.
+Proof. rewrite !(comm _ z) => ?. by apply cmra_includedN_op. Qed.
 Lemma cmra_mono_l x y z : x ≼ y → z ⋅ x ≼ z ⋅ y.
-Proof. by intros [z1 Hz1]; exists z1; rewrite Hz1 (assoc op). Qed.
+Proof.
+  rewrite !(comm _ z) => ?.
+  apply cmra_included_includedN =>?; apply cmra_includedN_op.
+  by apply cmra_included_includedN.
+Qed.
 Lemma cmra_monoN_r n x y z : x ≼{n} y → x ⋅ z ≼{n} y ⋅ z.
-Proof. by intros; rewrite -!(comm _ z); apply cmra_monoN_l. Qed.
+Proof. by intros; apply cmra_includedN_op. Qed.
 Lemma cmra_mono_r x y z : x ≼ y → x ⋅ z ≼ y ⋅ z.
 Proof. by intros; rewrite -!(comm _ z); apply cmra_mono_l. Qed.
 Lemma cmra_monoN n x1 x2 y1 y2 : x1 ≼{n} y1 → x2 ≼{n} y2 → x1 ⋅ x2 ≼{n} y1 ⋅ y2.
-Proof. intros; etrans; eauto using cmra_monoN_l, cmra_monoN_r. Qed.
+Proof.
+  intros; etrans; first apply cmra_monoN_l; eauto.
+  eauto using cmra_monoN_r.
+Qed.
 Lemma cmra_mono x1 x2 y1 y2 : x1 ≼ y1 → x2 ≼ y2 → x1 ⋅ x2 ≼ y1 ⋅ y2.
 Proof. intros; etrans; eauto using cmra_mono_l, cmra_mono_r. Qed.
 
@@ -443,12 +542,12 @@ Global Instance cmra_mono' :
   Proper (included ==> included ==> included) (@op A _).
 Proof. intros x1 x2 Hx y1 y2 Hy. by apply cmra_mono. Qed.
 
-Lemma cmra_included_dist_l n x1 x2 x1' :
-  x1 ≼ x2 → x1' ≡{n}≡ x1 → ∃ x2', x1' ≼ x2' ∧ x2' ≡{n}≡ x2.
-Proof.
-  intros [z Hx2] Hx1; exists (x1' ⋅ z); split; auto using cmra_included_l.
-  by rewrite Hx1 Hx2.
-Qed.
+(* Lemma cmra_included_dist_l n x1 x2 x1' : *)
+(*   x1 ≼ x2 → x1' ≡{n}≡ x1 → ∃ x2', x1' ≼ x2' ∧ x2' ≡{n}≡ x2. *)
+(* Proof. *)
+(*   intros [z Hx2] Hx1; exists (x1' ⋅ z); split; auto using cmra_included_l. *)
+(*   by rewrite Hx1 Hx2. *)
+(* Qed. *)
 
 (** ** Total core *)
 Section total_core.
@@ -466,7 +565,9 @@ Section total_core.
   Lemma cmra_core_mono x y : x ≼ y → core x ≼ core y.
   Proof.
     intros; destruct (cmra_total x) as [cx Hcx].
-    destruct (cmra_pcore_mono x y cx) as (cy&Hcy&?); auto.
+    apply cmra_included_includedN => n.
+    destruct (cmra_pcore_monoN n x y cx) as (cy&Hcy&?); trivial;
+      first by apply cmra_included_includedN.
     by rewrite /core /= Hcx Hcy.
   Qed.
 
@@ -502,40 +603,55 @@ Section total_core.
     rewrite /Persistent /core /= Hcx /=. eauto using cmra_pcore_idemp.
   Qed.
 
-  Lemma cmra_included_core x : core x ≼ x.
-  Proof. by exists x; rewrite cmra_core_l. Qed.
-  Global Instance cmra_includedN_preorder n : PreOrder (@includedN A _ _ n).
-  Proof.
-    split; [|apply _]. by intros x; exists (core x); rewrite cmra_core_r.
-  Qed.
-  Global Instance cmra_included_preorder : PreOrder (@included A _ _).
-  Proof.
-    split; [|apply _]. by intros x; exists (core x); rewrite cmra_core_r.
-  Qed.
+  (* Lemma cmra_included_core x : core x ≼ x. *)
+  (* Proof. by exists x; rewrite cmra_core_l. Qed. *)
+  (* Global Instance cmra_includedN_preorder n : PreOrder (@includedN A _ _ n). *)
+  (* Proof. *)
+  (*   split; [|apply _]. by intros x; exists (core x); rewrite cmra_core_r. *)
+  (* Qed. *)
+  (* Global Instance cmra_included_preorder : PreOrder (@included A _ _). *)
+  (* Proof. *)
+  (*   split; [|apply _]. by intros x; exists (core x); rewrite cmra_core_r. *)
+  (* Qed. *)
   Lemma cmra_core_monoN n x y : x ≼{n} y → core x ≼{n} core y.
   Proof.
-    intros [z ->].
-    apply cmra_included_includedN, cmra_core_mono, cmra_included_l.
+    intros; destruct (cmra_total x) as [cx Hcx].
+    destruct (cmra_pcore_monoN n x y cx) as (cy&Hcy&?); auto.
+    by rewrite /core /= Hcx Hcy.
   Qed.
+
+  Lemma cmra_core_includedN_op n x y : core x ≼{n} core (x ⋅ y).
+  Proof.
+    destruct (cmra_total x) as [z Heq].
+    rewrite /core /core' Heq /=.
+    destruct (cmra_pcore_included_op x z y) as [z' [Heq' ?]];
+      rewrite //= Heq'; apply cmra_included_includedN; auto.
+ Qed.
+
+  Lemma cmra_core_included_op x y : core x ≼ core (x ⋅ y).
+  Proof.
+    apply cmra_included_includedN => ?; apply cmra_core_includedN_op.
+ Qed.
+
 End total_core.
 
 (** ** Timeless *)
-Lemma cmra_timeless_included_l x y : Timeless x → ✓{0} y → x ≼{0} y → x ≼ y.
-Proof.
-  intros ?? [x' ?].
-  destruct (cmra_extend 0 y x x') as (z&z'&Hy&Hz&Hz'); auto; simpl in *.
-  by exists z'; rewrite Hy (timeless x z).
-Qed.
-Lemma cmra_timeless_included_r x y : Timeless y → x ≼{0} y → x ≼ y.
-Proof. intros ? [x' ?]. exists x'. by apply (timeless y). Qed.
-Lemma cmra_op_timeless x1 x2 :
-  ✓ (x1 ⋅ x2) → Timeless x1 → Timeless x2 → Timeless (x1 ⋅ x2).
-Proof.
-  intros ??? z Hz.
-  destruct (cmra_extend 0 z x1 x2) as (y1&y2&Hz'&?&?); auto; simpl in *.
-  { rewrite -?Hz. by apply cmra_valid_validN. }
-  by rewrite Hz' (timeless x1 y1) // (timeless x2 y2).
-Qed.
+(* Lemma cmra_timeless_included_l x y : Timeless x → ✓{0} y → x ≼{0} y → x ≼ y. *)
+(* Proof. *)
+(*   intros ?? Hxy0. *)
+(*   destruct (cmra_extend 0 y x x') as (z&z'&Hy&Hz&Hz'); auto; simpl in *. *)
+(*   by exists z'; rewrite Hy (timeless x z). *)
+(* Qed. *)
+(* Lemma cmra_timeless_included_r x y : Timeless y → x ≼{0} y → x ≼ y. *)
+(* Proof. intros ? [x' ?]. exists x'. by apply (timeless y). Qed. *)
+(* Lemma cmra_op_timeless x1 x2 : *)
+(*   ✓ (x1 ⋅ x2) → Timeless x1 → Timeless x2 → Timeless (x1 ⋅ x2). *)
+(* Proof. *)
+(*   intros ??? z Hz. *)
+(*   destruct (cmra_extend 0 z x1 x2) as (y1&y2&Hz'&?&?); auto; simpl in *. *)
+(*   { rewrite -?Hz. by apply cmra_valid_validN. } *)
+(*   by rewrite Hz' (timeless x1 y1) // (timeless x2 y2). *)
+(* Qed. *)
 
 (** ** Discrete *)
 Lemma cmra_discrete_valid_iff `{CMRADiscrete A} n x : ✓ x ↔ ✓{n} x.
@@ -543,11 +659,11 @@ Proof.
   split; first by rewrite cmra_valid_validN.
   eauto using cmra_discrete_valid, cmra_validN_le with lia.
 Qed.
-Lemma cmra_discrete_included_iff `{Discrete A} n x y : x ≼ y ↔ x ≼{n} y.
-Proof.
-  split; first by apply cmra_included_includedN.
-  intros [z ->%(timeless_iff _ _)]; eauto using cmra_included_l.
-Qed.
+(* Lemma cmra_discrete_included_iff `{Discrete A} n x y : x ≼ y ↔ x ≼{n} y. *)
+(* Proof. *)
+(*   split; first by apply cmra_included_includedN. *)
+(*   intros [z ->%(timeless_iff _ _)]; eauto using cmra_included_l. *)
+(* Qed. *)
 
 (** Cancelable elements  *)
 Global Instance cancelable_proper : Proper (equiv ==> iff) (@Cancelable A).
@@ -605,20 +721,47 @@ Section ucmra.
 
   Lemma ucmra_unit_validN n : ✓{n} (∅:A).
   Proof. apply cmra_valid_validN, ucmra_unit_valid. Qed.
-  Lemma ucmra_unit_leastN n x : ∅ ≼{n} x.
-  Proof. by exists x; rewrite left_id. Qed.
-  Lemma ucmra_unit_least x : ∅ ≼ x.
-  Proof. by exists x; rewrite left_id. Qed.
+  (* Lemma ucmra_unit_leastN n x : ∅ ≼{n} x. *)
+  (* Proof. by exists x; rewrite left_id. Qed. *)
+  (* Lemma ucmra_unit_least x : ∅ ≼ x. *)
+  (* Proof. by exists x; rewrite left_id. Qed. *)
   Global Instance ucmra_unit_right_id : RightId (≡) ∅ (@op A _).
   Proof. by intros x; rewrite (comm op) left_id. Qed.
   Global Instance ucmra_unit_persistent : Persistent (∅:A).
   Proof. apply ucmra_pcore_unit. Qed.
 
+  Lemma ucmra_unit_included_increasing x `{!Increasing x} : ∅ ≼ x.
+  Proof.
+    setoid_replace x with (x ⋅ ∅) by by rewrite right_id.
+    apply (increasing _).
+  Qed.
+
+  Global Instance ucmra_increasing_included_unit x : ∅ ≼ x → Increasing x.
+  Proof.
+    intros Hx y.
+    setoid_replace y with (∅ ⋅ y) at 1 by by rewrite left_id.
+    apply cmra_included_op; auto.
+  Qed.
+
+  Lemma ucmra_unit_included_pcore x y : pcore x = Some y → ∅ ≼ y.
+  Proof.
+    intros; apply (@ucmra_unit_included_increasing _ _).
+  Qed.
+
   Global Instance cmra_unit_total : CMRATotal A.
   Proof.
-    intros x. destruct (cmra_pcore_mono' ∅ x ∅) as (cx&->&?);
-      eauto using ucmra_unit_least, (persistent (∅:A)).
+    intros x.
+    destruct (cmra_pcore_included_op' ∅ ∅ x) as (?&Hc&_).
+    apply ucmra_pcore_unit.
+    rewrite -(left_id _ _ x) Hc; eauto.
   Qed.
+
+  Lemma ucmra_unit_included_core x : ∅ ≼ core x.
+  Proof.
+    destruct (cmra_total x) as [z Heq]; rewrite /core /core' Heq /=.
+    apply (@ucmra_unit_included_increasing _ _).
+  Qed.
+
   Global Instance empty_cancelable : Cancelable (∅:A).
   Proof. intros ???. by rewrite !left_id. Qed.
 
@@ -688,35 +831,35 @@ Section ucmra_leibniz.
 End ucmra_leibniz.
 
 (** * Constructing a CMRA with total core *)
-Section cmra_total.
-  Context A `{Dist A, Equiv A, PCore A, Op A, Valid A, ValidN A}.
-  Context (total : ∀ x, is_Some (pcore x)).
-  Context (op_ne : ∀ (x : A), NonExpansive (op x)).
-  Context (core_ne : NonExpansive (@core A _)).
-  Context (validN_ne : ∀ n, Proper (dist n ==> impl) (@validN A _ n)).
-  Context (valid_validN : ∀ (x : A), ✓ x ↔ ∀ n, ✓{n} x).
-  Context (validN_S : ∀ n (x : A), ✓{S n} x → ✓{n} x).
-  Context (op_assoc : Assoc (≡) (@op A _)).
-  Context (op_comm : Comm (≡) (@op A _)).
-  Context (core_l : ∀ x : A, core x ⋅ x ≡ x).
-  Context (core_idemp : ∀ x : A, core (core x) ≡ core x).
-  Context (core_mono : ∀ x y : A, x ≼ y → core x ≼ core y).
-  Context (validN_op_l : ∀ n (x y : A), ✓{n} (x ⋅ y) → ✓{n} x).
-  Context (extend : ∀ n (x y1 y2 : A),
-    ✓{n} x → x ≡{n}≡ y1 ⋅ y2 →
-    ∃ z1 z2, x ≡ z1 ⋅ z2 ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2).
-  Lemma cmra_total_mixin : CMRAMixin A.
-  Proof using Type*.
-    split; auto.
-    - intros n x y ? Hcx%core_ne Hx; move: Hcx. rewrite /core /= Hx /=.
-      case (total y)=> [cy ->]; eauto.
-    - intros x cx Hcx. move: (core_l x). by rewrite /core /= Hcx.
-    - intros x cx Hcx. move: (core_idemp x). rewrite /core /= Hcx /=.
-      case (total cx)=>[ccx ->]; by constructor.
-    - intros x y cx Hxy%core_mono Hx. move: Hxy.
-      rewrite /core /= Hx /=. case (total y)=> [cy ->]; eauto.
-  Qed.
-End cmra_total.
+(* Section cmra_total. *)
+(*   Context A `{Dist A, Equiv A, PCore A, Op A, Valid A, ValidN A}. *)
+(*   Context (total : ∀ x, is_Some (pcore x)). *)
+(*   Context (op_ne : ∀ (x : A), NonExpansive (op x)). *)
+(*   Context (core_ne : NonExpansive (@core A _)). *)
+(*   Context (validN_ne : ∀ n, Proper (dist n ==> impl) (@validN A _ n)). *)
+(*   Context (valid_validN : ∀ (x : A), ✓ x ↔ ∀ n, ✓{n} x). *)
+(*   Context (validN_S : ∀ n (x : A), ✓{S n} x → ✓{n} x). *)
+(*   Context (op_assoc : Assoc (≡) (@op A _)). *)
+(*   Context (op_comm : Comm (≡) (@op A _)). *)
+(*   Context (core_l : ∀ x : A, core x ⋅ x ≡ x). *)
+(*   Context (core_idemp : ∀ x : A, core (core x) ≡ core x). *)
+(*   Context (core_mono : ∀ x y : A, x ≼ y → core x ≼ core y). *)
+(*   Context (validN_op_l : ∀ n (x y : A), ✓{n} (x ⋅ y) → ✓{n} x). *)
+(*   Context (extend : ∀ n (x y1 y2 : A), *)
+(*     ✓{n} x → x ≡{n}≡ y1 ⋅ y2 → *)
+(*     ∃ z1 z2, x ≡ z1 ⋅ z2 ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2). *)
+(*   Lemma cmra_total_mixin : CMRAMixin A. *)
+(*   Proof using Type*. *)
+(*     split; auto. *)
+(*     - intros n x y ? Hcx%core_ne Hx; move: Hcx. rewrite /core /= Hx /=. *)
+(*       case (total y)=> [cy ->]; eauto. *)
+(*     - intros x cx Hcx. move: (core_l x). by rewrite /core /= Hcx. *)
+(*     - intros x cx Hcx. move: (core_idemp x). rewrite /core /= Hcx /=. *)
+(*       case (total cx)=>[ccx ->]; by constructor. *)
+(*     - intros x y cx Hxy%core_mono Hx. move: Hxy. *)
+(*       rewrite /core /= Hx /=. case (total y)=> [cy ->]; eauto. *)
+(*   Qed. *)
+(* End cmra_total. *)
 
 (** * Properties about morphisms *)
 Instance cmra_morphism_id {A : cmraT} : CMRAMorphism (@id A).
@@ -731,6 +874,7 @@ Proof.
   - move=> n x Hx /=. by apply cmra_morphism_validN, cmra_morphism_validN.
   - move=> x /=. by rewrite 2!cmra_morphism_pcore option_fmap_compose.
   - move=> x y /=. by rewrite !cmra_morphism_op.
+  - move=> n x y Hxy /=. by repeat apply cmra_morphism_monoN.
 Qed.
 
 Section cmra_morphism.
@@ -739,9 +883,13 @@ Section cmra_morphism.
   Lemma cmra_morphism_core x : core (f x) ≡ f (core x).
   Proof. unfold core, core'. rewrite cmra_morphism_pcore. by destruct (pcore x). Qed.
   Lemma cmra_morphism_monotone x y : x ≼ y → f x ≼ f y.
-  Proof. intros [z ->]. exists (f z). by rewrite cmra_morphism_op. Qed.
+  Proof.
+    intros Hxy; apply cmra_included_includedN => n.
+    eapply cmra_included_includedN in Hxy.
+    apply cmra_morphism_monoN; eauto.
+  Qed.
   Lemma cmra_morphism_monotoneN n x y : x ≼{n} y → f x ≼{n} f y.
-  Proof. intros [z ->]. exists (f z). by rewrite cmra_morphism_op. Qed.
+  Proof. by apply cmra_morphism_monoN. Qed.
   Lemma cmra_monotone_valid x : ✓ x → ✓ f x.
   Proof. rewrite !cmra_valid_validN; eauto using cmra_morphism_validN. Qed.
 End cmra_morphism.
@@ -838,613 +986,613 @@ Section cmra_transport.
   Proof. by destruct H. Qed.
 End cmra_transport.
 
-(** * Instances *)
-(** ** Discrete CMRA *)
-Record RAMixin A `{Equiv A, PCore A, Op A, Valid A} := {
-  (* setoids *)
-  ra_op_proper (x : A) : Proper ((≡) ==> (≡)) (op x);
-  ra_core_proper x y cx :
-    x ≡ y → pcore x = Some cx → ∃ cy, pcore y = Some cy ∧ cx ≡ cy;
-  ra_validN_proper : Proper ((≡) ==> impl) valid;
-  (* monoid *)
-  ra_assoc : Assoc (≡) (⋅);
-  ra_comm : Comm (≡) (⋅);
-  ra_pcore_l x cx : pcore x = Some cx → cx ⋅ x ≡ x;
-  ra_pcore_idemp x cx : pcore x = Some cx → pcore cx ≡ Some cx;
-  ra_pcore_mono x y cx :
-    x ≼ y → pcore x = Some cx → ∃ cy, pcore y = Some cy ∧ cx ≼ cy;
-  ra_valid_op_l x y : ✓ (x ⋅ y) → ✓ x
-}.
-
-Section discrete.
-  Local Set Default Proof Using "Type*".
-  Context `{Equiv A, PCore A, Op A, Valid A} (Heq : @Equivalence A (≡)).
-  Context (ra_mix : RAMixin A).
-  Existing Instances discrete_dist.
-
-  Instance discrete_validN : ValidN A := λ n x, ✓ x.
-  Definition discrete_cmra_mixin : CMRAMixin A.
-  Proof.
-    destruct ra_mix; split; try done.
-    - intros x; split; first done. by move=> /(_ 0).
-    - intros n x y1 y2 ??; by exists y1, y2.
-  Qed.
-
-  Instance discrete_cmra_discrete :
-    CMRADiscrete (CMRAT' A (discrete_ofe_mixin Heq) discrete_cmra_mixin A).
-  Proof. split. apply _. done. Qed.
-End discrete.
-
-(** A smart constructor for the discrete RA over a carrier [A]. It uses
-[discrete_ofe_equivalence_of A] to make sure the same [Equivalence] proof is
-used as when constructing the OFE. *)
-Notation discreteR A ra_mix :=
-  (CMRAT A (discrete_cmra_mixin (discrete_ofe_equivalence_of A%type) ra_mix))
-  (only parsing).
-
-Section ra_total.
-  Local Set Default Proof Using "Type*".
-  Context A `{Equiv A, PCore A, Op A, Valid A}.
-  Context (total : ∀ x, is_Some (pcore x)).
-  Context (op_proper : ∀ (x : A), Proper ((≡) ==> (≡)) (op x)).
-  Context (core_proper: Proper ((≡) ==> (≡)) (@core A _)).
-  Context (valid_proper : Proper ((≡) ==> impl) (@valid A _)).
-  Context (op_assoc : Assoc (≡) (@op A _)).
-  Context (op_comm : Comm (≡) (@op A _)).
-  Context (core_l : ∀ x : A, core x ⋅ x ≡ x).
-  Context (core_idemp : ∀ x : A, core (core x) ≡ core x).
-  Context (core_mono : ∀ x y : A, x ≼ y → core x ≼ core y).
-  Context (valid_op_l : ∀ x y : A, ✓ (x ⋅ y) → ✓ x).
-  Lemma ra_total_mixin : RAMixin A.
-  Proof.
-    split; auto.
-    - intros x y ? Hcx%core_proper Hx; move: Hcx. rewrite /core /= Hx /=.
-      case (total y)=> [cy ->]; eauto.
-    - intros x cx Hcx. move: (core_l x). by rewrite /core /= Hcx.
-    - intros x cx Hcx. move: (core_idemp x). rewrite /core /= Hcx /=.
-      case (total cx)=>[ccx ->]; by constructor.
-    - intros x y cx Hxy%core_mono Hx. move: Hxy.
-      rewrite /core /= Hx /=. case (total y)=> [cy ->]; eauto.
-  Qed.
-End ra_total.
-
-(** ** CMRA for the unit type *)
-Section unit.
-  Instance unit_valid : Valid () := λ x, True.
-  Instance unit_validN : ValidN () := λ n x, True.
-  Instance unit_pcore : PCore () := λ x, Some x.
-  Instance unit_op : Op () := λ x y, ().
-  Lemma unit_cmra_mixin : CMRAMixin ().
-  Proof. apply discrete_cmra_mixin, ra_total_mixin; by eauto. Qed.
-  Canonical Structure unitR : cmraT := CMRAT unit unit_cmra_mixin.
-
-  Instance unit_empty : Empty () := ().
-  Lemma unit_ucmra_mixin : UCMRAMixin ().
-  Proof. done. Qed.
-  Canonical Structure unitUR : ucmraT := UCMRAT unit unit_ucmra_mixin.
-
-  Global Instance unit_cmra_discrete : CMRADiscrete unitR.
-  Proof. done. Qed.
-  Global Instance unit_persistent (x : ()) : Persistent x.
-  Proof. by constructor. Qed.
-  Global Instance unit_cancelable (x : ()) : Cancelable x.
-  Proof. by constructor. Qed.
-End unit.
-
-(** ** Natural numbers *)
-Section nat.
-  Instance nat_valid : Valid nat := λ x, True.
-  Instance nat_validN : ValidN nat := λ n x, True.
-  Instance nat_pcore : PCore nat := λ x, Some 0.
-  Instance nat_op : Op nat := plus.
-  Definition nat_op_plus x y : x ⋅ y = x + y := eq_refl.
-  Lemma nat_included (x y : nat) : x ≼ y ↔ x ≤ y.
-  Proof. by rewrite nat_le_sum. Qed.
-  Lemma nat_ra_mixin : RAMixin nat.
-  Proof.
-    apply ra_total_mixin; try by eauto.
-    - solve_proper.
-    - intros x y z. apply Nat.add_assoc.
-    - intros x y. apply Nat.add_comm.
-    - by exists 0.
-  Qed.
-  Canonical Structure natR : cmraT := discreteR nat nat_ra_mixin.
-
-  Global Instance nat_cmra_discrete : CMRADiscrete natR.
-  Proof. apply discrete_cmra_discrete. Qed.
-
-  Instance nat_empty : Empty nat := 0.
-  Lemma nat_ucmra_mixin : UCMRAMixin nat.
-  Proof. split; apply _ || done. Qed.
-  Canonical Structure natUR : ucmraT := UCMRAT nat nat_ucmra_mixin.
-
-  Global Instance nat_cancelable (x : nat) : Cancelable x.
-  Proof. by intros ???? ?%Nat.add_cancel_l. Qed.
-End nat.
-
-Definition mnat := nat.
-
-Section mnat.
-  Instance mnat_valid : Valid mnat := λ x, True.
-  Instance mnat_validN : ValidN mnat := λ n x, True.
-  Instance mnat_pcore : PCore mnat := Some.
-  Instance mnat_op : Op mnat := Nat.max.
-  Definition mnat_op_max x y : x ⋅ y = x `max` y := eq_refl.
-  Lemma mnat_included (x y : mnat) : x ≼ y ↔ x ≤ y.
-  Proof.
-    split.
-    - intros [z ->]; unfold op, mnat_op; lia.
-    - exists y. by symmetry; apply Nat.max_r.
-  Qed.
-  Lemma mnat_ra_mixin : RAMixin mnat.
-  Proof.
-    apply ra_total_mixin; try by eauto.
-    - solve_proper.
-    - solve_proper.
-    - intros x y z. apply Nat.max_assoc.
-    - intros x y. apply Nat.max_comm.
-    - intros x. apply Max.max_idempotent.
-  Qed.
-  Canonical Structure mnatR : cmraT := discreteR mnat mnat_ra_mixin.
-
-  Global Instance mnat_cmra_discrete : CMRADiscrete mnatR.
-  Proof. apply discrete_cmra_discrete. Qed.
-
-  Instance mnat_empty : Empty mnat := 0.
-  Lemma mnat_ucmra_mixin : UCMRAMixin mnat.
-  Proof. split; apply _ || done. Qed.
-  Canonical Structure mnatUR : ucmraT := UCMRAT mnat mnat_ucmra_mixin.
-
-  Global Instance mnat_persistent (x : mnat) : Persistent x.
-  Proof. by constructor. Qed.
-End mnat.
-
-(** ** Positive integers. *)
-Section positive.
-  Instance pos_valid : Valid positive := λ x, True.
-  Instance pos_validN : ValidN positive := λ n x, True.
-  Instance pos_pcore : PCore positive := λ x, None.
-  Instance pos_op : Op positive := Pos.add.
-  Definition pos_op_plus x y : x ⋅ y = (x + y)%positive := eq_refl.
-  Lemma pos_included (x y : positive) : x ≼ y ↔ (x < y)%positive.
-  Proof. by rewrite Plt_sum. Qed.
-  Lemma pos_ra_mixin : RAMixin positive.
-  Proof.
-    split; try by eauto.
-    - by intros ??? ->.
-    - intros ???. apply Pos.add_assoc.
-    - intros ??. apply Pos.add_comm.
-  Qed.
-  Canonical Structure positiveR : cmraT := discreteR positive pos_ra_mixin.
-
-  Global Instance pos_cmra_discrete : CMRADiscrete positiveR.
-  Proof. apply discrete_cmra_discrete. Qed.
-
-  Global Instance pos_cancelable (x : positive) : Cancelable x.
-  Proof. intros n y z ??. by eapply Pos.add_reg_l, leibniz_equiv. Qed.
-  Global Instance pos_id_free (x : positive) : IdFree x.
-  Proof.
-    intros y ??. apply (Pos.add_no_neutral x y). rewrite Pos.add_comm.
-    by apply leibniz_equiv.
-  Qed.
-End positive.
-
-(** ** Product *)
-Section prod.
-  Context {A B : cmraT}.
-  Local Arguments pcore _ _ !_ /.
-  Local Arguments cmra_pcore _ !_/.
-
-  Instance prod_op : Op (A * B) := λ x y, (x.1 ⋅ y.1, x.2 ⋅ y.2).
-  Instance prod_pcore : PCore (A * B) := λ x,
-    c1 ← pcore (x.1); c2 ← pcore (x.2); Some (c1, c2).
-  Arguments prod_pcore !_ /.
-  Instance prod_valid : Valid (A * B) := λ x, ✓ x.1 ∧ ✓ x.2.
-  Instance prod_validN : ValidN (A * B) := λ n x, ✓{n} x.1 ∧ ✓{n} x.2.
-
-  Lemma prod_pcore_Some (x cx : A * B) :
-    pcore x = Some cx ↔ pcore (x.1) = Some (cx.1) ∧ pcore (x.2) = Some (cx.2).
-  Proof. destruct x, cx; by intuition simplify_option_eq. Qed.
-  Lemma prod_pcore_Some' (x cx : A * B) :
-    pcore x ≡ Some cx ↔ pcore (x.1) ≡ Some (cx.1) ∧ pcore (x.2) ≡ Some (cx.2).
-  Proof.
-    split; [by intros (cx'&[-> ->]%prod_pcore_Some&->)%equiv_Some_inv_r'|].
-    rewrite {3}/pcore /prod_pcore. (* TODO: use setoid rewrite *)
-    intros [Hx1 Hx2]; inversion_clear Hx1; simpl; inversion_clear Hx2.
-    by constructor.
-  Qed.
-
-  Lemma prod_included (x y : A * B) : x ≼ y ↔ x.1 ≼ y.1 ∧ x.2 ≼ y.2.
-  Proof.
-    split; [intros [z Hz]; split; [exists (z.1)|exists (z.2)]; apply Hz|].
-    intros [[z1 Hz1] [z2 Hz2]]; exists (z1,z2); split; auto.
-  Qed.
-  Lemma prod_includedN (x y : A * B) n : x ≼{n} y ↔ x.1 ≼{n} y.1 ∧ x.2 ≼{n} y.2.
-  Proof.
-    split; [intros [z Hz]; split; [exists (z.1)|exists (z.2)]; apply Hz|].
-    intros [[z1 Hz1] [z2 Hz2]]; exists (z1,z2); split; auto.
-  Qed.
-
-  Definition prod_cmra_mixin : CMRAMixin (A * B).
-  Proof.
-    split; try apply _.
-    - by intros n x y1 y2 [Hy1 Hy2]; split; rewrite /= ?Hy1 ?Hy2.
-    - intros n x y cx; setoid_rewrite prod_pcore_Some=> -[??] [??].
-      destruct (cmra_pcore_ne n (x.1) (y.1) (cx.1)) as (z1&->&?); auto.
-      destruct (cmra_pcore_ne n (x.2) (y.2) (cx.2)) as (z2&->&?); auto.
-      exists (z1,z2); repeat constructor; auto.
-    - by intros n y1 y2 [Hy1 Hy2] [??]; split; rewrite /= -?Hy1 -?Hy2.
-    - intros x; split.
-      + intros [??] n; split; by apply cmra_valid_validN.
-      + intros Hxy; split; apply cmra_valid_validN=> n; apply Hxy.
-    - by intros n x [??]; split; apply cmra_validN_S.
-    - by split; rewrite /= assoc.
-    - by split; rewrite /= comm.
-    - intros x y [??]%prod_pcore_Some;
-        constructor; simpl; eauto using cmra_pcore_l.
-    - intros x y; rewrite prod_pcore_Some prod_pcore_Some'.
-      naive_solver eauto using cmra_pcore_idemp.
-    - intros x y cx; rewrite prod_included prod_pcore_Some=> -[??] [??].
-      destruct (cmra_pcore_mono (x.1) (y.1) (cx.1)) as (z1&?&?); auto.
-      destruct (cmra_pcore_mono (x.2) (y.2) (cx.2)) as (z2&?&?); auto.
-      exists (z1,z2). by rewrite prod_included prod_pcore_Some.
-    - intros n x y [??]; split; simpl in *; eauto using cmra_validN_op_l.
-    - intros n x y1 y2 [??] [??]; simpl in *.
-      destruct (cmra_extend n (x.1) (y1.1) (y2.1)) as (z11&z12&?&?&?); auto.
-      destruct (cmra_extend n (x.2) (y1.2) (y2.2)) as (z21&z22&?&?&?); auto.
-      by exists (z11,z21), (z12,z22).
-  Qed.
-  Canonical Structure prodR := CMRAT (prod A B) prod_cmra_mixin.
-
-  Lemma pair_op (a a' : A) (b b' : B) : (a, b) ⋅ (a', b') = (a ⋅ a', b ⋅ b').
-  Proof. done. Qed.
-
-  Global Instance prod_cmra_total : CMRATotal A → CMRATotal B → CMRATotal prodR.
-  Proof.
-    intros H1 H2 [a b]. destruct (H1 a) as [ca ?], (H2 b) as [cb ?].
-    exists (ca,cb); by simplify_option_eq.
-  Qed.
-
-  Global Instance prod_cmra_discrete :
-    CMRADiscrete A → CMRADiscrete B → CMRADiscrete prodR.
-  Proof. split. apply _. by intros ? []; split; apply cmra_discrete_valid. Qed.
-
-  Global Instance pair_persistent x y :
-    Persistent x → Persistent y → Persistent (x,y).
-  Proof. by rewrite /Persistent prod_pcore_Some'. Qed.
-
-  Global Instance pair_exclusive_l x y : Exclusive x → Exclusive (x,y).
-  Proof. by intros ?[][?%exclusive0_l]. Qed.
-  Global Instance pair_exclusive_r x y : Exclusive y → Exclusive (x,y).
-  Proof. by intros ?[][??%exclusive0_l]. Qed.
-
-  Global Instance pair_cancelable x y :
-    Cancelable x → Cancelable y → Cancelable (x,y).
-  Proof. intros ???[][][][]. constructor; simpl in *; by eapply cancelableN. Qed.
-
-  Global Instance pair_id_free_l x y : IdFree x → IdFree (x,y).
-  Proof. move=>? [??] [? _] [/=? _]. eauto. Qed.
-  Global Instance pair_id_free_r x y : IdFree y → IdFree (x,y).
-  Proof. move=>? [??] [_ ?] [_ /=?]. eauto. Qed.
-End prod.
-
-Arguments prodR : clear implicits.
-
-Section prod_unit.
-  Context {A B : ucmraT}.
-
-  Instance prod_empty `{Empty A, Empty B} : Empty (A * B) := (∅, ∅).
-  Lemma prod_ucmra_mixin : UCMRAMixin (A * B).
-  Proof.
-    split.
-    - split; apply ucmra_unit_valid.
-    - by split; rewrite /=left_id.
-    - rewrite prod_pcore_Some'; split; apply (persistent _).
-  Qed.
-  Canonical Structure prodUR := UCMRAT (prod A B) prod_ucmra_mixin.
-
-  Lemma pair_split (x : A) (y : B) : (x, y) ≡ (x, ∅) ⋅ (∅, y).
-  Proof. by rewrite pair_op left_id right_id. Qed.
-
-  Lemma pair_split_L `{!LeibnizEquiv A, !LeibnizEquiv B} (x : A) (y : B) :
-    (x, y) = (x, ∅) ⋅ (∅, y).
-  Proof. unfold_leibniz. apply pair_split. Qed.
-End prod_unit.
-
-Arguments prodUR : clear implicits.
-
-Instance prod_map_cmra_morphism {A A' B B' : cmraT} (f : A → A') (g : B → B') :
-  CMRAMorphism f → CMRAMorphism g → CMRAMorphism (prod_map f g).
-Proof.
-  split; first apply _.
-  - by intros n x [??]; split; simpl; apply cmra_morphism_validN.
-  - intros x. etrans. apply (reflexivity (mbind _ _)).
-    etrans; last apply (reflexivity (_ <$> mbind _ _)). simpl.
-    assert (Hf := cmra_morphism_pcore f (x.1)).
-    destruct (pcore (f (x.1))), (pcore (x.1)); inversion_clear Hf=>//=.
-    assert (Hg := cmra_morphism_pcore g (x.2)).
-    destruct (pcore (g (x.2))), (pcore (x.2)); inversion_clear Hg=>//=.
-    by setoid_subst.
-  - intros. by rewrite /prod_map /= -!cmra_morphism_op.
-Qed.
-
-Program Definition prodRF (F1 F2 : rFunctor) : rFunctor := {|
-  rFunctor_car A B := prodR (rFunctor_car F1 A B) (rFunctor_car F2 A B);
-  rFunctor_map A1 A2 B1 B2 fg :=
-    prodC_map (rFunctor_map F1 fg) (rFunctor_map F2 fg)
-|}.
-Next Obligation.
-  intros F1 F2 A1 A2 B1 B2 n ???. by apply prodC_map_ne; apply rFunctor_ne.
-Qed.
-Next Obligation. by intros F1 F2 A B [??]; rewrite /= !rFunctor_id. Qed.
-Next Obligation.
-  intros F1 F2 A1 A2 A3 B1 B2 B3 f g f' g' [??]; simpl.
-  by rewrite !rFunctor_compose.
-Qed.
-Notation "F1 * F2" := (prodRF F1%RF F2%RF) : rFunctor_scope.
-
-Instance prodRF_contractive F1 F2 :
-  rFunctorContractive F1 → rFunctorContractive F2 →
-  rFunctorContractive (prodRF F1 F2).
-Proof.
-  intros ?? A1 A2 B1 B2 n ???;
-    by apply prodC_map_ne; apply rFunctor_contractive.
-Qed.
-
-Program Definition prodURF (F1 F2 : urFunctor) : urFunctor := {|
-  urFunctor_car A B := prodUR (urFunctor_car F1 A B) (urFunctor_car F2 A B);
-  urFunctor_map A1 A2 B1 B2 fg :=
-    prodC_map (urFunctor_map F1 fg) (urFunctor_map F2 fg)
-|}.
-Next Obligation.
-  intros F1 F2 A1 A2 B1 B2 n ???. by apply prodC_map_ne; apply urFunctor_ne.
-Qed.
-Next Obligation. by intros F1 F2 A B [??]; rewrite /= !urFunctor_id. Qed.
-Next Obligation.
-  intros F1 F2 A1 A2 A3 B1 B2 B3 f g f' g' [??]; simpl.
-  by rewrite !urFunctor_compose.
-Qed.
-Notation "F1 * F2" := (prodURF F1%URF F2%URF) : urFunctor_scope.
-
-Instance prodURF_contractive F1 F2 :
-  urFunctorContractive F1 → urFunctorContractive F2 →
-  urFunctorContractive (prodURF F1 F2).
-Proof.
-  intros ?? A1 A2 B1 B2 n ???;
-    by apply prodC_map_ne; apply urFunctor_contractive.
-Qed.
-
-(** ** CMRA for the option type *)
-Section option.
-  Context {A : cmraT}.
-  Local Arguments core _ _ !_ /.
-  Local Arguments pcore _ _ !_ /.
-
-  Instance option_valid : Valid (option A) := λ mx,
-    match mx with Some x => ✓ x | None => True end.
-  Instance option_validN : ValidN (option A) := λ n mx,
-    match mx with Some x => ✓{n} x | None => True end.
-  Instance option_pcore : PCore (option A) := λ mx, Some (mx ≫= pcore).
-  Arguments option_pcore !_ /.
-  Instance option_op : Op (option A) := union_with (λ x y, Some (x ⋅ y)).
-
-  Definition Some_valid a : ✓ Some a ↔ ✓ a := reflexivity _.
-  Definition Some_validN a n : ✓{n} Some a ↔ ✓{n} a := reflexivity _.
-  Definition Some_op a b : Some (a ⋅ b) = Some a ⋅ Some b := eq_refl.
-  Lemma Some_core `{CMRATotal A} a : Some (core a) = core (Some a).
-  Proof. rewrite /core /=. by destruct (cmra_total a) as [? ->]. Qed.
-  Lemma Some_op_opM x my : Some x ⋅ my = Some (x ⋅? my).
-  Proof. by destruct my. Qed.
-
-  Lemma option_included (mx my : option A) :
-    mx ≼ my ↔ mx = None ∨ ∃ x y, mx = Some x ∧ my = Some y ∧ (x ≡ y ∨ x ≼ y).
-  Proof.
-    split.
-    - intros [mz Hmz].
-      destruct mx as [x|]; [right|by left].
-      destruct my as [y|]; [exists x, y|destruct mz; inversion_clear Hmz].
-      destruct mz as [z|]; inversion_clear Hmz; split_and?; auto;
-        setoid_subst; eauto using cmra_included_l.
-    - intros [->|(x&y&->&->&[Hz|[z Hz]])].
-      + exists my. by destruct my.
-      + exists None; by constructor.
-      + exists (Some z); by constructor.
-  Qed.
-
-  Lemma option_includedN n (mx my : option A) :
-    mx ≼{n} my ↔ mx = None ∨ ∃ x y, mx = Some x ∧ my = Some y ∧ (x ≡{n}≡ y ∨ x ≼{n} y).
-  Proof.
-    split.
-    - intros [mz Hmz].
-      destruct mx as [x|]; [right|by left].
-      destruct my as [y|]; [exists x, y|destruct mz; inversion_clear Hmz].
-      destruct mz as [z|]; inversion_clear Hmz; split_and?; auto;
-        ofe_subst; eauto using cmra_includedN_l.
-    - intros [->|(x&y&->&->&[Hz|[z Hz]])].
-      + exists my. by destruct my.
-      + exists None; by constructor.
-      + exists (Some z); by constructor.
-  Qed.
-
-  Lemma option_cmra_mixin : CMRAMixin (option A).
-  Proof.
-    apply cmra_total_mixin.
-    - eauto.
-    - by intros [x|] n; destruct 1; constructor; ofe_subst.
-    - destruct 1; by ofe_subst.
-    - by destruct 1; rewrite /validN /option_validN //=; ofe_subst.
-    - intros [x|]; [apply cmra_valid_validN|done].
-    - intros n [x|]; unfold validN, option_validN; eauto using cmra_validN_S.
-    - intros [x|] [y|] [z|]; constructor; rewrite ?assoc; auto.
-    - intros [x|] [y|]; constructor; rewrite 1?comm; auto.
-    - intros [x|]; simpl; auto.
-      destruct (pcore x) as [cx|] eqn:?; constructor; eauto using cmra_pcore_l.
-    - intros [x|]; simpl; auto.
-      destruct (pcore x) as [cx|] eqn:?; simpl; eauto using cmra_pcore_idemp.
-    - intros mx my; setoid_rewrite option_included.
-      intros [->|(x&y&->&->&[?|?])]; simpl; eauto.
-      + destruct (pcore x) as [cx|] eqn:?; eauto.
-        destruct (cmra_pcore_proper x y cx) as (?&?&?); eauto 10.
-      + destruct (pcore x) as [cx|] eqn:?; eauto.
-        destruct (cmra_pcore_mono x y cx) as (?&?&?); eauto 10.
-    - intros n [x|] [y|]; rewrite /validN /option_validN /=;
-        eauto using cmra_validN_op_l.
-    - intros n mx my1 my2.
-      destruct mx as [x|], my1 as [y1|], my2 as [y2|]; intros Hx Hx';
-        inversion_clear Hx'; auto.
-      + destruct (cmra_extend n x y1 y2) as (z1&z2&?&?&?); auto.
-        by exists (Some z1), (Some z2); repeat constructor.
-      + by exists (Some x), None; repeat constructor.
-      + by exists None, (Some x); repeat constructor.
-      + exists None, None; repeat constructor.
-  Qed.
-  Canonical Structure optionR := CMRAT (option A) option_cmra_mixin.
-
-  Global Instance option_cmra_discrete : CMRADiscrete A → CMRADiscrete optionR.
-  Proof. split; [apply _|]. by intros [x|]; [apply (cmra_discrete_valid x)|]. Qed.
-
-  Instance option_empty : Empty (option A) := None.
-  Lemma option_ucmra_mixin : UCMRAMixin optionR.
-  Proof. split. done. by intros []. done. Qed.
-  Canonical Structure optionUR := UCMRAT (option A) option_ucmra_mixin.
-
-  (** Misc *)
-  Lemma op_None mx my : mx ⋅ my = None ↔ mx = None ∧ my = None.
-  Proof. destruct mx, my; naive_solver. Qed.
-  Lemma op_is_Some mx my : is_Some (mx ⋅ my) ↔ is_Some mx ∨ is_Some my.
-  Proof. rewrite -!not_eq_None_Some op_None. destruct mx, my; naive_solver. Qed.
-
-  Global Instance Some_persistent (x : A) : Persistent x → Persistent (Some x).
-  Proof. by constructor. Qed.
-  Global Instance option_persistent (mx : option A) :
-    (∀ x : A, Persistent x) → Persistent mx.
-  Proof. intros. destruct mx; apply _. Qed.
-
-  Lemma exclusiveN_Some_l n x `{!Exclusive x} my :
-    ✓{n} (Some x ⋅ my) → my = None.
-  Proof. destruct my. move=> /(exclusiveN_l _ x) []. done. Qed.
-  Lemma exclusiveN_Some_r n x `{!Exclusive x} my :
-    ✓{n} (my ⋅ Some x) → my = None.
-  Proof. rewrite comm. by apply exclusiveN_Some_l. Qed.
-
-  Lemma exclusive_Some_l x `{!Exclusive x} my : ✓ (Some x ⋅ my) → my = None.
-  Proof. destruct my. move=> /(exclusive_l x) []. done. Qed.
-  Lemma exclusive_Some_r x `{!Exclusive x} my : ✓ (my ⋅ Some x) → my = None.
-  Proof. rewrite comm. by apply exclusive_Some_l. Qed.
-
-  Lemma Some_includedN n x y : Some x ≼{n} Some y ↔ x ≡{n}≡ y ∨ x ≼{n} y.
-  Proof. rewrite option_includedN; naive_solver. Qed.
-  Lemma Some_included x y : Some x ≼ Some y ↔ x ≡ y ∨ x ≼ y.
-  Proof. rewrite option_included; naive_solver. Qed.
-  Lemma Some_included_2 x y : x ≼ y → Some x ≼ Some y.
-  Proof. rewrite Some_included; eauto. Qed.
-
-  Lemma Some_includedN_total `{CMRATotal A} n x y : Some x ≼{n} Some y ↔ x ≼{n} y.
-  Proof. rewrite Some_includedN. split. by intros [->|?]. eauto. Qed.
-  Lemma Some_included_total `{CMRATotal A} x y : Some x ≼ Some y ↔ x ≼ y.
-  Proof. rewrite Some_included. split. by intros [->|?]. eauto. Qed.
-
-  Lemma Some_includedN_exclusive n x `{!Exclusive x} y :
-    Some x ≼{n} Some y → ✓{n} y → x ≡{n}≡ y.
-  Proof. move=> /Some_includedN [//|/exclusive_includedN]; tauto. Qed.
-  Lemma Some_included_exclusive x `{!Exclusive x} y :
-    Some x ≼ Some y → ✓ y → x ≡ y.
-  Proof. move=> /Some_included [//|/exclusive_included]; tauto. Qed.
-
-  Lemma is_Some_includedN n mx my : mx ≼{n} my → is_Some mx → is_Some my.
-  Proof. rewrite -!not_eq_None_Some option_includedN. naive_solver. Qed.
-  Lemma is_Some_included mx my : mx ≼ my → is_Some mx → is_Some my.
-  Proof. rewrite -!not_eq_None_Some option_included. naive_solver. Qed.
-
-  Global Instance cancelable_Some x :
-    IdFree x → Cancelable x → Cancelable (Some x).
-  Proof.
-    intros Hirr ?? [y|] [z|] ? EQ; inversion_clear EQ.
-    - constructor. by apply (cancelableN x).
-    - destruct (Hirr y); [|eauto using dist_le with lia].
-      by eapply (cmra_validN_op_l 0 x y), (cmra_validN_le n); last lia.
-    - destruct (Hirr z); [|symmetry; eauto using dist_le with lia].
-      by eapply (cmra_validN_le n); last lia.
-    - done.
-  Qed.
-End option.
-
-Arguments optionR : clear implicits.
-Arguments optionUR : clear implicits.
-
-Section option_prod.
-  Context {A B : cmraT}.
-
-  Lemma Some_pair_includedN n (x1 x2 : A) (y1 y2 : B) :
-    Some (x1,y1) ≼{n} Some (x2,y2) → Some x1 ≼{n} Some x2 ∧ Some y1 ≼{n} Some y2.
-  Proof. rewrite !Some_includedN. intros [[??]|[??]%prod_includedN]; eauto. Qed.
-  Lemma Some_pair_includedN_total_1 `{CMRATotal A} n (x1 x2 : A) (y1 y2 : B) :
-    Some (x1,y1) ≼{n} Some (x2,y2) → x1 ≼{n} x2 ∧ Some y1 ≼{n} Some y2.
-  Proof. intros ?%Some_pair_includedN. by rewrite -(Some_includedN_total _ x1). Qed.
-  Lemma Some_pair_includedN_total_2 `{CMRATotal B} n (x1 x2 : A) (y1 y2 : B) :
-    Some (x1,y1) ≼{n} Some (x2,y2) → Some x1 ≼{n} Some x2 ∧ y1 ≼{n} y2.
-  Proof. intros ?%Some_pair_includedN. by rewrite -(Some_includedN_total _ y1). Qed.
-
-  Lemma Some_pair_included (x1 x2 : A) (y1 y2 : B) :
-    Some (x1,y1) ≼ Some (x2,y2) → Some x1 ≼ Some x2 ∧ Some y1 ≼ Some y2.
-  Proof. rewrite !Some_included. intros [[??]|[??]%prod_included]; eauto. Qed.
-  Lemma Some_pair_included_total_1 `{CMRATotal A} (x1 x2 : A) (y1 y2 : B) :
-    Some (x1,y1) ≼ Some (x2,y2) → x1 ≼ x2 ∧ Some y1 ≼ Some y2.
-  Proof. intros ?%Some_pair_included. by rewrite -(Some_included_total x1). Qed.
-  Lemma Some_pair_included_total_2 `{CMRATotal B} (x1 x2 : A) (y1 y2 : B) :
-    Some (x1,y1) ≼ Some (x2,y2) → Some x1 ≼ Some x2 ∧ y1 ≼ y2.
-  Proof. intros ?%Some_pair_included. by rewrite -(Some_included_total y1). Qed.
-End option_prod.
-
-Instance option_fmap_cmra_morphism {A B : cmraT} (f: A → B) `{!CMRAMorphism f} :
-  CMRAMorphism (fmap f : option A → option B).
-Proof.
-  split; first apply _.
-  - intros n [x|] ?; rewrite /cmra_validN //=. by apply (cmra_morphism_validN f).
-  - move=> [x|] //. by apply Some_proper, cmra_morphism_pcore.
-  - move=> [x|] [y|] //=. by rewrite -(cmra_morphism_op f).
-Qed.
-
-Program Definition optionRF (F : rFunctor) : rFunctor := {|
-  rFunctor_car A B := optionR (rFunctor_car F A B);
-  rFunctor_map A1 A2 B1 B2 fg := optionC_map (rFunctor_map F fg)
-|}.
-Next Obligation.
-  by intros F A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, rFunctor_ne.
-Qed.
-Next Obligation.
-  intros F A B x. rewrite /= -{2}(option_fmap_id x).
-  apply option_fmap_equiv_ext=>y; apply rFunctor_id.
-Qed.
-Next Obligation.
-  intros F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -option_fmap_compose.
-  apply option_fmap_equiv_ext=>y; apply rFunctor_compose.
-Qed.
-
-Instance optionRF_contractive F :
-  rFunctorContractive F → rFunctorContractive (optionRF F).
-Proof.
-  by intros ? A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, rFunctor_contractive.
-Qed.
-
-Program Definition optionURF (F : rFunctor) : urFunctor := {|
-  urFunctor_car A B := optionUR (rFunctor_car F A B);
-  urFunctor_map A1 A2 B1 B2 fg := optionC_map (rFunctor_map F fg)
-|}.
-Next Obligation.
-  by intros F A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, rFunctor_ne.
-Qed.
-Next Obligation.
-  intros F A B x. rewrite /= -{2}(option_fmap_id x).
-  apply option_fmap_equiv_ext=>y; apply rFunctor_id.
-Qed.
-Next Obligation.
-  intros F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -option_fmap_compose.
-  apply option_fmap_equiv_ext=>y; apply rFunctor_compose.
-Qed.
-
-Instance optionURF_contractive F :
-  rFunctorContractive F → urFunctorContractive (optionURF F).
-Proof.
-  by intros ? A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, rFunctor_contractive.
-Qed.
+(* (** * Instances *) *)
+(* (** ** Discrete CMRA *) *)
+(* Record RAMixin A `{Equiv A, PCore A, Op A, Valid A} := { *)
+(*   (* setoids *) *)
+(*   ra_op_proper (x : A) : Proper ((≡) ==> (≡)) (op x); *)
+(*   ra_core_proper x y cx : *)
+(*     x ≡ y → pcore x = Some cx → ∃ cy, pcore y = Some cy ∧ cx ≡ cy; *)
+(*   ra_validN_proper : Proper ((≡) ==> impl) valid; *)
+(*   (* monoid *) *)
+(*   ra_assoc : Assoc (≡) (⋅); *)
+(*   ra_comm : Comm (≡) (⋅); *)
+(*   ra_pcore_l x cx : pcore x = Some cx → cx ⋅ x ≡ x; *)
+(*   ra_pcore_idemp x cx : pcore x = Some cx → pcore cx ≡ Some cx; *)
+(*   ra_pcore_mono x y cx : *)
+(*     x ≼ y → pcore x = Some cx → ∃ cy, pcore y = Some cy ∧ cx ≼ cy; *)
+(*   ra_valid_op_l x y : ✓ (x ⋅ y) → ✓ x *)
+(* }. *)
+
+(* Section discrete. *)
+(*   Local Set Default Proof Using "Type*". *)
+(*   Context `{Equiv A, PCore A, Op A, Valid A} (Heq : @Equivalence A (≡)). *)
+(*   Context (ra_mix : RAMixin A). *)
+(*   Existing Instances discrete_dist. *)
+
+(*   Instance discrete_validN : ValidN A := λ n x, ✓ x. *)
+(*   Definition discrete_cmra_mixin : CMRAMixin A. *)
+(*   Proof. *)
+(*     destruct ra_mix; split; try done. *)
+(*     - intros x; split; first done. by move=> /(_ 0). *)
+(*     - intros n x y1 y2 ??; by exists y1, y2. *)
+(*   Qed. *)
+
+(*   Instance discrete_cmra_discrete : *)
+(*     CMRADiscrete (CMRAT' A (discrete_ofe_mixin Heq) discrete_cmra_mixin A). *)
+(*   Proof. split. apply _. done. Qed. *)
+(* End discrete. *)
+
+(* (** A smart constructor for the discrete RA over a carrier [A]. It uses *)
+(* [discrete_ofe_equivalence_of A] to make sure the same [Equivalence] proof is *)
+(* used as when constructing the OFE. *) *)
+(* Notation discreteR A ra_mix := *)
+(*   (CMRAT A (discrete_cmra_mixin (discrete_ofe_equivalence_of A%type) ra_mix)) *)
+(*   (only parsing). *)
+
+(* Section ra_total. *)
+(*   Local Set Default Proof Using "Type*". *)
+(*   Context A `{Equiv A, PCore A, Op A, Valid A}. *)
+(*   Context (total : ∀ x, is_Some (pcore x)). *)
+(*   Context (op_proper : ∀ (x : A), Proper ((≡) ==> (≡)) (op x)). *)
+(*   Context (core_proper: Proper ((≡) ==> (≡)) (@core A _)). *)
+(*   Context (valid_proper : Proper ((≡) ==> impl) (@valid A _)). *)
+(*   Context (op_assoc : Assoc (≡) (@op A _)). *)
+(*   Context (op_comm : Comm (≡) (@op A _)). *)
+(*   Context (core_l : ∀ x : A, core x ⋅ x ≡ x). *)
+(*   Context (core_idemp : ∀ x : A, core (core x) ≡ core x). *)
+(*   Context (core_mono : ∀ x y : A, x ≼ y → core x ≼ core y). *)
+(*   Context (valid_op_l : ∀ x y : A, ✓ (x ⋅ y) → ✓ x). *)
+(*   Lemma ra_total_mixin : RAMixin A. *)
+(*   Proof. *)
+(*     split; auto. *)
+(*     - intros x y ? Hcx%core_proper Hx; move: Hcx. rewrite /core /= Hx /=. *)
+(*       case (total y)=> [cy ->]; eauto. *)
+(*     - intros x cx Hcx. move: (core_l x). by rewrite /core /= Hcx. *)
+(*     - intros x cx Hcx. move: (core_idemp x). rewrite /core /= Hcx /=. *)
+(*       case (total cx)=>[ccx ->]; by constructor. *)
+(*     - intros x y cx Hxy%core_mono Hx. move: Hxy. *)
+(*       rewrite /core /= Hx /=. case (total y)=> [cy ->]; eauto. *)
+(*   Qed. *)
+(* End ra_total. *)
+
+(* (** ** CMRA for the unit type *) *)
+(* Section unit. *)
+(*   Instance unit_valid : Valid () := λ x, True. *)
+(*   Instance unit_validN : ValidN () := λ n x, True. *)
+(*   Instance unit_pcore : PCore () := λ x, Some x. *)
+(*   Instance unit_op : Op () := λ x y, (). *)
+(*   Lemma unit_cmra_mixin : CMRAMixin (). *)
+(*   Proof. apply discrete_cmra_mixin, ra_total_mixin; by eauto. Qed. *)
+(*   Canonical Structure unitR : cmraT := CMRAT unit unit_cmra_mixin. *)
+
+(*   Instance unit_empty : Empty () := (). *)
+(*   Lemma unit_ucmra_mixin : UCMRAMixin (). *)
+(*   Proof. done. Qed. *)
+(*   Canonical Structure unitUR : ucmraT := UCMRAT unit unit_ucmra_mixin. *)
+
+(*   Global Instance unit_cmra_discrete : CMRADiscrete unitR. *)
+(*   Proof. done. Qed. *)
+(*   Global Instance unit_persistent (x : ()) : Persistent x. *)
+(*   Proof. by constructor. Qed. *)
+(*   Global Instance unit_cancelable (x : ()) : Cancelable x. *)
+(*   Proof. by constructor. Qed. *)
+(* End unit. *)
+
+(* (** ** Natural numbers *) *)
+(* Section nat. *)
+(*   Instance nat_valid : Valid nat := λ x, True. *)
+(*   Instance nat_validN : ValidN nat := λ n x, True. *)
+(*   Instance nat_pcore : PCore nat := λ x, Some 0. *)
+(*   Instance nat_op : Op nat := plus. *)
+(*   Definition nat_op_plus x y : x ⋅ y = x + y := eq_refl. *)
+(*   Lemma nat_included (x y : nat) : x ≼ y ↔ x ≤ y. *)
+(*   Proof. by rewrite nat_le_sum. Qed. *)
+(*   Lemma nat_ra_mixin : RAMixin nat. *)
+(*   Proof. *)
+(*     apply ra_total_mixin; try by eauto. *)
+(*     - solve_proper. *)
+(*     - intros x y z. apply Nat.add_assoc. *)
+(*     - intros x y. apply Nat.add_comm. *)
+(*     - by exists 0. *)
+(*   Qed. *)
+(*   Canonical Structure natR : cmraT := discreteR nat nat_ra_mixin. *)
+
+(*   Global Instance nat_cmra_discrete : CMRADiscrete natR. *)
+(*   Proof. apply discrete_cmra_discrete. Qed. *)
+
+(*   Instance nat_empty : Empty nat := 0. *)
+(*   Lemma nat_ucmra_mixin : UCMRAMixin nat. *)
+(*   Proof. split; apply _ || done. Qed. *)
+(*   Canonical Structure natUR : ucmraT := UCMRAT nat nat_ucmra_mixin. *)
+
+(*   Global Instance nat_cancelable (x : nat) : Cancelable x. *)
+(*   Proof. by intros ???? ?%Nat.add_cancel_l. Qed. *)
+(* End nat. *)
+
+(* Definition mnat := nat. *)
+
+(* Section mnat. *)
+(*   Instance mnat_valid : Valid mnat := λ x, True. *)
+(*   Instance mnat_validN : ValidN mnat := λ n x, True. *)
+(*   Instance mnat_pcore : PCore mnat := Some. *)
+(*   Instance mnat_op : Op mnat := Nat.max. *)
+(*   Definition mnat_op_max x y : x ⋅ y = x `max` y := eq_refl. *)
+(*   Lemma mnat_included (x y : mnat) : x ≼ y ↔ x ≤ y. *)
+(*   Proof. *)
+(*     split. *)
+(*     - intros [z ->]; unfold op, mnat_op; lia. *)
+(*     - exists y. by symmetry; apply Nat.max_r. *)
+(*   Qed. *)
+(*   Lemma mnat_ra_mixin : RAMixin mnat. *)
+(*   Proof. *)
+(*     apply ra_total_mixin; try by eauto. *)
+(*     - solve_proper. *)
+(*     - solve_proper. *)
+(*     - intros x y z. apply Nat.max_assoc. *)
+(*     - intros x y. apply Nat.max_comm. *)
+(*     - intros x. apply Max.max_idempotent. *)
+(*   Qed. *)
+(*   Canonical Structure mnatR : cmraT := discreteR mnat mnat_ra_mixin. *)
+
+(*   Global Instance mnat_cmra_discrete : CMRADiscrete mnatR. *)
+(*   Proof. apply discrete_cmra_discrete. Qed. *)
+
+(*   Instance mnat_empty : Empty mnat := 0. *)
+(*   Lemma mnat_ucmra_mixin : UCMRAMixin mnat. *)
+(*   Proof. split; apply _ || done. Qed. *)
+(*   Canonical Structure mnatUR : ucmraT := UCMRAT mnat mnat_ucmra_mixin. *)
+
+(*   Global Instance mnat_persistent (x : mnat) : Persistent x. *)
+(*   Proof. by constructor. Qed. *)
+(* End mnat. *)
+
+(* (** ** Positive integers. *) *)
+(* Section positive. *)
+(*   Instance pos_valid : Valid positive := λ x, True. *)
+(*   Instance pos_validN : ValidN positive := λ n x, True. *)
+(*   Instance pos_pcore : PCore positive := λ x, None. *)
+(*   Instance pos_op : Op positive := Pos.add. *)
+(*   Definition pos_op_plus x y : x ⋅ y = (x + y)%positive := eq_refl. *)
+(*   Lemma pos_included (x y : positive) : x ≼ y ↔ (x < y)%positive. *)
+(*   Proof. by rewrite Plt_sum. Qed. *)
+(*   Lemma pos_ra_mixin : RAMixin positive. *)
+(*   Proof. *)
+(*     split; try by eauto. *)
+(*     - by intros ??? ->. *)
+(*     - intros ???. apply Pos.add_assoc. *)
+(*     - intros ??. apply Pos.add_comm. *)
+(*   Qed. *)
+(*   Canonical Structure positiveR : cmraT := discreteR positive pos_ra_mixin. *)
+
+(*   Global Instance pos_cmra_discrete : CMRADiscrete positiveR. *)
+(*   Proof. apply discrete_cmra_discrete. Qed. *)
+
+(*   Global Instance pos_cancelable (x : positive) : Cancelable x. *)
+(*   Proof. intros n y z ??. by eapply Pos.add_reg_l, leibniz_equiv. Qed. *)
+(*   Global Instance pos_id_free (x : positive) : IdFree x. *)
+(*   Proof. *)
+(*     intros y ??. apply (Pos.add_no_neutral x y). rewrite Pos.add_comm. *)
+(*     by apply leibniz_equiv. *)
+(*   Qed. *)
+(* End positive. *)
+
+(* (** ** Product *) *)
+(* Section prod. *)
+(*   Context {A B : cmraT}. *)
+(*   Local Arguments pcore _ _ !_ /. *)
+(*   Local Arguments cmra_pcore _ !_/. *)
+
+(*   Instance prod_op : Op (A * B) := λ x y, (x.1 ⋅ y.1, x.2 ⋅ y.2). *)
+(*   Instance prod_pcore : PCore (A * B) := λ x, *)
+(*     c1 ← pcore (x.1); c2 ← pcore (x.2); Some (c1, c2). *)
+(*   Arguments prod_pcore !_ /. *)
+(*   Instance prod_valid : Valid (A * B) := λ x, ✓ x.1 ∧ ✓ x.2. *)
+(*   Instance prod_validN : ValidN (A * B) := λ n x, ✓{n} x.1 ∧ ✓{n} x.2. *)
+
+(*   Lemma prod_pcore_Some (x cx : A * B) : *)
+(*     pcore x = Some cx ↔ pcore (x.1) = Some (cx.1) ∧ pcore (x.2) = Some (cx.2). *)
+(*   Proof. destruct x, cx; by intuition simplify_option_eq. Qed. *)
+(*   Lemma prod_pcore_Some' (x cx : A * B) : *)
+(*     pcore x ≡ Some cx ↔ pcore (x.1) ≡ Some (cx.1) ∧ pcore (x.2) ≡ Some (cx.2). *)
+(*   Proof. *)
+(*     split; [by intros (cx'&[-> ->]%prod_pcore_Some&->)%equiv_Some_inv_r'|]. *)
+(*     rewrite {3}/pcore /prod_pcore. (* TODO: use setoid rewrite *) *)
+(*     intros [Hx1 Hx2]; inversion_clear Hx1; simpl; inversion_clear Hx2. *)
+(*     by constructor. *)
+(*   Qed. *)
+
+(*   Lemma prod_included (x y : A * B) : x ≼ y ↔ x.1 ≼ y.1 ∧ x.2 ≼ y.2. *)
+(*   Proof. *)
+(*     split; [intros [z Hz]; split; [exists (z.1)|exists (z.2)]; apply Hz|]. *)
+(*     intros [[z1 Hz1] [z2 Hz2]]; exists (z1,z2); split; auto. *)
+(*   Qed. *)
+(*   Lemma prod_includedN (x y : A * B) n : x ≼{n} y ↔ x.1 ≼{n} y.1 ∧ x.2 ≼{n} y.2. *)
+(*   Proof. *)
+(*     split; [intros [z Hz]; split; [exists (z.1)|exists (z.2)]; apply Hz|]. *)
+(*     intros [[z1 Hz1] [z2 Hz2]]; exists (z1,z2); split; auto. *)
+(*   Qed. *)
+
+(*   Definition prod_cmra_mixin : CMRAMixin (A * B). *)
+(*   Proof. *)
+(*     split; try apply _. *)
+(*     - by intros n x y1 y2 [Hy1 Hy2]; split; rewrite /= ?Hy1 ?Hy2. *)
+(*     - intros n x y cx; setoid_rewrite prod_pcore_Some=> -[??] [??]. *)
+(*       destruct (cmra_pcore_ne n (x.1) (y.1) (cx.1)) as (z1&->&?); auto. *)
+(*       destruct (cmra_pcore_ne n (x.2) (y.2) (cx.2)) as (z2&->&?); auto. *)
+(*       exists (z1,z2); repeat constructor; auto. *)
+(*     - by intros n y1 y2 [Hy1 Hy2] [??]; split; rewrite /= -?Hy1 -?Hy2. *)
+(*     - intros x; split. *)
+(*       + intros [??] n; split; by apply cmra_valid_validN. *)
+(*       + intros Hxy; split; apply cmra_valid_validN=> n; apply Hxy. *)
+(*     - by intros n x [??]; split; apply cmra_validN_S. *)
+(*     - by split; rewrite /= assoc. *)
+(*     - by split; rewrite /= comm. *)
+(*     - intros x y [??]%prod_pcore_Some; *)
+(*         constructor; simpl; eauto using cmra_pcore_l. *)
+(*     - intros x y; rewrite prod_pcore_Some prod_pcore_Some'. *)
+(*       naive_solver eauto using cmra_pcore_idemp. *)
+(*     - intros x y cx; rewrite prod_included prod_pcore_Some=> -[??] [??]. *)
+(*       destruct (cmra_pcore_mono (x.1) (y.1) (cx.1)) as (z1&?&?); auto. *)
+(*       destruct (cmra_pcore_mono (x.2) (y.2) (cx.2)) as (z2&?&?); auto. *)
+(*       exists (z1,z2). by rewrite prod_included prod_pcore_Some. *)
+(*     - intros n x y [??]; split; simpl in *; eauto using cmra_validN_op_l. *)
+(*     - intros n x y1 y2 [??] [??]; simpl in *. *)
+(*       destruct (cmra_extend n (x.1) (y1.1) (y2.1)) as (z11&z12&?&?&?); auto. *)
+(*       destruct (cmra_extend n (x.2) (y1.2) (y2.2)) as (z21&z22&?&?&?); auto. *)
+(*       by exists (z11,z21), (z12,z22). *)
+(*   Qed. *)
+(*   Canonical Structure prodR := CMRAT (prod A B) prod_cmra_mixin. *)
+
+(*   Lemma pair_op (a a' : A) (b b' : B) : (a, b) ⋅ (a', b') = (a ⋅ a', b ⋅ b'). *)
+(*   Proof. done. Qed. *)
+
+(*   Global Instance prod_cmra_total : CMRATotal A → CMRATotal B → CMRATotal prodR. *)
+(*   Proof. *)
+(*     intros H1 H2 [a b]. destruct (H1 a) as [ca ?], (H2 b) as [cb ?]. *)
+(*     exists (ca,cb); by simplify_option_eq. *)
+(*   Qed. *)
+
+(*   Global Instance prod_cmra_discrete : *)
+(*     CMRADiscrete A → CMRADiscrete B → CMRADiscrete prodR. *)
+(*   Proof. split. apply _. by intros ? []; split; apply cmra_discrete_valid. Qed. *)
+
+(*   Global Instance pair_persistent x y : *)
+(*     Persistent x → Persistent y → Persistent (x,y). *)
+(*   Proof. by rewrite /Persistent prod_pcore_Some'. Qed. *)
+
+(*   Global Instance pair_exclusive_l x y : Exclusive x → Exclusive (x,y). *)
+(*   Proof. by intros ?[][?%exclusive0_l]. Qed. *)
+(*   Global Instance pair_exclusive_r x y : Exclusive y → Exclusive (x,y). *)
+(*   Proof. by intros ?[][??%exclusive0_l]. Qed. *)
+
+(*   Global Instance pair_cancelable x y : *)
+(*     Cancelable x → Cancelable y → Cancelable (x,y). *)
+(*   Proof. intros ???[][][][]. constructor; simpl in *; by eapply cancelableN. Qed. *)
+
+(*   Global Instance pair_id_free_l x y : IdFree x → IdFree (x,y). *)
+(*   Proof. move=>? [??] [? _] [/=? _]. eauto. Qed. *)
+(*   Global Instance pair_id_free_r x y : IdFree y → IdFree (x,y). *)
+(*   Proof. move=>? [??] [_ ?] [_ /=?]. eauto. Qed. *)
+(* End prod. *)
+
+(* Arguments prodR : clear implicits. *)
+
+(* Section prod_unit. *)
+(*   Context {A B : ucmraT}. *)
+
+(*   Instance prod_empty `{Empty A, Empty B} : Empty (A * B) := (∅, ∅). *)
+(*   Lemma prod_ucmra_mixin : UCMRAMixin (A * B). *)
+(*   Proof. *)
+(*     split. *)
+(*     - split; apply ucmra_unit_valid. *)
+(*     - by split; rewrite /=left_id. *)
+(*     - rewrite prod_pcore_Some'; split; apply (persistent _). *)
+(*   Qed. *)
+(*   Canonical Structure prodUR := UCMRAT (prod A B) prod_ucmra_mixin. *)
+
+(*   Lemma pair_split (x : A) (y : B) : (x, y) ≡ (x, ∅) ⋅ (∅, y). *)
+(*   Proof. by rewrite pair_op left_id right_id. Qed. *)
+
+(*   Lemma pair_split_L `{!LeibnizEquiv A, !LeibnizEquiv B} (x : A) (y : B) : *)
+(*     (x, y) = (x, ∅) ⋅ (∅, y). *)
+(*   Proof. unfold_leibniz. apply pair_split. Qed. *)
+(* End prod_unit. *)
+
+(* Arguments prodUR : clear implicits. *)
+
+(* Instance prod_map_cmra_morphism {A A' B B' : cmraT} (f : A → A') (g : B → B') : *)
+(*   CMRAMorphism f → CMRAMorphism g → CMRAMorphism (prod_map f g). *)
+(* Proof. *)
+(*   split; first apply _. *)
+(*   - by intros n x [??]; split; simpl; apply cmra_morphism_validN. *)
+(*   - intros x. etrans. apply (reflexivity (mbind _ _)). *)
+(*     etrans; last apply (reflexivity (_ <$> mbind _ _)). simpl. *)
+(*     assert (Hf := cmra_morphism_pcore f (x.1)). *)
+(*     destruct (pcore (f (x.1))), (pcore (x.1)); inversion_clear Hf=>//=. *)
+(*     assert (Hg := cmra_morphism_pcore g (x.2)). *)
+(*     destruct (pcore (g (x.2))), (pcore (x.2)); inversion_clear Hg=>//=. *)
+(*     by setoid_subst. *)
+(*   - intros. by rewrite /prod_map /= -!cmra_morphism_op. *)
+(* Qed. *)
+
+(* Program Definition prodRF (F1 F2 : rFunctor) : rFunctor := {| *)
+(*   rFunctor_car A B := prodR (rFunctor_car F1 A B) (rFunctor_car F2 A B); *)
+(*   rFunctor_map A1 A2 B1 B2 fg := *)
+(*     prodC_map (rFunctor_map F1 fg) (rFunctor_map F2 fg) *)
+(* |}. *)
+(* Next Obligation. *)
+(*   intros F1 F2 A1 A2 B1 B2 n ???. by apply prodC_map_ne; apply rFunctor_ne. *)
+(* Qed. *)
+(* Next Obligation. by intros F1 F2 A B [??]; rewrite /= !rFunctor_id. Qed. *)
+(* Next Obligation. *)
+(*   intros F1 F2 A1 A2 A3 B1 B2 B3 f g f' g' [??]; simpl. *)
+(*   by rewrite !rFunctor_compose. *)
+(* Qed. *)
+(* Notation "F1 * F2" := (prodRF F1%RF F2%RF) : rFunctor_scope. *)
+
+(* Instance prodRF_contractive F1 F2 : *)
+(*   rFunctorContractive F1 → rFunctorContractive F2 → *)
+(*   rFunctorContractive (prodRF F1 F2). *)
+(* Proof. *)
+(*   intros ?? A1 A2 B1 B2 n ???; *)
+(*     by apply prodC_map_ne; apply rFunctor_contractive. *)
+(* Qed. *)
+
+(* Program Definition prodURF (F1 F2 : urFunctor) : urFunctor := {| *)
+(*   urFunctor_car A B := prodUR (urFunctor_car F1 A B) (urFunctor_car F2 A B); *)
+(*   urFunctor_map A1 A2 B1 B2 fg := *)
+(*     prodC_map (urFunctor_map F1 fg) (urFunctor_map F2 fg) *)
+(* |}. *)
+(* Next Obligation. *)
+(*   intros F1 F2 A1 A2 B1 B2 n ???. by apply prodC_map_ne; apply urFunctor_ne. *)
+(* Qed. *)
+(* Next Obligation. by intros F1 F2 A B [??]; rewrite /= !urFunctor_id. Qed. *)
+(* Next Obligation. *)
+(*   intros F1 F2 A1 A2 A3 B1 B2 B3 f g f' g' [??]; simpl. *)
+(*   by rewrite !urFunctor_compose. *)
+(* Qed. *)
+(* Notation "F1 * F2" := (prodURF F1%URF F2%URF) : urFunctor_scope. *)
+
+(* Instance prodURF_contractive F1 F2 : *)
+(*   urFunctorContractive F1 → urFunctorContractive F2 → *)
+(*   urFunctorContractive (prodURF F1 F2). *)
+(* Proof. *)
+(*   intros ?? A1 A2 B1 B2 n ???; *)
+(*     by apply prodC_map_ne; apply urFunctor_contractive. *)
+(* Qed. *)
+
+(* (** ** CMRA for the option type *) *)
+(* Section option. *)
+(*   Context {A : cmraT}. *)
+(*   Local Arguments core _ _ !_ /. *)
+(*   Local Arguments pcore _ _ !_ /. *)
+
+(*   Instance option_valid : Valid (option A) := λ mx, *)
+(*     match mx with Some x => ✓ x | None => True end. *)
+(*   Instance option_validN : ValidN (option A) := λ n mx, *)
+(*     match mx with Some x => ✓{n} x | None => True end. *)
+(*   Instance option_pcore : PCore (option A) := λ mx, Some (mx ≫= pcore). *)
+(*   Arguments option_pcore !_ /. *)
+(*   Instance option_op : Op (option A) := union_with (λ x y, Some (x ⋅ y)). *)
+
+(*   Definition Some_valid a : ✓ Some a ↔ ✓ a := reflexivity _. *)
+(*   Definition Some_validN a n : ✓{n} Some a ↔ ✓{n} a := reflexivity _. *)
+(*   Definition Some_op a b : Some (a ⋅ b) = Some a ⋅ Some b := eq_refl. *)
+(*   Lemma Some_core `{CMRATotal A} a : Some (core a) = core (Some a). *)
+(*   Proof. rewrite /core /=. by destruct (cmra_total a) as [? ->]. Qed. *)
+(*   Lemma Some_op_opM x my : Some x ⋅ my = Some (x ⋅? my). *)
+(*   Proof. by destruct my. Qed. *)
+
+(*   Lemma option_included (mx my : option A) : *)
+(*     mx ≼ my ↔ mx = None ∨ ∃ x y, mx = Some x ∧ my = Some y ∧ (x ≡ y ∨ x ≼ y). *)
+(*   Proof. *)
+(*     split. *)
+(*     - intros [mz Hmz]. *)
+(*       destruct mx as [x|]; [right|by left]. *)
+(*       destruct my as [y|]; [exists x, y|destruct mz; inversion_clear Hmz]. *)
+(*       destruct mz as [z|]; inversion_clear Hmz; split_and?; auto; *)
+(*         setoid_subst; eauto using cmra_included_l. *)
+(*     - intros [->|(x&y&->&->&[Hz|[z Hz]])]. *)
+(*       + exists my. by destruct my. *)
+(*       + exists None; by constructor. *)
+(*       + exists (Some z); by constructor. *)
+(*   Qed. *)
+
+(*   Lemma option_includedN n (mx my : option A) : *)
+(*     mx ≼{n} my ↔ mx = None ∨ ∃ x y, mx = Some x ∧ my = Some y ∧ (x ≡{n}≡ y ∨ x ≼{n} y). *)
+(*   Proof. *)
+(*     split. *)
+(*     - intros [mz Hmz]. *)
+(*       destruct mx as [x|]; [right|by left]. *)
+(*       destruct my as [y|]; [exists x, y|destruct mz; inversion_clear Hmz]. *)
+(*       destruct mz as [z|]; inversion_clear Hmz; split_and?; auto; *)
+(*         ofe_subst; eauto using cmra_includedN_l. *)
+(*     - intros [->|(x&y&->&->&[Hz|[z Hz]])]. *)
+(*       + exists my. by destruct my. *)
+(*       + exists None; by constructor. *)
+(*       + exists (Some z); by constructor. *)
+(*   Qed. *)
+
+(*   Lemma option_cmra_mixin : CMRAMixin (option A). *)
+(*   Proof. *)
+(*     apply cmra_total_mixin. *)
+(*     - eauto. *)
+(*     - by intros [x|] n; destruct 1; constructor; ofe_subst. *)
+(*     - destruct 1; by ofe_subst. *)
+(*     - by destruct 1; rewrite /validN /option_validN //=; ofe_subst. *)
+(*     - intros [x|]; [apply cmra_valid_validN|done]. *)
+(*     - intros n [x|]; unfold validN, option_validN; eauto using cmra_validN_S. *)
+(*     - intros [x|] [y|] [z|]; constructor; rewrite ?assoc; auto. *)
+(*     - intros [x|] [y|]; constructor; rewrite 1?comm; auto. *)
+(*     - intros [x|]; simpl; auto. *)
+(*       destruct (pcore x) as [cx|] eqn:?; constructor; eauto using cmra_pcore_l. *)
+(*     - intros [x|]; simpl; auto. *)
+(*       destruct (pcore x) as [cx|] eqn:?; simpl; eauto using cmra_pcore_idemp. *)
+(*     - intros mx my; setoid_rewrite option_included. *)
+(*       intros [->|(x&y&->&->&[?|?])]; simpl; eauto. *)
+(*       + destruct (pcore x) as [cx|] eqn:?; eauto. *)
+(*         destruct (cmra_pcore_proper x y cx) as (?&?&?); eauto 10. *)
+(*       + destruct (pcore x) as [cx|] eqn:?; eauto. *)
+(*         destruct (cmra_pcore_mono x y cx) as (?&?&?); eauto 10. *)
+(*     - intros n [x|] [y|]; rewrite /validN /option_validN /=; *)
+(*         eauto using cmra_validN_op_l. *)
+(*     - intros n mx my1 my2. *)
+(*       destruct mx as [x|], my1 as [y1|], my2 as [y2|]; intros Hx Hx'; *)
+(*         inversion_clear Hx'; auto. *)
+(*       + destruct (cmra_extend n x y1 y2) as (z1&z2&?&?&?); auto. *)
+(*         by exists (Some z1), (Some z2); repeat constructor. *)
+(*       + by exists (Some x), None; repeat constructor. *)
+(*       + by exists None, (Some x); repeat constructor. *)
+(*       + exists None, None; repeat constructor. *)
+(*   Qed. *)
+(*   Canonical Structure optionR := CMRAT (option A) option_cmra_mixin. *)
+
+(*   Global Instance option_cmra_discrete : CMRADiscrete A → CMRADiscrete optionR. *)
+(*   Proof. split; [apply _|]. by intros [x|]; [apply (cmra_discrete_valid x)|]. Qed. *)
+
+(*   Instance option_empty : Empty (option A) := None. *)
+(*   Lemma option_ucmra_mixin : UCMRAMixin optionR. *)
+(*   Proof. split. done. by intros []. done. Qed. *)
+(*   Canonical Structure optionUR := UCMRAT (option A) option_ucmra_mixin. *)
+
+(*   (** Misc *) *)
+(*   Lemma op_None mx my : mx ⋅ my = None ↔ mx = None ∧ my = None. *)
+(*   Proof. destruct mx, my; naive_solver. Qed. *)
+(*   Lemma op_is_Some mx my : is_Some (mx ⋅ my) ↔ is_Some mx ∨ is_Some my. *)
+(*   Proof. rewrite -!not_eq_None_Some op_None. destruct mx, my; naive_solver. Qed. *)
+
+(*   Global Instance Some_persistent (x : A) : Persistent x → Persistent (Some x). *)
+(*   Proof. by constructor. Qed. *)
+(*   Global Instance option_persistent (mx : option A) : *)
+(*     (∀ x : A, Persistent x) → Persistent mx. *)
+(*   Proof. intros. destruct mx; apply _. Qed. *)
+
+(*   Lemma exclusiveN_Some_l n x `{!Exclusive x} my : *)
+(*     ✓{n} (Some x ⋅ my) → my = None. *)
+(*   Proof. destruct my. move=> /(exclusiveN_l _ x) []. done. Qed. *)
+(*   Lemma exclusiveN_Some_r n x `{!Exclusive x} my : *)
+(*     ✓{n} (my ⋅ Some x) → my = None. *)
+(*   Proof. rewrite comm. by apply exclusiveN_Some_l. Qed. *)
+
+(*   Lemma exclusive_Some_l x `{!Exclusive x} my : ✓ (Some x ⋅ my) → my = None. *)
+(*   Proof. destruct my. move=> /(exclusive_l x) []. done. Qed. *)
+(*   Lemma exclusive_Some_r x `{!Exclusive x} my : ✓ (my ⋅ Some x) → my = None. *)
+(*   Proof. rewrite comm. by apply exclusive_Some_l. Qed. *)
+
+(*   Lemma Some_includedN n x y : Some x ≼{n} Some y ↔ x ≡{n}≡ y ∨ x ≼{n} y. *)
+(*   Proof. rewrite option_includedN; naive_solver. Qed. *)
+(*   Lemma Some_included x y : Some x ≼ Some y ↔ x ≡ y ∨ x ≼ y. *)
+(*   Proof. rewrite option_included; naive_solver. Qed. *)
+(*   Lemma Some_included_2 x y : x ≼ y → Some x ≼ Some y. *)
+(*   Proof. rewrite Some_included; eauto. Qed. *)
+
+(*   Lemma Some_includedN_total `{CMRATotal A} n x y : Some x ≼{n} Some y ↔ x ≼{n} y. *)
+(*   Proof. rewrite Some_includedN. split. by intros [->|?]. eauto. Qed. *)
+(*   Lemma Some_included_total `{CMRATotal A} x y : Some x ≼ Some y ↔ x ≼ y. *)
+(*   Proof. rewrite Some_included. split. by intros [->|?]. eauto. Qed. *)
+
+(*   Lemma Some_includedN_exclusive n x `{!Exclusive x} y : *)
+(*     Some x ≼{n} Some y → ✓{n} y → x ≡{n}≡ y. *)
+(*   Proof. move=> /Some_includedN [//|/exclusive_includedN]; tauto. Qed. *)
+(*   Lemma Some_included_exclusive x `{!Exclusive x} y : *)
+(*     Some x ≼ Some y → ✓ y → x ≡ y. *)
+(*   Proof. move=> /Some_included [//|/exclusive_included]; tauto. Qed. *)
+
+(*   Lemma is_Some_includedN n mx my : mx ≼{n} my → is_Some mx → is_Some my. *)
+(*   Proof. rewrite -!not_eq_None_Some option_includedN. naive_solver. Qed. *)
+(*   Lemma is_Some_included mx my : mx ≼ my → is_Some mx → is_Some my. *)
+(*   Proof. rewrite -!not_eq_None_Some option_included. naive_solver. Qed. *)
+
+(*   Global Instance cancelable_Some x : *)
+(*     IdFree x → Cancelable x → Cancelable (Some x). *)
+(*   Proof. *)
+(*     intros Hirr ?? [y|] [z|] ? EQ; inversion_clear EQ. *)
+(*     - constructor. by apply (cancelableN x). *)
+(*     - destruct (Hirr y); [|eauto using dist_le with lia]. *)
+(*       by eapply (cmra_validN_op_l 0 x y), (cmra_validN_le n); last lia. *)
+(*     - destruct (Hirr z); [|symmetry; eauto using dist_le with lia]. *)
+(*       by eapply (cmra_validN_le n); last lia. *)
+(*     - done. *)
+(*   Qed. *)
+(* End option. *)
+
+(* Arguments optionR : clear implicits. *)
+(* Arguments optionUR : clear implicits. *)
+
+(* Section option_prod. *)
+(*   Context {A B : cmraT}. *)
+
+(*   Lemma Some_pair_includedN n (x1 x2 : A) (y1 y2 : B) : *)
+(*     Some (x1,y1) ≼{n} Some (x2,y2) → Some x1 ≼{n} Some x2 ∧ Some y1 ≼{n} Some y2. *)
+(*   Proof. rewrite !Some_includedN. intros [[??]|[??]%prod_includedN]; eauto. Qed. *)
+(*   Lemma Some_pair_includedN_total_1 `{CMRATotal A} n (x1 x2 : A) (y1 y2 : B) : *)
+(*     Some (x1,y1) ≼{n} Some (x2,y2) → x1 ≼{n} x2 ∧ Some y1 ≼{n} Some y2. *)
+(*   Proof. intros ?%Some_pair_includedN. by rewrite -(Some_includedN_total _ x1). Qed. *)
+(*   Lemma Some_pair_includedN_total_2 `{CMRATotal B} n (x1 x2 : A) (y1 y2 : B) : *)
+(*     Some (x1,y1) ≼{n} Some (x2,y2) → Some x1 ≼{n} Some x2 ∧ y1 ≼{n} y2. *)
+(*   Proof. intros ?%Some_pair_includedN. by rewrite -(Some_includedN_total _ y1). Qed. *)
+
+(*   Lemma Some_pair_included (x1 x2 : A) (y1 y2 : B) : *)
+(*     Some (x1,y1) ≼ Some (x2,y2) → Some x1 ≼ Some x2 ∧ Some y1 ≼ Some y2. *)
+(*   Proof. rewrite !Some_included. intros [[??]|[??]%prod_included]; eauto. Qed. *)
+(*   Lemma Some_pair_included_total_1 `{CMRATotal A} (x1 x2 : A) (y1 y2 : B) : *)
+(*     Some (x1,y1) ≼ Some (x2,y2) → x1 ≼ x2 ∧ Some y1 ≼ Some y2. *)
+(*   Proof. intros ?%Some_pair_included. by rewrite -(Some_included_total x1). Qed. *)
+(*   Lemma Some_pair_included_total_2 `{CMRATotal B} (x1 x2 : A) (y1 y2 : B) : *)
+(*     Some (x1,y1) ≼ Some (x2,y2) → Some x1 ≼ Some x2 ∧ y1 ≼ y2. *)
+(*   Proof. intros ?%Some_pair_included. by rewrite -(Some_included_total y1). Qed. *)
+(* End option_prod. *)
+
+(* Instance option_fmap_cmra_morphism {A B : cmraT} (f: A → B) `{!CMRAMorphism f} : *)
+(*   CMRAMorphism (fmap f : option A → option B). *)
+(* Proof. *)
+(*   split; first apply _. *)
+(*   - intros n [x|] ?; rewrite /cmra_validN //=. by apply (cmra_morphism_validN f). *)
+(*   - move=> [x|] //. by apply Some_proper, cmra_morphism_pcore. *)
+(*   - move=> [x|] [y|] //=. by rewrite -(cmra_morphism_op f). *)
+(* Qed. *)
+
+(* Program Definition optionRF (F : rFunctor) : rFunctor := {| *)
+(*   rFunctor_car A B := optionR (rFunctor_car F A B); *)
+(*   rFunctor_map A1 A2 B1 B2 fg := optionC_map (rFunctor_map F fg) *)
+(* |}. *)
+(* Next Obligation. *)
+(*   by intros F A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, rFunctor_ne. *)
+(* Qed. *)
+(* Next Obligation. *)
+(*   intros F A B x. rewrite /= -{2}(option_fmap_id x). *)
+(*   apply option_fmap_equiv_ext=>y; apply rFunctor_id. *)
+(* Qed. *)
+(* Next Obligation. *)
+(*   intros F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -option_fmap_compose. *)
+(*   apply option_fmap_equiv_ext=>y; apply rFunctor_compose. *)
+(* Qed. *)
+
+(* Instance optionRF_contractive F : *)
+(*   rFunctorContractive F → rFunctorContractive (optionRF F). *)
+(* Proof. *)
+(*   by intros ? A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, rFunctor_contractive. *)
+(* Qed. *)
+
+(* Program Definition optionURF (F : rFunctor) : urFunctor := {| *)
+(*   urFunctor_car A B := optionUR (rFunctor_car F A B); *)
+(*   urFunctor_map A1 A2 B1 B2 fg := optionC_map (rFunctor_map F fg) *)
+(* |}. *)
+(* Next Obligation. *)
+(*   by intros F A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, rFunctor_ne. *)
+(* Qed. *)
+(* Next Obligation. *)
+(*   intros F A B x. rewrite /= -{2}(option_fmap_id x). *)
+(*   apply option_fmap_equiv_ext=>y; apply rFunctor_id. *)
+(* Qed. *)
+(* Next Obligation. *)
+(*   intros F A1 A2 A3 B1 B2 B3 f g f' g' x. rewrite /= -option_fmap_compose. *)
+(*   apply option_fmap_equiv_ext=>y; apply rFunctor_compose. *)
+(* Qed. *)
+
+(* Instance optionURF_contractive F : *)
+(*   rFunctorContractive F → urFunctorContractive (optionURF F). *)
+(* Proof. *)
+(*   by intros ? A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, rFunctor_contractive. *)
+(* Qed. *)
