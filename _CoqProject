@@ -25,6 +25,7 @@ theories/algebra/gset.v
 theories/algebra/coPset.v
 theories/algebra/deprecated.v
 theories/algebra/proofmode_classes.v
+theories/algebra/ora.v
 theories/bi/interface.v
 theories/bi/derived_connectives.v
 theories/bi/derived_laws.v
@@ -59,6 +60,7 @@ theories/base_logic/lib/cancelable_invariants.v
 theories/base_logic/lib/gen_heap.v
 theories/base_logic/lib/core.v
 theories/base_logic/lib/fancy_updates_from_vs.v
+theories/base_logic/oupred.v
 theories/program_logic/adequacy.v
 theories/program_logic/lifting.v
 theories/program_logic/weakestpre.v
