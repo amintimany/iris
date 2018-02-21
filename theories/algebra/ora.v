@@ -46,9 +46,11 @@ Section mixin.
     mixin_ora_pcore_monoN n x y cx :
       x ≼ₒ{n} y → pcore x = Some cx → ∃ cy, pcore y = Some cy ∧ cx ≼ₒ{n} cy;
     mixin_ora_validN_op_l n x y : ✓{n} (x ⋅ y) → ✓{n} x;
-    mixin_ora_extend n x y1 y2 :
+    mixin_ora_op_extend n x y1 y2 :
       ✓{n} x → y1 ⋅ y2 ≼ₒ{n} x →
       ∃ z1 z2, z1 ⋅ z2 ≼ₒ{S n} x ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2;
+    mixin_ora_extend n x y :
+      ✓{n} x → y ≼ₒ{n} x → ∃ z, z ≼ₒ{S n} x ∧ z ≡{n}≡ y;
     (* OraOrder *)
     mixin_ora_dist_orderN n x y : x ≡{n}≡ y → x ≼ₒ{n} y;
     mixin_ora_orderN_S n x y : x ≼ₒ{S n} y → x ≼ₒ{n} y;
@@ -137,9 +139,12 @@ Section ora_mixin.
   Proof. apply (mixin_ora_pcore_monoN _ (ora_mixin A)). Qed.
   Lemma ora_validN_op_l n x y : ✓{n} (x ⋅ y) → ✓{n} x.
   Proof. apply (mixin_ora_validN_op_l _ (ora_mixin A)). Qed.
-  Lemma ora_extend n x y1 y2 :
+  Lemma ora_op_extend n x y1 y2 :
     ✓{n} x → y1 ⋅ y2 ≼ₒ{n} x →
     ∃ z1 z2, z1 ⋅ z2 ≼ₒ{S n} x ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2.
+  Proof. apply (mixin_ora_op_extend _ (ora_mixin A)). Qed.
+  Lemma ora_extend n x y :
+      ✓{n} x → y ≼ₒ{n} x → ∃ z, z ≼ₒ{S n} x ∧ z ≡{n}≡ y.
   Proof. apply (mixin_ora_extend _ (ora_mixin A)). Qed.
   Lemma ora_dist_orderN n x y : x ≡{n}≡ y → x ≼ₒ{n} y.
   Proof. apply (mixin_ora_dist_orderN _ (ora_mixin A)). Qed.

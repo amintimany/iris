@@ -535,8 +535,8 @@ Proof.
   - (* Discrete a → a ≡ b ⊣⊢ ⌜a ≡ b⌝ *)
     intros A a b ?. unseal; split=> n x ?; by apply (discrete_iff n).
   - (* bi_plainly ((P → Q) ∧ (Q → P)) ⊢ P ≡ Q *)
-    (* unseal; split=> n x ? /= HPQ; split=> n' x' ? HP; *)
-    (* split; eapply HPQ; eauto using @ucmra_unit_least. *)
+    unseal; split=> n x ? /= HPQ; split=> n' x' ? HP.
+    split; eapply HPQ; eauto using @ucmra_unit_least;
     admit.
   - (* Next x ≡ Next y ⊢ ▷ (x ≡ y) *)
     by unseal.
@@ -555,7 +555,7 @@ Proof.
   - (* ▷ (P ∗ Q) ⊢ ▷ P ∗ ▷ Q *)
     intros P Q. unseal; split=> -[|n] x ? /=.
     { by exists x, (core x); rewrite ora_core_r. }
-    intros (x1&x2&Hx&?&?); destruct (ora_extend n x x1 x2)
+    intros (x1&x2&Hx&?&?); destruct (ora_op_extend n x x1 x2)
       as (y1&y2&Hx'&Hy1&Hy2); eauto using ora_validN_S; simpl in *.
     exists y1, y2; split; auto; by rewrite Hy1 Hy2.
   - (* ▷ P ∗ ▷ Q ⊢ ▷ (P ∗ Q) *)
@@ -646,14 +646,14 @@ Proof.
 Qed.
 Lemma ownM_unit : bi_valid (ouPred_ownM (ε:M)).
 Proof. unseal; split=> n x ? ?; done. Qed.
+
 Lemma later_ownM (a : M) : ▷ ouPred_ownM a ⊢ ∃ b, ouPred_ownM b ∧ ▷ (a ≡ b).
 Proof.
   rewrite /bi_and /sbi_later /bi_exist /sbi_internal_eq /=; unseal.
   split=> -[|n] x /= ? Hax; first by eauto using ucmra_unit_leastN.
-  destruct (ora_extend n x a ε) as (a'&y'&Hx&?&?); auto using ora_validN_S.
-  { by rewrite right_id. }
-  exists a'. split; auto. setoid_rewrite <- Hx. admit.
-Admitted.
+  destruct (ora_extend n x a) as (a'&Hx&?); auto using ora_validN_S.
+  exists a'. split; auto.
+Qed.
 
 (* Valid *)
 Lemma discrete_valid {A : oraT} `{!OraDiscrete A} (a : A) :
