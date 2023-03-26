@@ -1,4 +1,4 @@
-From iris.bi Require Export bi.
+From iris.bi Require Export interface extensions internal_eq plainly.
 From iris.si_logic Require Export siprop.
 From iris.prelude Require Import options.
 Import siProp_primitive.
