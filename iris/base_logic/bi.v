@@ -266,6 +266,12 @@ Section restate.
   Proof. by rewrite -upred.uPred_pure_unseal. Qed.
   Local Lemma uPred_pure_unseal : bi_pure = @upred.uPred_pure_def M.
   Proof. by rewrite -upred.uPred_pure_unseal. Qed.
+  (* FIXME: Use bi classes *)
+  Local Lemma uPred_si_pure_unseal : uPred_si_pure = @upred.uPred_si_pure_def M.
+  Proof. by rewrite -upred.uPred_si_pure_unseal. Qed.
+  Local Lemma uPred_si_emp_valid_unseal :
+    uPred_si_emp_valid = @upred.uPred_si_emp_valid_def M.
+  Proof. by rewrite -upred.uPred_si_emp_valid_unseal. Qed.
   Local Lemma uPred_and_unseal : bi_and = @upred.uPred_and_def M.
   Proof. by rewrite -upred.uPred_and_unseal. Qed.
   Local Lemma uPred_or_unseal : bi_or = @upred.uPred_or_def M.
@@ -294,7 +300,9 @@ Section restate.
   Proof. by rewrite -upred.uPred_bupd_unseal. Qed.
 
   Local Definition uPred_unseal :=
-    (uPred_emp_unseal, uPred_pure_unseal, uPred_and_unseal, uPred_or_unseal,
+    (uPred_emp_unseal, uPred_pure_unseal,
+    uPred_si_pure_unseal, uPred_si_emp_valid_unseal,
+    uPred_and_unseal, uPred_or_unseal,
     uPred_impl_unseal, uPred_forall_unseal, uPred_exist_unseal,
     uPred_internal_eq_unseal, uPred_sep_unseal, uPred_wand_unseal,
     uPred_plainly_unseal, uPred_persistently_unseal, uPred_later_unseal,

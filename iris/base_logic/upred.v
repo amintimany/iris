@@ -1,6 +1,7 @@
 From iris.algebra Require Export cmra updates.
 From iris.algebra Require Export stepindex_finite.
 From iris.bi Require Import notation.
+From iris.si_logic Require Import siprop.
 From iris.prelude Require Import options.
 
 Local Hint Extern 1 (_ ≼ _) => etrans; [eassumption|] : core.
@@ -263,6 +264,26 @@ Global Arguments uPred_pure {M}.
 Local Definition uPred_pure_unseal :
   @uPred_pure = @uPred_pure_def := uPred_pure_aux.(seal_eq).
 
+Local Program Definition uPred_si_pure_def {M} (Pi : siProp) : uPred M :=
+  {| uPred_holds n x := siProp_holds Pi n |}.
+Solve Obligations with naive_solver eauto using siProp_closed.
+Local Definition uPred_si_pure_aux : seal (@uPred_si_pure_def).
+Proof. by eexists. Qed.
+Definition uPred_si_pure := uPred_si_pure_aux.(unseal).
+Global Arguments uPred_si_pure {M}.
+Local Definition uPred_si_pure_unseal :
+  @uPred_si_pure = @uPred_si_pure_def := uPred_si_pure_aux.(seal_eq).
+
+Local Program Definition uPred_si_emp_valid_def {M} (P : uPred M) : siProp :=
+  {| siProp_holds n := P n ε |}.
+Solve Obligations with naive_solver eauto with uPred_def.
+Local Definition uPred_si_emp_valid_aux : seal (@uPred_si_emp_valid_def).
+Proof. by eexists. Qed.
+Definition uPred_si_emp_valid := uPred_si_emp_valid_aux.(unseal).
+Global Arguments uPred_si_emp_valid {M}.
+Local Definition uPred_si_emp_valid_unseal :
+  @uPred_si_emp_valid = @uPred_si_emp_valid_def := uPred_si_emp_valid_aux.(seal_eq).
+
 Local Program Definition uPred_and_def {M} (P Q : uPred M) : uPred M :=
   {| uPred_holds n x := P n x ∧ Q n x |}.
 Solve Obligations with naive_solver eauto 2 with uPred_def.
@@ -429,7 +450,8 @@ Notation "✓ x" := (uPred_cmra_valid x) (at level 20) : bi_scope.
     connectives. *)
 Module uPred_primitive.
 Local Definition uPred_unseal :=
-  (uPred_pure_unseal, uPred_and_unseal, uPred_or_unseal, uPred_impl_unseal,
+  (uPred_pure_unseal, uPred_si_pure_unseal, uPred_si_emp_valid_unseal,
+  uPred_and_unseal, uPred_or_unseal, uPred_impl_unseal,
   uPred_forall_unseal, uPred_exist_unseal, uPred_internal_eq_unseal,
   uPred_sep_unseal, uPred_wand_unseal, uPred_plainly_unseal,
   uPred_persistently_unseal, uPred_later_unseal, uPred_ownM_unseal,
@@ -443,6 +465,7 @@ Section primitive.
   Implicit Types P Q : uPred M.
   Implicit Types A : Type.
   Local Arguments uPred_holds {_} !_ _ _ /.
+  Local Arguments siProp_holds !_ _ /.
   Local Hint Immediate uPred_in_entails : core.
 
   (** The notations below are implicitly local due to the section, so we do not
@@ -455,6 +478,8 @@ Section primitive.
   Notation "'True'" := (uPred_pure True) : bi_scope.
   Notation "'False'" := (uPred_pure False) : bi_scope.
   Notation "'⌜' φ '⌝'" := (uPred_pure φ%type%stdpp) : bi_scope.
+  Notation "<si_pure> Pi" := (uPred_si_pure Pi) : bi_scope.
+  Notation "<si_emp_valid> P" := (uPred_si_emp_valid P).
   Infix "∧" := uPred_and : bi_scope.
   Infix "∨" := uPred_or : bi_scope.
   Infix "→" := uPred_impl : bi_scope.
@@ -495,6 +520,15 @@ Section primitive.
   (** Non-expansiveness and setoid morphisms *)
   Lemma pure_ne n : Proper (iff ==> dist n) (@uPred_pure M).
   Proof. intros φ1 φ2 Hφ. by unseal; split=> -[|m] ?; try apply Hφ. Qed.
+
+  Lemma si_pure_ne : NonExpansive (@uPred_si_pure M).
+  Proof. intros n Pi Pi' HPi. unseal; split; intros; by apply HPi. Qed.
+
+  Lemma si_emp_valid_ne : NonExpansive (@uPred_si_emp_valid M).
+  Proof.
+    intros n P P' HP.
+    unseal; split; intros; apply HP; auto using ucmra_unit_validN.
+  Qed.
 
   Lemma and_ne : NonExpansive2 (@uPred_and M).
   Proof.
@@ -588,6 +622,59 @@ Section primitive.
     unseal; split=> n' x; split; intros HP k yf ??;
       destruct (HP k yf) as (x'&?&?); auto;
       exists x'; split; auto; apply HPQ; eauto using cmra_validN_op_l.
+  Qed.
+
+  (** Rules for the [siProp] embedding *)
+  Lemma si_pure_mono Pi Qi : siProp_entails Pi Qi → <si_pure> Pi ⊢ <si_pure> Qi.
+  Proof. intros HPQi. unseal; split=> n ??. apply HPQi. Qed.
+  Lemma si_emp_valid_mono P Q :
+    (P ⊢ Q) → siProp_entails (<si_emp_valid> P) (<si_emp_valid> Q).
+  Proof. intros HPQ. unseal; split=> n. apply HPQ, ucmra_unit_validN. Qed.
+
+  Lemma si_pure_impl_2 Pi Qi :
+    (<si_pure> Pi → <si_pure> Qi) ⊢ <si_pure> siProp_impl Pi Qi.
+  Proof.
+    unseal; siProp_primitive.unseal. split; simpl; eauto using cmra_validN_le.
+  Qed.
+  Lemma si_pure_forall_2 {A} (Φi : A → siProp) :
+   (∀ x, <si_pure> Φi x) ⊢ <si_pure> siProp_forall Φi.
+  Proof. by unseal; siProp_primitive.unseal. Qed.
+  Lemma si_pure_later Pi : <si_pure> siProp_later Pi ⊣⊢ ▷ <si_pure> Pi.
+  Proof. by unseal; siProp_primitive.unseal. Qed.
+
+  Lemma si_emp_valid_later_1 P :
+    siProp_entails (<si_emp_valid> ▷ P) (siProp_later (<si_emp_valid> P)).
+  Proof. by unseal; siProp_primitive.unseal. Qed.
+  Lemma si_emp_valid_exist_1 {A} (Φ : A → uPred M) :
+    siProp_entails (<si_emp_valid> ∃ x, Φ x)
+                   (siProp_exist (λ x, <si_emp_valid> Φ x)).
+  Proof. by unseal; siProp_primitive.unseal. Qed.
+
+  Lemma si_emp_valid_si_pure Pi :
+    <si_emp_valid> (<si_pure> Pi : uPred M)%I ≡ Pi.
+  Proof. by unseal. Qed.
+  Lemma si_pure_si_emp_valid P :
+    <si_pure> <si_emp_valid> P ⊢ □ P.
+  Proof.
+    unseal. split=> /= n x _ ?.
+    eapply uPred_mono with n ε; eauto using ucmra_unit_leastN.
+  Qed.
+
+  (** FIXME: Rename once we delete the current [prop_ext]. *)
+  Lemma prop_ext_new P Q :
+    siProp_entails (<si_emp_valid> ((P -∗ Q) ∧ (Q -∗ P)))
+                   (siProp_internal_eq P Q).
+  Proof.
+    unseal; siProp_primitive.unseal.
+    split=> n /=. setoid_rewrite (left_id ε op). split; naive_solver.
+  Qed.
+
+  Lemma persistently_impl_si_pure Pi Q :
+    (<si_pure> Pi → □ Q) ⊢ □ (<si_pure> Pi → Q).
+  Proof.
+    unseal; split=> /= n x ? HPQ n' x' ????.
+    eapply uPred_mono with n' (core x)=>//; [|by apply cmra_included_includedN].
+    apply (HPQ n' x); eauto using cmra_validN_le.
   Qed.
 
   (** Introduction and elimination rules *)
