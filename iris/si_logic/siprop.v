@@ -1,4 +1,4 @@
-From iris.algebra Require Export ofe stepindex_finite.
+From iris.algebra Require Export cmra stepindex_finite.
 From iris.bi Require Import notation.
 From iris.prelude Require Import options.
 
@@ -119,6 +119,16 @@ Definition siProp_internal_eq {A} := unseal siProp_internal_eq_aux A.
 Local Definition siProp_internal_eq_unseal :
   @siProp_internal_eq = @siProp_internal_eq_def := seal_eq siProp_internal_eq_aux.
 
+Local Program Definition siProp_cmra_valid_def {A : cmra} (a : A) : siProp :=
+  {| siProp_holds n := ✓{n} a |}.
+Solve Obligations with naive_solver eauto 2 using cmra_validN_le.
+Local Definition siProp_cmra_valid_aux : seal (@siProp_cmra_valid_def).
+Proof. by eexists. Qed.
+Definition siProp_cmra_valid := siProp_cmra_valid_aux.(unseal).
+Global Arguments siProp_cmra_valid {A}.
+Local Definition siProp_cmra_valid_unseal :
+  @siProp_cmra_valid = @siProp_cmra_valid_def := siProp_cmra_valid_aux.(seal_eq).
+
 (** Primitive logical rules.
     These are not directly usable later because they do not refer to the BI
     connectives. *)
@@ -126,7 +136,7 @@ Module siProp_primitive.
 Local Definition siProp_unseal :=
   (siProp_pure_unseal, siProp_and_unseal, siProp_or_unseal,
   siProp_impl_unseal, siProp_forall_unseal, siProp_exist_unseal,
-  siProp_later_unseal, siProp_internal_eq_unseal).
+  siProp_later_unseal, siProp_internal_eq_unseal, siProp_cmra_valid_unseal).
 Ltac unseal := rewrite !siProp_unseal /=.
 
 Section primitive.
@@ -147,6 +157,7 @@ Section primitive.
     (siProp_exist (λ x, .. (siProp_exist (λ y, P%I)) ..)) : bi_scope.
   Notation "▷ P" := (siProp_later P) : bi_scope.
   Notation "x ≡ y" := (siProp_internal_eq x y) : bi_scope.
+  Notation "✓ x" := (siProp_cmra_valid x) : bi_scope.
 
   (** Below there follow the primitive laws for [siProp]. There are no derived laws
   in this file. *)
@@ -206,6 +217,11 @@ Section primitive.
     intros n x x' Hx y y' Hy; split=> n' z; unseal; split; intros; simpl in *.
     - by rewrite -(dist_le _ _ _ _ Hx) -?(dist_le _ _ _ _ Hy); auto.
     - by rewrite (dist_le _ _ _ _ Hx) ?(dist_le _ _ _ _ Hy); auto.
+  Qed.
+  Lemma cmra_valid_ne (A : cmra) : NonExpansive (@siProp_cmra_valid A).
+  Proof.
+    intros n x x' Hx. unseal; split=> /= n' z.
+    by rewrite (dist_le _ _ _ _ Hx).
   Qed.
 
   (** Introduction and elimination rules *)
@@ -309,6 +325,12 @@ Section primitive.
     unseal; split=> n /= HPQ. split=> n' ?.
     move: HPQ=> [] /(_ n') ? /(_ n'). naive_solver.
   Qed.
+
+  (** Validity *)
+  Lemma cmra_valid_intro {A : cmra} P (a : A) : ✓ a → P ⊢ (✓ a).
+  Proof. unseal=> ?; split=> n ? /=; by apply cmra_valid_validN. Qed.
+  Lemma cmra_valid_weaken {A : cmra} (a b : A) : ✓ (a ⋅ b) ⊢ ✓ a.
+  Proof. unseal; split=> n; apply cmra_validN_op_l. Qed.
 
   (** Consistency/soundness statement *)
   Lemma pure_soundness φ : (True ⊢ ⌜ φ ⌝) → φ.
