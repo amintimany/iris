@@ -100,7 +100,8 @@ Global Instance into_forall_fupd `{!BiFUpd PROP} {A} E1 E2 P (Φ : A → PROP) :
 Proof. rewrite /IntoForall=>->. apply fupd_forall. Qed.
 
 Global Instance from_forall_fupd
-    `{!BiFUpd PROP, !BiPlainly PROP, !BiFUpdPlainly PROP} E1 E2 {A} P (Φ : A → PROP) name :
+    `{!BiFUpd PROP, !Sbi PROP, !BiFUpdSbi PROP, !BiAffine PROP}
+    E1 E2 {A} P (Φ : A → PROP) name :
   (* Some cases in which [E2 ⊆ E1] holds *)
   TCOr (TCEq E1 E2) (TCOr (TCEq E1 ⊤) (TCEq E2 ∅)) →
   FromForall P Φ name → (∀ x, Plain (Φ x)) →
@@ -109,7 +110,8 @@ Proof.
   rewrite /FromForall=> -[->|[->|->]] <- ?; rewrite fupd_plain_forall; set_solver.
 Qed.
 Global Instance from_forall_step_fupd
-    `{!BiFUpd PROP, !BiPlainly PROP, !BiFUpdPlainly PROP} E1 E2 {A} P (Φ : A → PROP) name :
+    `{!BiFUpd PROP, !Sbi PROP, !BiFUpdSbi PROP, !BiAffine PROP}
+    E1 E2 {A} P (Φ : A → PROP) name :
   (* Some cases in which [E2 ⊆ E1] holds *)
   TCOr (TCEq E1 E2) (TCOr (TCEq E1 ⊤) (TCEq E2 ∅)) →
   FromForall P Φ name → (∀ x, Plain (Φ x)) →
@@ -148,14 +150,14 @@ Proof.
 Qed.
 
 Global Instance elim_modal_bupd_plain_goal
-    `{!BiBUpd PROP, !BiPlainly PROP, !BiBUpdPlainly PROP} p P Q :
+    `{!BiBUpd PROP, !Sbi PROP, !BiBUpdSbi PROP, !BiAffine PROP} p P Q :
   Plain Q → ElimModal True p false (|==> P) P Q Q.
 Proof.
   intros. by rewrite /ElimModal intuitionistically_if_elim
     bupd_frame_r wand_elim_r bupd_elim.
 Qed.
 Global Instance elim_modal_bupd_plain
-    `{!BiBUpd PROP, !BiPlainly PROP, !BiBUpdPlainly PROP} p P Q :
+    `{!BiBUpd PROP, !Sbi PROP, !BiBUpdSbi PROP, !BiAffine PROP} p P Q :
   Plain P → ElimModal True p p (|==> P) P Q Q.
 Proof. intros. by rewrite /ElimModal bupd_elim wand_elim_r. Qed.
 Global Instance elim_modal_bupd_fupd

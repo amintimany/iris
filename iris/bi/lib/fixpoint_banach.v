@@ -11,7 +11,7 @@ Section fixpoint_laws.
   Context {PROP: bi}.
   Implicit Types P Q : PROP.
 
-  Lemma fixpoint_plain `{!BiPlainly PROP} {A}
+  Lemma fixpoint_plain `{!Sbi PROP} {A}
       (F : (A -d> PROP) → A -d> PROP) `{!Contractive F} :
     (∀ Φ, (∀ x, Plain (Φ x)) → (∀ x, Plain (F Φ x))) →
     ∀ x, Plain (fixpoint F x).
@@ -88,7 +88,7 @@ Section fixpoint_laws.
       apply limit_preserving_and; apply limit_preserving_entails; solve_proper.
   Qed.
 
-  Lemma fixpoint_plain_absoring `{!BiPlainly PROP} {A}
+  Lemma fixpoint_plain_absoring `{!Sbi PROP} {A}
       (F : (A -d> PROP) → A -d> PROP) `{!Contractive F} :
     (∀ Φ, (∀ x, Plain (Φ x)) → (∀ x, Absorbing (Φ x)) →
           (∀ x, Plain (F Φ x) ∧ Absorbing (F Φ x))) →
@@ -102,7 +102,7 @@ Section fixpoint_laws.
       apply limit_preserving_and; apply limit_preserving_entails; solve_proper.
   Qed.
 
-  Lemma fixpoint_plain_affine `{!BiPlainly PROP} {A}
+  Lemma fixpoint_plain_affine `{!Sbi PROP} {A}
       (F : (A -d> PROP) → A -d> PROP) `{!Contractive F} :
     (∀ Φ, (∀ x, Plain (Φ x)) → (∀ x, Affine (Φ x)) →
           (∀ x, Plain (F Φ x) ∧ Affine (F Φ x))) →

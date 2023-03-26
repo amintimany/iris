@@ -3,8 +3,7 @@ From iris.proofmode Require Import proofmode.
 From iris.prelude Require Import options.
 
 Section fixpoint.
-  Context {PROP : bi} `{!BiInternalEq PROP}
-    {A : ofe} (F : (A → PROP) → (A → PROP)) `{!BiMonoPred F}.
+  Context `{!Sbi PROP} {A : ofe} (F : (A → PROP) → (A → PROP)) `{!BiMonoPred F}.
 
   Definition L := bi_least_fixpoint F.
   Definition G := bi_greatest_fixpoint F.

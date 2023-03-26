@@ -89,9 +89,9 @@ Global Instance is_rw_lock_contractive `{!heapGS_gen hlc Σ, !rwlock, !rwlockG �
   Proper (pointwise_relation _ (dist_later n) ==> dist n) (is_rw_lock γ lk).
 Proof.
   assert (Contractive (is_rw_lock γ lk : (Qp -d> iPropO Σ) → _)) as Hcontr.
-  { apply (uPred.contractive_internal_eq (M:=iResUR Σ)); iIntros (Φ1 Φ2) "#HΦ".
+  { apply (contractive_internal_eq (PROP:=iPropI Σ)); iIntros (Φ1 Φ2) "#HΦ".
     rewrite discrete_fun_equivI.
-    iApply plainly.prop_ext_2; iIntros "!>"; iSplit; iIntros "H";
+    iApply prop_ext_2; iIntros "!>"; iSplit; iIntros "H";
       iApply (is_rw_lock_iff with "H");
       iIntros "!> !>" (q); iRewrite ("HΦ" $! q); auto. }
   intros Φ1 Φ2 HΦ. apply Hcontr. dist_later_intro. apply HΦ.

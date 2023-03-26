@@ -1,6 +1,5 @@
 From stdpp Require Export coPset.
 From iris.algebra Require Import gmap_view gset coPset.
-From iris.bi Require Import lib.cmra.
 From iris.proofmode Require Import proofmode.
 From iris.base_logic.lib Require Export own.
 From iris.prelude Require Import options.

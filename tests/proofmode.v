@@ -73,7 +73,7 @@ Check "test_iStopProof".
 Lemma test_iStopProof Q : emp -∗ Q -∗ Q.
 Proof. iIntros "#H1 H2". Show. iStopProof. Show. by rewrite bi.sep_elim_r. Qed.
 
-Lemma test_iRewrite `{!BiInternalEq PROP} {A : ofe} (x y : A) P :
+Lemma test_iRewrite `{!Sbi PROP} {A : ofe} (x y : A) P :
   □ (∀ z, P -∗ <affine> (z ≡ y)) -∗ (P -∗ P ∧ (x,x) ≡ (y,x)).
 Proof.
   iIntros "#H1 H2".
@@ -82,7 +82,7 @@ Proof.
   auto.
 Qed.
 
-Lemma test_iRewrite_dom `{!BiInternalEq PROP} {A : ofe} (m1 m2 : gmap nat A) :
+Lemma test_iRewrite_dom `{!Sbi PROP} {A : ofe} (m1 m2 : gmap nat A) :
   m1 ≡ m2 ⊢@{PROP} ⌜ dom m1 = dom m2 ⌝.
 Proof. iIntros "H". by iRewrite "H". Qed.
 
@@ -297,7 +297,7 @@ Qed.
 Lemma test_iIntros_pure_not `{!BiPureForall PROP} : ⊢@{PROP} ⌜ ¬False ⌝.
 Proof. by iIntros (?). Qed.
 
-Lemma test_fast_iIntros `{!BiInternalEq PROP} P Q :
+Lemma test_fast_iIntros `{!Sbi PROP} P Q :
   ⊢ ∀ x y z : nat,
     ⌜x = plus 0 x⌝ → ⌜y = 0⌝ → ⌜z = 0⌝ → P → □ Q → foo (x ≡ x).
 Proof.
@@ -641,7 +641,7 @@ Proof.
   unshelve iSpecialize ("H" $! ∅ {[ 1%positive ]} ∅); try apply _. done.
 Qed.
 
-Lemma test_iFrame_pure `{!BiInternalEq PROP} {A : ofe} (φ : Prop) (y z : A) :
+Lemma test_iFrame_pure `{!Sbi PROP} {A : ofe} (φ : Prop) (y z : A) :
   φ → <affine> ⌜y ≡ z⌝ -∗ (⌜ φ ⌝ ∧ ⌜ φ ⌝ ∧ y ≡ z : PROP).
 Proof. iIntros (Hv) "#Hxy". iFrame (Hv) "Hxy". Qed.
 
@@ -965,7 +965,7 @@ Lemma test_iNext_quantifier {A} (Φ : A → A → PROP) :
   (∀ y, ∃ x, ▷ Φ x y) -∗ ▷ (∀ y, ∃ x, Φ x y).
 Proof. iIntros "H". iNext. done. Qed.
 
-Lemma text_iNext_Next `{!BiInternalEq PROP} {A B : ofe} (f : A -n> A) x y :
+Lemma text_iNext_Next `{!Sbi PROP} {A B : ofe} (f : A -n> A) x y :
   Next x ≡ Next y -∗ (Next (f x) ≡ Next (f y) : PROP).
 Proof. iIntros "H". iNext. by iRewrite "H". Qed.
 
@@ -1140,7 +1140,7 @@ Lemma test_apply_wand_below_let (Φ : nat → PROP) :
   Φ 5 -∗ Φ 5.
 Proof. iIntros "?". iApply lemma_for_test_apply_wand_below_let. done. Qed.
 
-Lemma test_iNext_iRewrite `{!BiInternalEq PROP} P Q :
+Lemma test_iNext_iRewrite `{!Sbi PROP} P Q :
   <affine> ▷ (Q ≡ P) -∗ <affine> ▷ Q -∗ <affine> ▷ P.
 Proof.
   iIntros "#HPQ HQ !>". iNext. by iRewrite "HPQ" in "HQ".
@@ -1158,7 +1158,7 @@ Lemma test_iIntros_rewrite P (x1 x2 x3 x4 : nat) :
   x1 = x2 → (⌜ x2 = x3 ⌝ ∗ ⌜ x3 ≡ x4 ⌝ ∗ P) -∗ ⌜ x1 = x4 ⌝ ∗ P.
 Proof. iIntros (?) "(-> & -> & $)"; auto. Qed.
 
-Lemma test_iIntros_leibniz_equiv `{!BiInternalEq PROP} {A : ofe} (x y : A) :
+Lemma test_iIntros_leibniz_equiv `{!Sbi PROP} {A : ofe} (x y : A) :
   Discrete x → LeibnizEquiv A →
   x ≡ y ⊢@{PROP} ⌜x = y⌝.
 Proof.
@@ -1167,7 +1167,7 @@ Proof.
   done.
 Qed.
 
-Lemma test_iIntros_leibniz_equiv_prod `{!BiInternalEq PROP}
+Lemma test_iIntros_leibniz_equiv_prod `{!Sbi PROP}
     {A B : ofe} (a1 a2 : A) (b1 b2 : B) :
   Discrete a1 → Discrete b1 → LeibnizEquiv A → LeibnizEquiv B →
   (a1, b1) ≡ (a2, b2) ⊢@{PROP} ⌜a1 = a2⌝.
@@ -1179,7 +1179,7 @@ Proof.
   done.
 Qed.
 
-Lemma test_iPureIntro_leibniz_equiv `{!BiInternalEq PROP}
+Lemma test_iPureIntro_leibniz_equiv `{!Sbi PROP}
     {A : ofe} `{!LeibnizEquiv A} (x y : A) :
   (x ≡ y) → ⊢@{PROP} x ≡ y.
 Proof.
@@ -1197,7 +1197,7 @@ Proof.
   otherwise. *)
 Qed.
 
-Lemma test_iNext_affine `{!BiInternalEq PROP} P Q :
+Lemma test_iNext_affine `{!Sbi PROP} P Q :
   <affine> ▷ (Q ≡ P) -∗ <affine> ▷ Q -∗ <affine> ▷ P.
 Proof. iIntros "#HPQ HQ !>". iNext. by iRewrite "HPQ" in "HQ". Qed.
 
@@ -1473,11 +1473,11 @@ Proof.
   iExFalso. iExact "H".
 Qed.
 
-Lemma test_apply_affine_impl `{!BiPlainly PROP} (P : PROP) :
+Lemma test_apply_affine_impl `{!Sbi PROP} (P : PROP) :
   P -∗ (∀ Q : PROP, ■ (Q -∗ <pers> Q) → ■ (P -∗ Q) → Q).
 Proof. iIntros "HP" (Q) "_ #HPQ". by iApply "HPQ". Qed.
 
-Lemma test_apply_affine_wand `{!BiPlainly PROP} (P : PROP) :
+Lemma test_apply_affine_wand `{!Sbi PROP} (P : PROP) :
   P -∗ (∀ Q : PROP, <affine> ■ (Q -∗ <pers> Q) -∗ <affine> ■ (P -∗ Q) -∗ Q).
 Proof. iIntros "HP" (Q) "_ #HPQ". by iApply "HPQ". Qed.
 
@@ -1844,7 +1844,7 @@ Lemma test_entails_annot_sections_space_close P :
   (P ⊣⊢@{PROP} P ) ∧ (⊣⊢@{PROP} ) P P ∧ (.⊣⊢ P ) P.
 Proof. naive_solver. Qed.
 
-Lemma test_bi_internal_eq_annot_sections `{!BiInternalEq PROP} P :
+Lemma test_bi_internal_eq_annot_sections `{!Sbi PROP} P :
   ⊢@{PROP}
     P ≡@{PROP} P ∧ (≡@{PROP}) P P ∧ (P ≡.) P ∧ (.≡ P) P ∧
     ((P ≡@{PROP} P)) ∧ ((≡@{PROP})) P P ∧ ((P ≡.)) P ∧ ((.≡ P)) P ∧

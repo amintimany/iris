@@ -274,18 +274,6 @@ Section primitive.
   Proof. unseal; intros HΨ; split=> n [a ?]; by apply HΨ with a. Qed.
 
   (** Later *)
-  Lemma later_eq_1 {A : ofe} (x y : A) : Next x ≡ Next y ⊢ ▷ (x ≡ y).
-  Proof.
-    unseal. split. intros [|n]; simpl; first done.
-    intros Heq; apply Heq, SIdx.lt_succ_diag_r.
-  Qed.
-  Lemma later_eq_2 {A : ofe} (x y : A) : ▷ (x ≡ y) ⊢ Next x ≡ Next y.
-  Proof.
-    unseal. split. intros n Hn; split; intros m Hlt; simpl in *.
-    destruct n as [|n]; first lia.
-    eapply dist_le; first done. lia.
-  Qed.
-
   Lemma later_mono P Q : (P ⊢ Q) → ▷ P ⊢ ▷ Q.
   Proof. unseal=> HP; split=>-[|n]; [done|apply HP; eauto using cmra_validN_S]. Qed.
   Lemma later_intro P : P ⊢ ▷ P.
@@ -311,28 +299,52 @@ Section primitive.
     intros Hnonexp. unseal; split=> n Hab n' ? HΨ. eapply Hnonexp with n a; auto.
   Qed.
 
-  Lemma fun_ext {A} {B : A → ofe} (f g : discrete_fun B) : (∀ x, f x ≡ g x) ⊢ f ≡ g.
-  Proof. by unseal. Qed.
-  Lemma sig_eq {A : ofe} (P : A → Prop) (x y : sig P) : `x ≡ `y ⊢ x ≡ y.
-  Proof. by unseal. Qed.
-  Lemma discrete_eq_1 {A : ofe} (a b : A) :
-    TCOr (Discrete a) (Discrete b) →
-    a ≡ b ⊢ ⌜a ≡ b⌝.
-  Proof. unseal=> ?. split=> n. by apply (discrete_iff n). Qed.
-
   Lemma prop_ext_2 P Q : ((P → Q) ∧ (Q → P)) ⊢ P ≡ Q.
   Proof.
     unseal; split=> n /= HPQ. split=> n' ?.
     move: HPQ=> [] /(_ n') ? /(_ n'). naive_solver.
   Qed.
 
+  Lemma fun_extI {A} {B : A → ofe} (g1 g2 : discrete_fun B) :
+    (∀ i, g1 i ≡ g2 i) ⊢ g1 ≡ g2.
+  Proof. by unseal. Qed.
+  Lemma sig_equivI_1 {A : ofe} (P : A → Prop) (x y : sigO P) :
+    proj1_sig x ≡ proj1_sig y ⊢ x ≡ y.
+  Proof. by unseal. Qed.
+
+  Lemma later_equivI_1 {A : ofe} (x y : A) : Next x ≡ Next y ⊢ ▷ (x ≡ y).
+  Proof.
+    unseal. split. intros [|n]; simpl; [done|].
+    intros Heq; apply Heq; auto using SIdx.lt_succ_diag_r.
+  Qed.
+  Lemma later_equivI_2 {A : ofe} (x y : A) : ▷ (x ≡ y) ⊢ Next x ≡ Next y.
+  Proof.
+    unseal. split. intros n ?; split; intros m Hlt; simpl in *.
+    destruct n as [|n]; first lia.
+    by eapply dist_le, SIdx.lt_succ_r.
+  Qed.
+
+  Lemma discrete_eq_1 {A : ofe} (a b : A) :
+    TCOr (Discrete a) (Discrete b) →
+    a ≡ b ⊢ ⌜a ≡ b⌝.
+  Proof. unseal=> ?. split=> n. by apply (discrete_iff n). Qed.
+
+  Lemma internal_eq_entails {A B : ofe} (a1 a2 : A) (b1 b2 : B) :
+    (a1 ≡ a2 ⊢ b1 ≡ b2) ↔ (∀ n, a1 ≡{n}≡ a2 → b1 ≡{n}≡ b2).
+  Proof. unseal. split; [by intros []|done]. Qed.
+
   (** Validity *)
   Lemma cmra_valid_intro {A : cmra} P (a : A) : ✓ a → P ⊢ (✓ a).
   Proof. unseal=> ?; split=> n ? /=; by apply cmra_valid_validN. Qed.
+  Lemma cmra_valid_elim {A : cmra} (a : A) : ✓ a ⊢ ⌜ ✓{0} a ⌝.
+  Proof. unseal; split=> n ?; by apply cmra_validN_le with n, SIdx.le_0_l. Qed.
   Lemma cmra_valid_weaken {A : cmra} (a b : A) : ✓ (a ⋅ b) ⊢ ✓ a.
   Proof. unseal; split=> n; apply cmra_validN_op_l. Qed.
+  Lemma valid_entails {A B : cmra} (a : A) (b : B) :
+    (✓ a ⊢ ✓ b) ↔ ∀ n, ✓{n} a → ✓{n} b.
+  Proof. unseal. split; [by intros []|done]. Qed.
 
-  (** Consistency/soundness statement *)
+  (** Consistency/soundness statements *)
   Lemma pure_soundness φ : (True ⊢ ⌜ φ ⌝) → φ.
   Proof. unseal=> -[H]. by apply (H 0). Qed.
 

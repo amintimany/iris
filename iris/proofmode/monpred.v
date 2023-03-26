@@ -467,14 +467,14 @@ Global Instance add_modal_at_bupd_goal `{!BiBUpd PROP} φ 𝓟 𝓟' Q i :
   AddModal 𝓟 𝓟' (|==> Q i)%I → AddModal 𝓟 𝓟' ((|==> Q) i).
 Proof. by rewrite /AddModal !monPred_at_bupd. Qed.
 
-Global Instance from_forall_monPred_at_plainly `{!BiPlainly PROP} i P Φ :
+Global Instance from_forall_monPred_at_plainly `{!Sbi PROP} i P Φ :
   (∀ i, MakeMonPredAt i P (Φ i)) →
   FromForall ((■ P) i) (λ j, ■ (Φ j))%I (to_ident_name idx).
 Proof.
   rewrite /FromForall /MakeMonPredAt=>HPΦ. rewrite monPred_at_plainly.
   by setoid_rewrite HPΦ.
 Qed.
-Global Instance into_forall_monPred_at_plainly `{!BiPlainly PROP} i P Φ :
+Global Instance into_forall_monPred_at_plainly `{!Sbi PROP} i P Φ :
   (∀ i, MakeMonPredAt i P (Φ i)) →
   IntoForall ((■ P) i) (λ j, ■ (Φ j))%I.
 Proof.
@@ -486,7 +486,7 @@ Global Instance is_except_0_monPred_at i P :
   IsExcept0 P → IsExcept0 (P i).
 Proof. rewrite /IsExcept0=>- [/(_ i)]. by rewrite monPred_at_except_0. Qed.
 
-Global Instance make_monPred_at_internal_eq `{!BiInternalEq PROP} {A : ofe} (x y : A) i :
+Global Instance make_monPred_at_internal_eq `{!Sbi PROP} {A : ofe} (x y : A) i :
   MakeMonPredAt i (x ≡ y) (x ≡ y).
 Proof. by rewrite /MakeMonPredAt monPred_at_internal_eq. Qed.
 Global Instance make_monPred_at_except_0 i P 𝓠 :
@@ -502,7 +502,7 @@ Global Instance make_monPred_at_fupd `{!BiFUpd PROP} i E1 E2 P 𝓟 :
   MakeMonPredAt i P 𝓟 → MakeMonPredAt i (|={E1,E2}=> P) (|={E1,E2}=> 𝓟).
 Proof. by rewrite /MakeMonPredAt monPred_at_fupd=> <-. Qed.
 
-Global Instance into_internal_eq_monPred_at `{!BiInternalEq PROP}
+Global Instance into_internal_eq_monPred_at `{!Sbi PROP}
     {A : ofe} (x y : A) P i :
   IntoInternalEq P x y → IntoInternalEq (P i) x y.
 Proof. rewrite /IntoInternalEq=> ->. by rewrite monPred_at_internal_eq. Qed.

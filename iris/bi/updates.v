@@ -109,29 +109,28 @@ Class BiBUpdFUpd (PROP : bi) `{BiBUpd PROP, BiFUpd PROP} :=
   bupd_fupd E (P : PROP) : (|==> P) ⊢ |={E}=> P.
 Global Hint Mode BiBUpdFUpd ! - - : typeclass_instances.
 
-Class BiBUpdPlainly (PROP : bi) `{!BiBUpd PROP, !BiPlainly PROP} :=
-  bupd_plainly (P : PROP) : (|==> ■ P) ⊢ P.
-Global Hint Mode BiBUpdPlainly ! - - : typeclass_instances.
+Class BiBUpdSbi (PROP : bi) `{!BiBUpd PROP, !Sbi PROP} :=
+  bupd_si_pure Pi : (|==> <si_pure> Pi) ⊢@{PROP} <si_pure> Pi.
+Global Hint Mode BiBUpdSbi ! - - : typeclass_instances.
 
-(** These rules for the interaction between the [■] and [|={E1,E2=>] modalities
-only make sense for affine logics. From the axioms below, one could derive
-[■ P ={E}=∗ P] (see the lemma [fupd_plainly_elim]), which in turn gives
-[True ={E}=∗ emp]. *)
-Class BiFUpdPlainly (PROP : bi) `{!BiFUpd PROP, !BiPlainly PROP} := {
+(** These rules for the interaction between [<si_pure>] and the [|={E1,E2=>]
+modality only make sense for affine logics. For general BIs we do not know the
+canonical set of rules and linear models in which they might hold. *)
+Class BiFUpdSbi (PROP : bi) `{!BiFUpd PROP, !Sbi PROP} := {
   (** Given a mask-changing non-persistent view shift ending in a plain
   proposition, and given the precondition of the view shift, we can eliminate
   the view shift without consuming the precondition and without changing the
   mask. *)
-  fupd_plainly_keep_l E E' (P R : PROP) :
-    (R ={E,E'}=∗ ■ P) ∗ R ⊢ |={E}=> P ∗ R;
+  fupd_si_pure_keep_l E E' Pi (R : PROP) :
+    (R ={E,E'}=∗ <si_pure> Pi) ∗ R ⊢ |={E}=> <si_pure> Pi ∗ R;
   (** Later "almost" commutes with fancy updates over plain propositions. It
   commutes "almost" because of the ◇ modality, which is needed in the definition
   of fancy updates so one can remove laters of timeless propositions. *)
-  fupd_plainly_later E (P : PROP) :
-    (▷ |={E}=> ■ P) ⊢ |={E}=> ▷ ◇ P;
+  fupd_si_pure_later E Pi :
+    (▷ |={E}=> <si_pure> Pi) ⊢@{PROP} |={E}=> ▷ ◇ <si_pure> Pi;
   (** Forall quantifiers commute with fancy updates over plain propositions. *)
-  fupd_plainly_forall_2 E {A} (Φ : A → PROP) :
-    (∀ x, |={E}=> ■ Φ x) ⊢ |={E}=> ∀ x, Φ x
+  fupd_si_pure_forall_2 E {A} (Φi : A → siProp) :
+    (∀ x, |={E}=> <si_pure> Φi x) ⊢@{PROP} |={E}=> ∀ x, <si_pure> Φi x
 }.
 Global Hint Mode BiBUpdFUpd ! - - : typeclass_instances.
 
@@ -253,13 +252,22 @@ Section bupd_derived.
     Absorbing P → Absorbing (|==> P).
   Proof. rewrite /Absorbing /bi_absorbingly bupd_frame_l =>-> //. Qed.
 
-  Section bupd_plainly.
-    Context `{!BiPlainly PROP, !BiBUpdPlainly PROP}.
+  Section bupd_sbi.
+    Context `{!Sbi PROP, !BiBUpdSbi PROP}.
 
-    Lemma bupd_elim P `{!Plain P} : (|==> P) ⊢ P.
-    Proof. by rewrite {1}(plain P) bupd_plainly. Qed.
+    Lemma bupd_plainly P : (|==> ■ P) ⊢ ■ P.
+    Proof. apply bupd_si_pure. Qed.
 
-    Lemma bupd_plain_forall {A} (Φ : A → PROP) `{∀ x, Plain (Φ x)} :
+    Lemma bupd_plainly_elim P `{!Absorbing P} : (|==> ■ P) ⊢ P.
+    Proof. by rewrite bupd_plainly plainly_elim. Qed.
+
+    Lemma bupd_elim P `{!Plain P, !Absorbing P} : (|==> P) ⊢ P.
+    Proof.
+      by rewrite {1}(plain P) /plainly bupd_si_pure si_pure_si_emp_valid_elim.
+    Qed.
+
+    Lemma bupd_plain_forall {A} (Φ : A → PROP)
+        `{!∀ x, Plain (Φ x), !∀ x, Absorbing (Φ x)} :
       (|==> ∀ x, Φ x) ⊣⊢ (∀ x, |==> Φ x).
     Proof.
       apply (anti_symm _).
@@ -273,8 +281,7 @@ Section bupd_derived.
       intros. rewrite /Plain. rewrite {1}(plain P) {1}bupd_elim.
       by rewrite -bupd_intro.
     Qed.
-
-  End bupd_plainly.
+  End bupd_sbi.
 End bupd_derived.
 
 Section fupd_derived.
@@ -432,10 +439,12 @@ Section fupd_derived.
     (|={E1,E2}=> (P ∧ Q)) ⊢@{PROP} (|={E1,E2}=> P) ∧ (|={E1,E2}=> Q).
   Proof. apply and_intro; apply fupd_mono; [apply and_elim_l | apply and_elim_r]. Qed.
 
-  Lemma fupd_exist E1 E2 A (Φ : A → PROP) : (∃ x : A, |={E1, E2}=> Φ x) ⊢ |={E1, E2}=> ∃ x : A, Φ x.
+  Lemma fupd_exist E1 E2 A (Φ : A → PROP) :
+    (∃ x : A, |={E1, E2}=> Φ x) ⊢ |={E1, E2}=> ∃ x : A, Φ x.
   Proof. apply exist_elim=> a. by rewrite -(exist_intro a). Qed.
 
-  Lemma fupd_forall E1 E2 A (Φ : A → PROP) : (|={E1, E2}=> ∀ x : A, Φ x) ⊢ ∀ x : A, |={E1, E2}=> Φ x.
+  Lemma fupd_forall E1 E2 A (Φ : A → PROP) :
+    (|={E1, E2}=> ∀ x : A, Φ x) ⊢ ∀ x : A, |={E1, E2}=> Φ x.
   Proof. apply forall_intro=> a. by rewrite -(forall_elim a). Qed.
 
   Lemma fupd_sep E P Q : (|={E}=> P) ∗ (|={E}=> Q) ⊢ |={E}=> P ∗ Q.
@@ -572,8 +581,23 @@ Section fupd_derived.
     by rewrite -laterN_intro.
   Qed.
 
-  Section fupd_plainly_derived.
-    Context `{!BiPlainly PROP, !BiFUpdPlainly PROP}.
+  Section fupd_sbi_derived.
+    Context `{!Sbi PROP, !BiFUpdSbi PROP, !BiAffine PROP}.
+
+    Lemma fupd_plainly_keep_l E E' (P R : PROP) :
+      (R ={E,E'}=∗ ■ P) ∗ R ⊢ |={E}=> P ∗ R.
+    Proof. by rewrite /plainly fupd_si_pure_keep_l si_pure_si_emp_valid_elim. Qed.
+
+    Lemma fupd_plainly_later E P : (▷ |={E}=> ■ P) ⊢ |={E}=> ▷ ◇ P.
+    Proof.
+      by rewrite /plainly fupd_si_pure_later si_pure_si_emp_valid_elim.
+    Qed.
+    Lemma fupd_plainly_forall_2 E {A} (Φ : A → PROP) :
+      (∀ x, |={E}=> ■ Φ x) ⊢ |={E}=> ∀ x, Φ x.
+    Proof.
+      rewrite /plainly fupd_si_pure_forall_2.
+      by setoid_rewrite si_pure_si_emp_valid_elim; last apply _.
+    Qed.
 
     Lemma fupd_plainly_mask E E' P : (|={E,E'}=> ■ P) ⊢ |={E}=> P.
     Proof.
@@ -663,5 +687,5 @@ Section fupd_derived.
       rewrite -(fupd_except_0 Ei Eo) -step_fupd_intro //.
       by rewrite -later_forall -except_0_forall.
     Qed.
-  End fupd_plainly_derived.
+  End fupd_sbi_derived.
 End fupd_derived.

@@ -4,7 +4,7 @@ From iris.prelude Require Import options.
 Import bi.
 
 Section class_instances_plainly.
-Context {PROP} `{!BiPlainly PROP}.
+Context `{!Sbi PROP}.
 Implicit Types P Q R : PROP.
 
 Global Instance from_assumption_plainly_l_true P Q :
@@ -67,7 +67,7 @@ Global Instance from_or_plainly P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr (■ P) (■ Q1) (■ Q2).
 Proof. rewrite /FromOr=> <-. by rewrite -plainly_or_2. Qed.
 
-Global Instance into_or_plainly `{!BiPlainlyExist PROP} P Q1 Q2 :
+Global Instance into_or_plainly `{!SbiEmpValidExist PROP} P Q1 Q2 :
   IntoOr P Q1 Q2 → IntoOr (■ P) (■ Q1) (■ Q2).
 Proof. rewrite /IntoOr=>->. by rewrite plainly_or. Qed.
 
@@ -75,7 +75,8 @@ Global Instance from_exist_plainly {A} P (Φ : A → PROP) :
   FromExist P Φ → FromExist (■ P) (λ a, ■ (Φ a))%I.
 Proof. rewrite /FromExist=> <-. by rewrite -plainly_exist_2. Qed.
 
-Global Instance into_exist_plainly `{!BiPlainlyExist PROP} {A} P (Φ : A → PROP) name :
+Global Instance into_exist_plainly `{!SbiEmpValidExist PROP}
+    {A} P (Φ : A → PROP) name :
   IntoExist P Φ name → IntoExist (■ P) (λ a, ■ (Φ a))%I name.
 Proof. rewrite /IntoExist=> HP. by rewrite HP plainly_exist. Qed.
 

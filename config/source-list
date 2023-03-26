@@ -53,15 +53,18 @@ iris/bi/derived_laws.v
 iris/bi/derived_laws_later.v
 iris/bi/plainly.v
 iris/bi/internal_eq.v
+iris/bi/cmra.v
 iris/bi/big_op.v
 iris/bi/updates.v
 iris/bi/ascii.v
 iris/bi/bi.v
+iris/bi/sbi.v
+iris/bi/sbi_unfold.v
+iris/bi/algebra.v
 iris/bi/monpred.v
 iris/bi/embedding.v
 iris/bi/weakestpre.v
 iris/bi/telescopes.v
-iris/bi/lib/cmra.v
 iris/bi/lib/counterexamples.v
 iris/bi/lib/fixpoint_mono.v
 iris/bi/lib/fixpoint_banach.v
@@ -75,7 +78,6 @@ iris/base_logic/bi.v
 iris/base_logic/derived.v
 iris/base_logic/proofmode.v
 iris/base_logic/base_logic.v
-iris/base_logic/algebra.v
 iris/base_logic/bupd_alt.v
 iris/base_logic/lib/iprop.v
 iris/base_logic/lib/own.v
@@ -129,6 +131,7 @@ iris/proofmode/class_instances_updates.v
 iris/proofmode/class_instances_embedding.v
 iris/proofmode/class_instances_plainly.v
 iris/proofmode/class_instances_internal_eq.v
+iris/proofmode/class_instances_cmra.v
 iris/proofmode/class_instances_frame.v
 iris/proofmode/class_instances_make.v
 iris/proofmode/monpred.v
@@ -169,7 +172,7 @@ iris_heap_lang/lib/array.v
 iris_heap_lang/lib/logatom_lock.v
 
 iris_unstable/algebra/list.v
-iris_unstable/base_logic/algebra.v
+iris_unstable/bi/algebra.v
 iris_unstable/base_logic/mono_list.v
 iris_unstable/heap_lang/interpreter.v
 

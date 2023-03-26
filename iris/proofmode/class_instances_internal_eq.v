@@ -4,7 +4,7 @@ From iris.prelude Require Import options.
 Import bi.
 
 Section class_instances_internal_eq.
-Context `{!BiInternalEq PROP}.
+Context `{!Sbi PROP}.
 Implicit Types P Q R : PROP.
 
 (* When a user calls [iPureIntro] on [⊢ a ≡ b], the following instance turns

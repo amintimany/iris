@@ -80,20 +80,20 @@ Proof. rewrite /BiBUpdFUpd uPred_fupd_unseal. by iIntros (E P) ">? [$ $] !> !>".
 
 (** The interaction laws with the plainly modality are only supported when
   we opt out of the support for later credits. *)
-Global Instance uPred_bi_fupd_plainly_no_lc `{!invGS_gen HasNoLc Σ} :
-  BiFUpdPlainly (uPredI (iResUR Σ)).
+Global Instance uPred_bi_fupd_sbi_no_lc `{!invGS_gen HasNoLc Σ} :
+  BiFUpdSbi (uPredI (iResUR Σ)).
 Proof.
   split; rewrite uPred_fupd_unseal /uPred_fupd_def.
-  - iIntros (E E' P Q) "[H HQ] [Hw HE]".
-    iAssert (◇ ■ P)%I as "#>HP".
+  - iIntros (E E' Pi Q) "[H HQ] [Hw HE]".
+    iAssert (◇ <si_pure> Pi)%I as "#>HP".
     { by iMod ("H" with "HQ [$]") as "(_ & _ & HP)". }
     by iFrame.
-  - iIntros (E P) "H [Hw HE]".
-    iAssert (▷ ◇ ■ P)%I as "#HP".
+  - iIntros (E Pi) "H [Hw HE]".
+    iAssert (▷ ◇ <si_pure> Pi)%I as "#HP".
     { iNext. by iMod ("H" with "[$]") as "(_ & _ & HP)". }
     iFrame. iIntros "!> !> !>". by iMod "HP".
-  - iIntros (E A Φ) "HΦ [Hw HE]".
-    iAssert (◇ ■ ∀ x : A, Φ x)%I as "#>HP".
+  - iIntros (E A Φi) "HΦ [Hw HE]".
+    iAssert (◇ ∀ x : A, <si_pure> Φi x)%I as "#>HP".
     { iIntros (x). by iMod ("HΦ" with "[$Hw $HE]") as "(_&_&?)". }
     by iFrame.
 Qed.

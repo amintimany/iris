@@ -175,7 +175,7 @@ Local Lemma wp_progress_gen (hlc : has_lc) Σ Λ `{!invGpreS Σ} es σ1 n κs t2
   not_stuck e2 σ2.
 Proof.
   intros Hwp ??.
-  eapply pure_soundness.
+  apply (pure_soundness (PROP:=iPropI Σ)).
   eapply (step_fupdN_soundness_gen _ hlc (steps_sum num_laters_per_step 0 n)
     (steps_sum num_laters_per_step 0 n)).
   iIntros (Hinv) "Hcred".
@@ -233,7 +233,7 @@ Lemma wp_strong_adequacy_gen (hlc : has_lc) Σ Λ `{!invGpreS Σ} s es σ1 n κs
   φ.
 Proof.
   intros Hwp ?.
-  eapply pure_soundness.
+  apply (pure_soundness (PROP:=iPropI Σ)).
   eapply (step_fupdN_soundness_gen _ hlc (steps_sum num_laters_per_step 0 n)
     (steps_sum num_laters_per_step 0 n)).
   iIntros (Hinv) "Hcred".

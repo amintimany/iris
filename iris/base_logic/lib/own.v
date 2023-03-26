@@ -105,11 +105,9 @@ Local Instance iRes_singleton_ne γ : NonExpansive (@iRes_singleton Σ A _ γ).
 Proof. by intros n a a' Ha; apply discrete_fun_singleton_ne; rewrite Ha. Qed.
 Local Lemma iRes_singleton_validI γ a : ✓ (iRes_singleton γ a) ⊢@{iPropI Σ} ✓ a.
 Proof.
-  rewrite /iRes_singleton.
-  rewrite discrete_fun_validI (forall_elim (inG_id i)) discrete_fun_lookup_singleton.
-  rewrite singleton_validI.
-  trans (✓ cmra_transport inG_prf a : iProp Σ)%I; last by destruct inG_prf.
-  apply valid_entails=> n. apply inG_unfold_validN.
+  sbi_unfold=> n. rewrite /iRes_singleton.
+  rewrite discrete_fun_singleton_validN singleton_validN inG_unfold_validN.
+  by destruct inG_prf.
 Qed.
 Local Lemma iRes_singleton_op γ a1 a2 :
   iRes_singleton γ (a1 ⋅ a2) ≡ iRes_singleton γ a1 ⋅ iRes_singleton γ a2.
@@ -204,7 +202,7 @@ Proof.
   rewrite and_exist_l. f_equiv=> b. rewrite and_exist_l. apply exist_elim=> r'.
   rewrite assoc. apply and_mono_l.
   etrans; [|apply ownM_mono, (cmra_included_l _ r')].
-  eapply (internal_eq_rewrite' _ _ uPred_ownM _); [apply and_elim_r|].
+  eapply (internal_eq_rewrite' _ _ uPred_ownM _ _); [apply and_elim_r|].
   apply and_elim_l.
 Qed.
 

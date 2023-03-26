@@ -9,7 +9,7 @@ Set Default Proof Using "Type*".
 
 (** * Definitions *)
 Section definitions.
-  Context {PROP : bi} `{!BiInternalEq PROP}.
+  Context `{!Sbi PROP}.
   Context {A : ofe}.
 
   Local Definition bi_rtc_pre (R : A → A → PROP)
@@ -42,7 +42,7 @@ Section definitions.
   Global Instance: Params (@bi_nsteps) 5 := {}.
 End definitions.
 
-Local Instance bi_rtc_pre_mono {PROP : bi} `{!BiInternalEq PROP}
+Local Instance bi_rtc_pre_mono {PROP : bi} `{!Sbi PROP}
     {A : ofe} (R : A → A → PROP) `{!NonExpansive2 R} (x : A) :
   BiMonoPred (bi_rtc_pre R x).
 Proof.
@@ -54,18 +54,18 @@ Proof.
   iDestruct ("H" with "Hrec") as "Hrec". eauto with iFrame.
 Qed.
 
-Global Instance bi_rtc_ne {PROP : bi} `{!BiInternalEq PROP} {A : ofe} (R : A → A → PROP) :
+Global Instance bi_rtc_ne {PROP : bi} `{!Sbi PROP} {A : ofe} (R : A → A → PROP) :
   NonExpansive2 (bi_rtc R).
 Proof.
   intros n x1 x2 Hx y1 y2 Hy. rewrite /bi_rtc Hx. f_equiv=> rec z.
   solve_proper.
 Qed.
 
-Global Instance bi_rtc_proper {PROP : bi} `{!BiInternalEq PROP} {A : ofe} (R : A → A → PROP)
+Global Instance bi_rtc_proper {PROP : bi} `{!Sbi PROP} {A : ofe} (R : A → A → PROP)
   : Proper ((≡) ==> (≡) ==> (⊣⊢)) (bi_rtc R).
 Proof. apply ne_proper_2. apply _. Qed.
 
-Local Instance bi_tc_pre_mono `{!BiInternalEq PROP}
+Local Instance bi_tc_pre_mono `{!Sbi PROP}
     {A : ofe} (R : A → A → PROP) `{NonExpansive2 R} (x : A) :
   BiMonoPred (bi_tc_pre R x).
 Proof.
@@ -77,7 +77,7 @@ Proof.
   iRight. iExists x'. iFrame "HR". by iApply "H".
 Qed.
 
-Global Instance bi_tc_ne `{!BiInternalEq PROP} {A : ofe}
+Global Instance bi_tc_ne `{!Sbi PROP} {A : ofe}
     (R : A → A → PROP) `{NonExpansive2 R} :
   NonExpansive2 (bi_tc R).
 Proof.
@@ -85,24 +85,24 @@ Proof.
   solve_proper.
 Qed.
 
-Global Instance bi_tc_proper `{!BiInternalEq PROP} {A : ofe}
+Global Instance bi_tc_proper `{!Sbi PROP} {A : ofe}
     (R : A → A → PROP) `{NonExpansive2 R}
   : Proper ((≡) ==> (≡) ==> (⊣⊢)) (bi_tc R).
 Proof. apply ne_proper_2. apply _. Qed.
 
-Global Instance bi_nsteps_ne {PROP : bi} `{!BiInternalEq PROP}
+Global Instance bi_nsteps_ne {PROP : bi} `{!Sbi PROP}
     {A : ofe} (R : A → A → PROP) `{NonExpansive2 R} (n : nat) :
   NonExpansive2 (bi_nsteps R n).
 Proof. induction n; solve_proper. Qed.
 
-Global Instance bi_nsteps_proper {PROP : bi} `{!BiInternalEq PROP}
+Global Instance bi_nsteps_proper {PROP : bi} `{!Sbi PROP}
     {A : ofe} (R : A → A → PROP) `{NonExpansive2 R} (n : nat)
   : Proper ((≡) ==> (≡) ==> (⊣⊢)) (bi_nsteps R n).
 Proof. apply ne_proper_2. apply _. Qed.
 
 (** * General theorems *)
 Section general.
-  Context {PROP : bi} `{!BiInternalEq PROP}.
+  Context `{!Sbi PROP}.
   Context {A : ofe}.
   Context (R : A → A → PROP) `{!NonExpansive2 R}.
 
@@ -396,7 +396,7 @@ Section general.
 End general.
 
 Section timeless.
-  Context {PROP : bi} `{!BiInternalEq PROP, !Timeless (@bi_emp PROP)}.
+  Context `{!Sbi PROP, !Timeless (@bi_emp PROP)}.
   Context `{!OfeDiscrete A}.
   Context (R : A → A → PROP) `{!NonExpansive2 R}.
 

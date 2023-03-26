@@ -155,13 +155,13 @@ Global Instance from_modal_later_embed `{!BiEmbedLater PROP PROP'} φ `(sel : A)
 Proof. rewrite /FromModal /= =>HPQ ?. by rewrite -HPQ // embed_laterN. Qed.
 
 Global Instance from_modal_plainly_embed
-    `{!BiPlainly PROP, !BiPlainly PROP', !BiEmbedPlainly PROP PROP'} φ `(sel : A) P Q :
+    `{!Sbi PROP, !Sbi PROP', !BiEmbedSbi PROP PROP'} φ `(sel : A) P Q :
   FromModal φ modality_plainly sel P Q →
   FromModal φ (PROP2:=PROP') modality_plainly sel ⎡P⎤ ⎡Q⎤ | 100.
 Proof. rewrite /FromModal /= =>HPQ ?. by rewrite -HPQ // embed_plainly. Qed.
 
 Global Instance into_internal_eq_embed
-    `{!BiInternalEq PROP, !BiInternalEq PROP', !BiEmbedInternalEq PROP PROP'}
+    `{!Sbi PROP, !Sbi PROP', !BiEmbedSbi PROP PROP'}
     {A : ofe} (x y : A) (P : PROP) :
   IntoInternalEq P x y → IntoInternalEq (⎡P⎤ : PROP')%I x y.
 Proof. rewrite /IntoInternalEq=> ->. by rewrite embed_internal_eq. Qed.
