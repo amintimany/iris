@@ -39,6 +39,10 @@ Reserved Notation "P -∗ Q"
   (at level 99, Q at level 200, right associativity,
    format "'[' P  -∗  '/' '[' Q ']' ']'").
 
+Reserved Notation "<si_pure> Pi" (at level 20, right associativity).
+Reserved Notation "<si_pure>@{ PROP } Pi" (at level 20, right associativity).
+Reserved Notation "<si_emp_valid> P" (at level 20, right associativity).
+
 Reserved Notation "⎡ P ⎤".
 
 (** Modalities *)
