@@ -255,15 +255,6 @@ Inductive uPred_entails {M} (P Q : uPred M) : Prop :=
 Global Hint Resolve uPred_mono : uPred_def.
 
 (** logical connectives *)
-Local Program Definition uPred_pure_def {M} (φ : Prop) : uPred M :=
-  {| uPred_holds n x := φ |}.
-Solve Obligations with done.
-Local Definition uPred_pure_aux : seal (@uPred_pure_def). Proof. by eexists. Qed.
-Definition uPred_pure := uPred_pure_aux.(unseal).
-Global Arguments uPred_pure {M}.
-Local Definition uPred_pure_unseal :
-  @uPred_pure = @uPred_pure_def := uPred_pure_aux.(seal_eq).
-
 Local Program Definition uPred_si_pure_def {M} (Pi : siProp) : uPred M :=
   {| uPred_holds n x := siProp_holds Pi n |}.
 Solve Obligations with naive_solver eauto using siProp_closed.
@@ -450,7 +441,7 @@ Notation "✓ x" := (uPred_cmra_valid x) (at level 20) : bi_scope.
     connectives. *)
 Module uPred_primitive.
 Local Definition uPred_unseal :=
-  (uPred_pure_unseal, uPred_si_pure_unseal, uPred_si_emp_valid_unseal,
+  (uPred_si_pure_unseal, uPred_si_emp_valid_unseal,
   uPred_and_unseal, uPred_or_unseal, uPred_impl_unseal,
   uPred_forall_unseal, uPred_exist_unseal, uPred_internal_eq_unseal,
   uPred_sep_unseal, uPred_wand_unseal, uPred_plainly_unseal,
@@ -475,11 +466,11 @@ Section primitive.
   Notation "P ⊣⊢ Q" := (@uPred_equiv M P%I Q%I) : stdpp_scope.
   Notation "(⊣⊢)" := (@uPred_equiv M) (only parsing) : stdpp_scope.
 
-  Notation "'True'" := (uPred_pure True) : bi_scope.
-  Notation "'False'" := (uPred_pure False) : bi_scope.
-  Notation "'⌜' φ '⌝'" := (uPred_pure φ%type%stdpp) : bi_scope.
   Notation "<si_pure> Pi" := (uPred_si_pure Pi) : bi_scope.
   Notation "<si_emp_valid> P" := (uPred_si_emp_valid P).
+  Notation "'⌜' φ '⌝'" := (<si_pure> siProp_pure φ%type%stdpp)%I : bi_scope.
+  Notation "'True'" := ⌜ True ⌝%I : bi_scope.
+  Notation "'False'" := ⌜ False ⌝%I : bi_scope.
   Infix "∧" := uPred_and : bi_scope.
   Infix "∨" := uPred_or : bi_scope.
   Infix "→" := uPred_impl : bi_scope.
@@ -518,9 +509,6 @@ Section primitive.
   Qed.
 
   (** Non-expansiveness and setoid morphisms *)
-  Lemma pure_ne n : Proper (iff ==> dist n) (@uPred_pure M).
-  Proof. intros φ1 φ2 Hφ. by unseal; split=> -[|m] ?; try apply Hφ. Qed.
-
   Lemma si_pure_ne : NonExpansive (@uPred_si_pure M).
   Proof. intros n Pi Pi' HPi. unseal; split; intros; by apply HPi. Qed.
 
@@ -678,13 +666,6 @@ Section primitive.
   Qed.
 
   (** Introduction and elimination rules *)
-  Lemma pure_intro φ P : φ → P ⊢ ⌜φ⌝.
-  Proof. by intros ?; unseal; split. Qed.
-  Lemma pure_elim' φ P : (φ → True ⊢ P) → ⌜φ⌝ ⊢ P.
-  Proof. unseal; intros HP; split=> n x ??. by apply HP. Qed.
-  Lemma pure_forall_2 {A} (φ : A → Prop) : (∀ x : A, ⌜φ x⌝) ⊢ ⌜∀ x : A, φ x⌝.
-  Proof. by unseal. Qed.
-
   Lemma and_elim_l P Q : P ∧ Q ⊢ P.
   Proof. by unseal; split=> n x ? [??]. Qed.
   Lemma and_elim_r P Q : P ∧ Q ⊢ Q.
@@ -730,7 +711,8 @@ Section primitive.
   Qed.
   Lemma True_sep_1 P : P ⊢ True ∗ P.
   Proof.
-    unseal; split; intros n x ??. exists (core x), x. by rewrite cmra_core_l.
+    unseal; siProp_primitive.unseal; split; intros n x ??.
+    exists (core x), x. by rewrite cmra_core_l.
   Qed.
   Lemma True_sep_2 P : True ∗ P ⊢ P.
   Proof.
@@ -849,7 +831,7 @@ Section primitive.
 
   Lemma later_false_em P : ▷ P ⊢ ▷ False ∨ (▷ False → P).
   Proof.
-    unseal; split=> -[|n] x ? /= HP; [by left|right].
+    unseal; siProp_primitive.unseal; split=> -[|n] x ? /= HP; [by left|right].
     intros [|n'] x' ????; eauto using uPred_mono, cmra_included_includedN.
   Qed.
 
@@ -892,7 +874,8 @@ Section primitive.
     TCOr (Discrete a) (Discrete b) →
     a ≡ b ⊢ ⌜a ≡ b⌝.
   Proof.
-    unseal=> ?. split=> n x ?. by apply (discrete_iff n).
+    unseal; siProp_primitive.unseal=> ?.
+    split=> n x ?. by apply (discrete_iff n).
   Qed.
 
   (** This is really just a special case of an entailment
@@ -966,7 +949,7 @@ Section primitive.
   Lemma bupd_ownM_updateP x (Φ : M → Prop) :
     x ~~>: Φ → uPred_ownM x ⊢ |==> ∃ y, ⌜Φ y⌝ ∧ uPred_ownM y.
   Proof.
-    unseal=> Hup; split=> n x2 ? [x3 Hx] k yf ??.
+    unseal; siProp_primitive.unseal=> Hup; split=> n x2 ? [x3 Hx] k yf ??.
     destruct (Hup k (Some (x3 ⋅ yf))) as (y&?&?); simpl in *.
     { rewrite /= assoc -(dist_le _ _ _ _ Hx); auto. }
     exists (y ⋅ x3); split; first by rewrite -assoc.
@@ -988,7 +971,10 @@ Section primitive.
   Lemma cmra_valid_intro {A : cmra} P (a : A) : ✓ a → P ⊢ (✓ a).
   Proof. unseal=> ?; split=> n x ? _ /=; by apply cmra_valid_validN. Qed.
   Lemma cmra_valid_elim {A : cmra} (a : A) : ✓ a ⊢ ⌜ ✓{0} a ⌝.
-  Proof. unseal; split=> n x ??; by apply cmra_validN_le with n, SIdx.le_0_l. Qed.
+  Proof.
+    unseal; siProp_primitive.unseal.
+    split=> n x ??; by apply cmra_validN_le with n, SIdx.le_0_l.
+  Qed.
   Lemma plainly_cmra_valid_1 {A : cmra} (a : A) : ✓ a ⊢ ■ ✓ a.
   Proof. by unseal. Qed.
   Lemma cmra_valid_weaken {A : cmra} (a b : A) : ✓ (a ⋅ b) ⊢ ✓ a.
@@ -1006,17 +992,20 @@ Section primitive.
   (** The lemmas [pure_soundness] and [internal_eq_soundness] should become an
   instance of [siProp] soundness in the future. *)
   Lemma pure_soundness φ : (True ⊢ ⌜ φ ⌝) → φ.
-  Proof. unseal=> -[H]. by apply (H 0 ε); eauto using ucmra_unit_validN. Qed.
+  Proof.
+    unseal; siProp_primitive.unseal=> -[H].
+    by apply (H 0 ε); eauto using ucmra_unit_validN.
+  Qed.
 
   Lemma internal_eq_soundness {A : ofe} (x y : A) : (True ⊢ x ≡ y) → x ≡ y.
   Proof.
-    unseal=> -[H]. apply equiv_dist=> n.
+    unseal; siProp_primitive.unseal=> -[H]. apply equiv_dist=> n.
     by apply (H n ε); eauto using ucmra_unit_validN.
   Qed.
 
   Lemma later_soundness P : (True ⊢ ▷ P) → (True ⊢ P).
   Proof.
-    unseal=> -[HP]; split=> n x Hx _.
+    unseal; siProp_primitive.unseal=> -[HP]; split=> n x Hx _.
     apply uPred_mono with n ε; eauto using ucmra_unit_leastN.
     by apply (HP (S n)); eauto using ucmra_unit_validN.
   Qed.

@@ -1,5 +1,7 @@
 From iris.bi Require Export derived_connectives extensions
   updates internal_eq plainly lib.cmra.
+From iris.si_logic Require Export bi.
+From iris.bi Require Import derived_laws derived_laws_later.
 From iris.base_logic Require Export upred.
 From iris.prelude Require Import options.
 Import uPred_primitive.
@@ -7,9 +9,17 @@ Import uPred_primitive.
 (** BI instances for [uPred], and re-stating the remaining primitive laws in
 terms of the BI interface. This file does *not* unseal. *)
 
+Definition uPred_pure {M} (φ : Prop) : uPred M := uPred_si_pure ⌜ φ ⌝.
 Definition uPred_emp {M} : uPred M := uPred_pure True.
 
 Local Existing Instance entails_po.
+
+Local Lemma True_intro M P : uPred_entails (M:=M) P (uPred_pure True).
+Proof.
+  trans (uPred_si_pure (∀ x : False, True) : uPred M).
+  - etrans; last apply si_pure_forall_2. by apply forall_intro.
+  - by apply si_pure_mono, bi.True_intro.
+Qed.
 
 Lemma uPred_bi_mixin (M : ucmra) :
   BiMixin
@@ -19,7 +29,7 @@ Proof.
   split.
   - exact: entails_po.
   - exact: equiv_entails.
-  - exact: pure_ne.
+  - intros n φ1 φ2 Hφ. apply si_pure_ne. by rewrite Hφ.
   - exact: and_ne.
   - exact: or_ne.
   - exact: impl_ne.
@@ -27,8 +37,14 @@ Proof.
   - exact: exist_ne.
   - exact: sep_ne.
   - exact: wand_ne.
-  - exact: pure_intro.
-  - exact: pure_elim'.
+  - (* φ → P ⊢ ⌜ φ ⌝ (ADMISSIBLE) *)
+    intros φ P ?. etrans; first by apply True_intro.
+    by apply si_pure_mono, bi.pure_intro.
+  - (* (φ → True ⊢ P) → (⌜ φ ⌝ ⊢ P) (ADMISSIBLE) *)
+    intros φ P HφP. etrans; last apply persistently_elim.
+    etrans; last apply si_pure_si_emp_valid.
+    apply si_pure_mono. apply bi.pure_elim'=> ?.
+    rewrite -(si_emp_valid_si_pure True). by apply si_emp_valid_mono, HφP.
   - exact: and_elim_l.
   - exact: and_elim_r.
   - exact: and_intro.
@@ -63,7 +79,7 @@ Proof.
     trans (uPred_forall (M:=M) (λ _ : False, uPred_persistently uPred_emp)).
     + apply forall_intro=>-[].
     + etrans; first exact: persistently_forall_2.
-      apply persistently_mono. exact: pure_intro.
+      apply persistently_mono, True_intro.
   - (* ((<pers> P) ∧ (<pers> Q)) ⊢ <pers> (P ∧ Q) (ADMISSIBLE) *)
     intros P Q.
     trans (uPred_forall (M:=M) (λ b : bool, uPred_persistently (if b then P else Q))).
@@ -78,8 +94,7 @@ Proof.
   - (* <pers> P ∗ Q ⊢ <pers> P (ADMISSIBLE) *)
     intros. etrans; first exact: sep_comm'.
     etrans; last exact: True_sep_2.
-    apply sep_mono; last done.
-    exact: pure_intro.
+    apply sep_mono; last done. apply True_intro.
   - exact: persistently_and_sep_l_1.
 Qed.
 
@@ -136,12 +151,12 @@ Proof.
     trans (uPred_forall (M:=M) (λ _ : False , uPred_plainly uPred_emp)).
     + apply forall_intro=>[[]].
     + etrans; first exact: plainly_forall_2.
-      apply plainly_mono. exact: pure_intro.
+      apply plainly_mono. exact: bi.pure_intro.
   - (* ■ P ∗ Q ⊢ ■ P (ADMISSIBLE) *)
     intros P Q. etrans; last exact: True_sep_2.
     etrans; first exact: sep_comm'.
     apply sep_mono; last done.
-    exact: pure_intro.
+    exact: bi.pure_intro.
   - exact: later_plainly_1.
   - exact: later_plainly_2.
 Qed.
@@ -162,7 +177,7 @@ Global Instance uPred_bi_bupd M : BiBUpd (uPredI M) := {| bi_bupd_mixin := uPred
 (** extra BI instances *)
 
 Global Instance uPred_affine M : BiAffine (uPredI M) | 0.
-Proof. intros P. exact: pure_intro. Qed.
+Proof. intros P. exact: bi.pure_intro. Qed.
 (* Also add this to the global hint database, otherwise [eauto] won't work for
 many lemmas that have [BiAffine] as a premise. *)
 Global Hint Immediate uPred_affine : core.
@@ -171,7 +186,10 @@ Global Instance uPred_persistently_forall M : BiPersistentlyForall (uPredI M).
 Proof. exact: @persistently_forall_2. Qed.
 
 Global Instance uPred_pure_forall M : BiPureForall (uPredI M).
-Proof. exact: @pure_forall_2. Qed.
+Proof.
+  intros A φ. etrans; [apply si_pure_forall_2|].
+  apply si_pure_mono, pure_forall_2.
+Qed.
 
 Global Instance uPred_later_contractive {M} : BiLaterContractive (uPredI M).
 Proof. exact: @later_contractive. Qed.
@@ -262,10 +280,12 @@ Section restate.
 
   (** We restate the unsealing lemmas for the BI layer. The sealing lemmas
   are partially applied so that they also rewrite under binders. *)
-  Local Lemma uPred_emp_unseal : bi_emp = @upred.uPred_pure_def M True.
-  Proof. by rewrite -upred.uPred_pure_unseal. Qed.
-  Local Lemma uPred_pure_unseal : bi_pure = @upred.uPred_pure_def M.
-  Proof. by rewrite -upred.uPred_pure_unseal. Qed.
+  Local Lemma uPred_emp_unseal :
+    bi_emp = @upred.uPred_si_pure_def M (siprop.siProp_pure_def True).
+  Proof. by rewrite -upred.uPred_si_pure_unseal -siprop.siProp_pure_unseal. Qed.
+  Local Lemma uPred_pure_unseal :
+    bi_pure = λ φ, @upred.uPred_si_pure_def M (siprop.siProp_pure_def φ).
+  Proof. by rewrite -upred.uPred_si_pure_unseal -siprop.siProp_pure_unseal. Qed.
   (* FIXME: Use bi classes *)
   Local Lemma uPred_si_pure_unseal : uPred_si_pure = @upred.uPred_si_pure_def M.
   Proof. by rewrite -upred.uPred_si_pure_unseal. Qed.
