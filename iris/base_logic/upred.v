@@ -883,6 +883,13 @@ Section primitive.
     exists y; eauto using cmra_includedN_l.
   Qed.
 
+  Lemma ownM_forall {A} (f : A → M) :
+    (∀ a, uPred_ownM (f a)) ⊢ ∃ z, uPred_ownM z ∧ (∀ a, ∃ xf, z ≡ f a ⋅ xf).
+  Proof.
+    unseal. split=> n y /= Hval Hf. exists y. split; [done|]. intros a.
+    destruct (Hf a) as [xf ?]; eauto.
+  Qed.
+
   (** Valid *)
   Lemma ownM_valid (a : M) : uPred_ownM a ⊢ ✓ a.
   Proof.
