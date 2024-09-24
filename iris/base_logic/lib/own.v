@@ -397,284 +397,151 @@ Section proofmode_instances.
   Qed.
 End proofmode_instances.
 
-Section and_own_cmra.
+Section own_forall.
   Context `{i : !inG Σ A}.
+  Implicit Types a c : A.
+  Implicit Types x z : iResUR Σ.
 
-  (* Our main goal in this section is to prove:
-     (∀ b, own γ (f b)) ⊢ ∃ z , own γ z ∗ (∀ b, Some (f b) ≼ Some z)
+  (** Our main goal in this section is to prove [own_forall]:
 
-     We have the analogue in the global ucmra, from ownM_forall:
-     (∀ a, uPred_ownM (f a)) ⊢ ∃ z, uPred_ownM z ∧ (∀ a, f a ≼ z)
+    (∀ b, own γ (f b)) ⊢ ∃ c : A, own γ c ∗ (∀ b, Some (f b) ≼ Some c)
 
-     We need to relate `uPred_ownM (iRes_singleton γ _)` to `own γ _` so that we
-     can bring this theorem from the global ucmra world to the A world.
-     In particular, uPred_ownM_and gives us some z in the ucmra world, but to prove
-     the theorem in the end, we need to supply a witness z' in the A world.
-     We start by defining this `iRes_project` function to map from the ucmra world
-     to the A world, basically an inverse of iRes_singleton:
-  *)
+  We have the analogue in the global ucmra, from [ownM_forall]:
 
-  Local Definition iRes_project (x : iResUR Σ) (γ : gname) : option A :=
-    match (x (inG_id i) !! γ) with
-    | Some t => Some (cmra_transport (eq_sym inG_prf) (inG_fold t))
-    | None => None
-    end.
+    (∀ a, uPred_ownM (f a)) ⊢ ∃ z : iRes Σ, uPred_ownM z ∧ (∀ a, f a ≼ z)
 
-  (* Now we prove some nice properties about `iRes_project` *)
+  We need to relate [uPred_ownM (iRes_singleton γ _)] to [own γ _] so that we
+  can bring this theorem from the global ucmra world to the [A] world.
+  In particular, [ownM_forall] gives us some [z] in the ucmra world, but to prove
+  the theorem in the end, we need to supply a witness [z'] in the [A] world.
+  We start by defining the [iRes_project] function to map from the ucmra world
+  to the [A] world, basically an inverse of [iRes_singleton]: *)
 
-  Local Lemma iRes_project_op (x y : iResUR Σ) γ :
-    (iRes_project (x ⋅ y) γ : option A) ≡ (iRes_project x γ ⋅ iRes_project y γ).
+  Local Definition iRes_project (γ : gname) (x : iResUR Σ) : option A :=
+    cmra_transport (eq_sym inG_prf) ∘ inG_fold <$> x (inG_id i) !! γ.
+
+  (* Now we prove some properties about [iRes_project] *)
+  Local Lemma iRes_project_op γ x y :
+    iRes_project γ (x ⋅ y) ≡@{option A} iRes_project γ x ⋅ iRes_project γ y.
   Proof.
-    unfold iRes_project. rewrite lookup_op.
-    destruct (x (inG_id i) !! γ) as [x1|] eqn:p1; destruct (y (inG_id i) !! γ) as [y1|] eqn:p2.
-    - rewrite p1. rewrite p2.
-        replace (Some x1 ⋅ Some y1) with (Some (x1 ⋅ y1)) by trivial.
-        enough (cmra_transport (eq_sym inG_prf) (inG_fold (x1 ⋅ y1)) ≡
-                cmra_transport (eq_sym inG_prf) (inG_fold x1)
-                ⋅ cmra_transport (eq_sym inG_prf) (inG_fold y1)) as H.
-        { intros. setoid_rewrite H. trivial. }
-        setoid_rewrite <- cmra_transport_op. f_equiv.
-        unfold inG_fold. apply cmra_morphism_op. typeclasses eauto.
-    - rewrite p1. rewrite p2. trivial.
-    - rewrite p1. rewrite p2. trivial.
-    - rewrite p1. rewrite p2. trivial.
+    rewrite /iRes_project lookup_op.
+    case: (x (inG_id i) !! γ)=> [x1|]; case: (y (inG_id i) !! γ)=> [y1|] //=.
+    rewrite -Some_op -cmra_transport_op. do 2 f_equiv. apply: cmra_morphism_op.
   Qed.
 
-  Local Instance iRes_proper_project_equiv_n (n : nat) : Proper ((≡{n}≡) ==> (=) ==> (≡{n}≡)) iRes_project.
+  Local Instance iRes_project_ne γ : NonExpansive (iRes_project γ).
+  Proof. intros n x1 x2 Hx. rewrite /iRes_project. do 2 f_equiv. apply Hx. Qed.
+
+  Local Lemma iRes_project_singleton γ a :
+    iRes_project γ (iRes_singleton γ a) ≡ Some a.
   Proof.
-    unfold Proper, "==>". intros x y H γ γ0 s0. unfold iRes_project. subst γ0.
-    assert (x (inG_id i) !! γ ≡{n}≡ y (inG_id i) !! γ) as M.
-    { enough (x (inG_id i) ≡{n}≡ y (inG_id i)). { trivial. } trivial. }
-    destruct (x (inG_id i) !! γ) as [x1|]; destruct (y (inG_id i) !! γ) as [y1|].
-    - assert (x1 ≡{n}≡ y1) as Q.
-      + unfold "≡" in M. unfold ofe_equiv, optionO, option_equiv in M. inversion M. trivial.
-      + setoid_rewrite Q. trivial.
-    - inversion M.
-    - inversion M.
-    - trivial.
+    rewrite /iRes_project /iRes_singleton discrete_fun_lookup_singleton.
+    rewrite lookup_singleton /= inG_fold_unfold.
+    by rewrite cmra_transport_trans eq_trans_sym_inv_r.
   Qed.
 
-  Local Lemma iRes_project_singleton (x : A) (γ : gname) :
-    iRes_project (iRes_singleton γ x) γ ≡ Some x.
+  (** The singleton result [c] of [iRes_project γ z] is below [z] *)
+  Local Lemma iRes_project_below γ z c :
+    iRes_project γ z = Some c → iRes_singleton γ c ≼ z.
   Proof.
-    unfold iRes_project, iRes_singleton. setoid_rewrite discrete_fun_lookup_singleton.
-    rewrite lookup_singleton. f_equiv. setoid_rewrite inG_fold_unfold.
-    rewrite cmra_transport_trans eq_trans_sym_inv_r /=. trivial.
+    rewrite /iRes_project /iRes_singleton fmap_Some.
+    intros (a' & Hγ & ->). rewrite cmra_transport_trans eq_trans_sym_inv_l /=.
+    exists (discrete_fun_insert (inG_id i) (delete γ (z (inG_id i))) z).
+    intros j. rewrite discrete_fun_lookup_op.
+    destruct (decide (j = inG_id i)) as [->|]; last first.
+    { rewrite discrete_fun_lookup_singleton_ne //.
+      rewrite discrete_fun_lookup_insert_ne //. by rewrite left_id. }
+    rewrite discrete_fun_lookup_singleton discrete_fun_lookup_insert.
+    intros γ'. rewrite lookup_op. destruct (decide (γ' = γ)) as [->|].
+    - by rewrite lookup_singleton lookup_delete Hγ inG_unfold_fold.
+    - by rewrite lookup_singleton_ne // lookup_delete_ne // left_id.
   Qed.
 
-  Local Lemma iRes_incl_from_proj γ z' z :
-    iRes_project z γ = Some z' → iRes_singleton γ z' ≼ z.
+  (** If another singleton [c] is below [z], [iRes_project] is above [c]. *)
+  Local Lemma iRes_project_above γ z c :
+    iRes_singleton γ c ≼ z ⊢@{iProp Σ} Some c ≼ iRes_project γ z.
   Proof.
-    intro p. unfold iRes_project in p. destruct (z (inG_id i) !! γ) as [z1|] eqn:e.
-    - assert ((cmra_transport (eq_sym inG_prf) (inG_fold z1)) ≡ z') as X.
-      { unfold "≡", ofe_equiv, optionO, option_equiv in p. inversion p. trivial. }
-      unfold includedN. unfold iRes_singleton.
-      exists (discrete_fun_insert (inG_id i) (delete γ (z (inG_id i))) z).
-      intros x'.
-      have h : Decision (inG_id i = x') by solve_decision. destruct h.
-      + setoid_rewrite discrete_fun_lookup_op. subst x'.
-        setoid_rewrite discrete_fun_lookup_singleton.
-        setoid_rewrite discrete_fun_lookup_insert.
-        intro γ0.
-        have h1 : Decision (γ = γ0) by solve_decision. destruct h1.
-        * subst γ0. rewrite lookup_op. rewrite lookup_delete.
-          rewrite lookup_singleton. rewrite e.
-          unfold "⋅", cmra_op, optionR, option_op_instance, union_with, option_union_with.
-          f_equiv. setoid_rewrite <- X.
-          rewrite cmra_transport_trans eq_trans_sym_inv_l /=.
-          setoid_rewrite inG_unfold_fold. trivial.
-        * rewrite lookup_op. rewrite lookup_delete_ne; trivial.
-          rewrite lookup_singleton_ne; trivial.
-          unfold "⋅", cmra_op, optionR, option_op_instance, union_with, option_union_with.
-          destruct (z (inG_id i) !! γ0) eqn:s.
-          ++ rewrite s. trivial.
-          ++ rewrite s. trivial.
-      + setoid_rewrite discrete_fun_lookup_op.
-        setoid_rewrite discrete_fun_lookup_singleton_ne; trivial.
-        setoid_rewrite discrete_fun_lookup_insert_ne; trivial.
-        symmetry. apply ucmra_unit_left_id.
-    - inversion p.
+    iIntros "#[%x Hincl]". iExists (iRes_project γ x).
+    rewrite -(iRes_project_singleton γ) -iRes_project_op.
+    by iRewrite "Hincl".
   Qed.
 
-  (*
-    To get from,
-      ∃ z ,  uPred_ownM z   ∧ x ≼ z    ∧ y ≼ z
-    to,
-      ∃ z' , own γ z'       ∧ x ≼ z'   ∧ y ≼ z'
-    We're going to set z' to be the projection of z. This requires us to establish
-    3 entailments. The next lemma handle the first one, `uPred_ownM z ⊢ own γ z`:
-  *)
-
-  Local Lemma uPred_ownM_implies_project_at_γ γ z' z :
-    iRes_project z γ = Some z' → uPred_ownM z ⊢ uPred_ownM (iRes_singleton γ z').
+  (** Finally we tie it all together. *)
+  Lemma own_forall `{!Inhabited B} γ (f : B → A) :
+    (∀ b, own γ (f b)) ⊢ ∃ c, own γ c ∗ (∀ b, Some (f b) ≼ Some c).
   Proof.
-    intros proj_eq. have own_le_w := iRes_incl_from_proj γ z' z proj_eq.
-    destruct own_le_w as [w own_le_w].
-    setoid_rewrite own_le_w. setoid_rewrite ownM_op.
-    iIntros "[Ha Hb]". iFrame.
+    rewrite own_eq /own_def. iIntros "Hown".
+    iDestruct (ownM_forall with "Hown") as (z) "[Hown Hincl]".
+    destruct (iRes_project γ z) as [c|] eqn:Hc.
+    - iExists c. iSplitL "Hown".
+      { iApply (ownM_mono with "Hown"). by apply iRes_project_below. }
+      iIntros (b). rewrite -Hc. by iApply iRes_project_above.
+    - iDestruct ("Hincl" $! inhabitant) as "Hincl".
+      iDestruct (iRes_project_above with "Hincl") as "Hincl".
+      rewrite Hc. iDestruct "Hincl" as (mx) "H".
+      rewrite option_equivI. by destruct mx.
   Qed.
 
-  (* This handles the other two entailments: *)
-
-  Local Lemma uPred_ucmra_incl_implies_incl_at_γ γ (x z' : A) z :
-      iRes_project z γ = Some z' →
-        ((iRes_singleton γ x ≼ z) : iProp Σ) ⊢ (Some x ≼ Some z').
+  (** Now some corollaries *)
+  Lemma own_forall_total `{!CmraTotal A, !Inhabited B} γ (f : B → A) :
+    (∀ b, own γ (f b)) ⊢ ∃ c, own γ c ∗ (∀ b, f b ≼ c).
   Proof.
-    intros proj_eqn. iIntros "#Hincl".
-    iDestruct "Hincl" as (c) "#Hincl".
-    iAssert (iRes_project z γ ≡ iRes_project (iRes_singleton γ x) γ ⋅ iRes_project c γ)%I as "Heq".
-      { setoid_rewrite <- iRes_project_op. iRewrite "Hincl". trivial. }
-    setoid_rewrite iRes_project_singleton.
-    rewrite proj_eqn.
-    iExists (iRes_project c γ). iFrame "Heq".
+    iIntros "Hown". iDestruct (own_forall with "Hown") as (c) "[$ Hincl]".
+    iIntros (b). iDestruct (option_included_totalI with "Hincl") as "$".
   Qed.
 
-  (* We also need to show the projection is not None. *)
-
-  Local Lemma uPred_ucmra_incl_projection_is_not_none γ (x : A) (z : iResUR Σ)
-    : iRes_project z γ = None →
-        ((iRes_singleton γ x ≼ z) : iProp Σ) ⊢ False.
+  Lemma own_and γ a1 a2 :
+    own γ a1 ∧ own γ a2 ⊢ ∃ c, own γ c ∗ Some a1 ≼ Some c ∗ Some a2 ≼ Some c.
   Proof.
-    intros proj_eqn. iIntros "#Hincl".
-    iDestruct "Hincl" as (c) "#Hincl".
-    iAssert (iRes_project z γ ≡ iRes_project (iRes_singleton γ x) γ ⋅ iRes_project c γ)%I as "Heq".
-      { setoid_rewrite <- iRes_project_op. iRewrite "Hincl". trivial. }
-    setoid_rewrite iRes_project_singleton.
-    rewrite proj_eqn.
-    iDestruct (discrete_eq_1 with "Heq") as "%Heq". exfalso.
-    destruct (iRes_project c γ); inversion Heq.
+    iIntros "Hown". iDestruct (own_forall γ (λ b, if b : bool then a1 else a2)
+      with "[Hown]") as (c) "[$ Hincl]".
+    { rewrite and_alt.
+      iIntros ([]); [iApply ("Hown" $! true)|iApply ("Hown" $! false)]. }
+    iSplit; [iApply ("Hincl" $! true)|iApply ("Hincl" $! false)].
+  Qed.
+  Lemma own_and_total `{!CmraTotal A} γ a1 a2 :
+    own γ a1 ∧ own γ a2 ⊢ ∃ c, own γ c ∗ a1 ≼ c ∗ a2 ≼ c.
+  Proof.
+    iIntros "Hown". iDestruct (own_and with "Hown") as (c) "[$ [??]]".
+    rewrite !option_included_totalI; eauto.
   Qed.
 
-  (* Finally we tie it all together. *)
-
-  Lemma forall_own `{Inhabited B} (γ : gname) (f : B → A) :
-    (∀ b, own γ (f b)) ⊢ ∃ z , own γ z ∗ (∀ b, Some (f b) ≼ Some z).
+  Lemma own_forall_pred {B} γ (φ : B → Prop) (f : B → A) :
+    (∃ b, φ b) →
+    (∀ b, ⌜ φ b ⌝ -∗ own γ (f b)) ⊢
+    ∃ c, own γ c ∗ (∀ b, ⌜ φ b ⌝ -∗ Some (f b) ≼ Some c).
   Proof.
-    rewrite own_eq. unfold own_def. iIntros "forall_own".
-    iDestruct (ownM_forall with "forall_own") as (z) "[own_z f]".
-    destruct (iRes_project z γ) as [z'|] eqn:proj_eqn.
-    {
-      iExists z'. iSplitL "own_z".
-      { iApply (uPred_ownM_implies_project_at_γ γ z' z); trivial. }
-      iIntros (b).
-      iApply (uPred_ucmra_incl_implies_incl_at_γ γ (f b) z' z); trivial.
-    }
-    {
-      iDestruct ("f" $! (inhabitant)) as "f".
-      iExFalso.
-      iApply (uPred_ucmra_incl_projection_is_not_none γ (f inhabitant) z); trivial.
-    }
+    iIntros ([b0 pb0]) "Hown".
+    iAssert (∀ b : { b | φ b }, own γ (f (`b)))%I with "[Hown]" as "Hown".
+    { iIntros ([b pb]). by iApply ("Hown" $! b). }
+    iDestruct (@own_forall _ with "Hown") as (c) "[$ Hincl]".
+    { split. apply (b0 ↾ pb0). }
+    iIntros (b pb). iApply ("Hincl" $! (b ↾ pb)).
+  Qed.
+  Lemma own_forall_pred_total `{!CmraTotal A} {B} γ (φ : B → Prop) (f : B → A) :
+    (∃ b, φ b) →
+    (∀ b, ⌜ φ b ⌝ -∗ own γ (f b)) ⊢ ∃ c, own γ c ∗ (∀ b, ⌜ φ b ⌝ -∗ f b ≼ c).
+  Proof.
+    iIntros (Hφ) "Hown".
+    iDestruct (own_forall_pred with "Hown") as (z) "[$ Hincl]"; first done.
+    iIntros (b ?). iApply (@option_included_totalI with "(Hincl [//])").
   Qed.
 
-  (* Now some corollaries *)
-
-  Lemma forall_pred_own {B} (γ : gname) (p : B → Prop) (f : B → A) :
-    (∃ b , p b) →
-    (∀ b, ⌜ p b ⌝ → own γ (f b)) ⊢ ∃ z , own γ z ∗ (∀ b, ⌜ p b ⌝ -∗ Some (f b) ≼ Some z).
+  Lemma own_and_discrete_total `{!CmraDiscrete A, !CmraTotal A} γ a1 a2 c :
+    (∀ c', ✓ c' → a1 ≼ c' → a2 ≼ c' → c ≼ c') →
+    own γ a1 ∧ own γ a2 ⊢ own γ c.
   Proof.
-    intros exb. iIntros "F".
-    iAssert (∀ (b : { b | p b }), own γ (f (proj1_sig b)))%I with "[F]" as "G".
-    { iIntros (b). destruct b as [b bp]. iDestruct ("F" $! b) as "F".
-      iApply "F". iPureIntro. trivial. }
-    destruct exb as [b0 pb0].
-    iDestruct ((@forall_own _) with "G") as (z) "[O Incl]". { split. apply (exist _ b0 pb0). }
-    iExists z. iFrame "O".
-    iIntros (b) "%pb". iDestruct ("Incl" $! (exist _ b pb)) as "Incl".
-    iFrame "Incl".
+    iIntros (Hvalid) "Hown".
+    iDestruct (own_and_total with "Hown") as (c') "[Hown [%Ha1 %Ha2]]".
+    iDestruct (own_valid with "Hown") as %?.
+    iApply (own_mono with "Hown"); eauto.
   Qed.
-
-  Lemma and_own (γ : gname) (x y : A) :
-    (own γ x ∧ own γ y) ⊢ ∃ z , own γ z
-        ∗ Some x ≼ Some z
-        ∗ Some y ≼ Some z.
+  Lemma own_and_discrete_total_False `{!CmraDiscrete A, !CmraTotal A} γ a1 a2 :
+    (∀ c', ✓ c' → a1 ≼ c' → a2 ≼ c' → False) →
+    own γ a1 ∧ own γ a2 ⊢ False.
   Proof.
-    iIntros "Hand".
-    iAssert (∀ (b : bool), own γ (match b with true => x | false => y end))%I with "[Hand]" as "G".
-    - iIntros (b). destruct b.
-      + iDestruct "Hand" as "[X _]". iFrame.
-      + iDestruct "Hand" as "[_ X]". iFrame.
-    - iDestruct (forall_own with "G") as (z) "[O #Incl]". iExists z.
-      iDestruct ("Incl" $! true) as "InclX". iDestruct ("Incl" $! false) as "InclY".
-      iFrame. iFrame "#".
+    iIntros (Hvalid) "Hown".
+    iDestruct (own_and_total with "Hown") as (c) "[Hown [%Ha1 %Ha2]]".
+    iDestruct (own_valid with "Hown") as %?; eauto.
   Qed.
-
-  Local Lemma uPred_cmra_incl_discrete_implies_pure {D : CmraDiscrete A} (x y : A) :
-    ((Some x ≼ Some y) : iProp Σ) ⊢ ⌜ Some x ≼ Some y ⌝.
-  Proof.
-    unfold internal_included. iIntros "eq". iDestruct "eq" as (c) "eq".
-    iDestruct (discrete_eq_1 with "eq") as "%Heq".
-    unfold "≼". iPureIntro. exists c. trivial.
-  Qed.
-
-  Lemma and_own_discrete {D : CmraDiscrete A} (γ : gname) (x y : A) :
-    (own γ x ∧ own γ y) ⊢ ∃ z , own γ z ∗ ⌜ Some x ≼ Some z ∧ Some y ≼ Some z ⌝.
-  Proof.
-    iIntros "and_own". iDestruct (and_own with "and_own") as (z) "[own [a b]]".
-    iExists z. iFrame "own".
-    iDestruct (uPred_cmra_incl_discrete_implies_pure with "a") as "%a".
-    iDestruct (uPred_cmra_incl_discrete_implies_pure with "b") as "%b".
-    iPureIntro; split; trivial.
-  Qed.
-End and_own_cmra.
-
-Section and_own_ucmra.
-  Context {Σ : gFunctors}.
-  Context {A : ucmra}.
-  Context `{i : !inG Σ A}.
-
-  Lemma and_own_ucmra (γ : gname) (x y : A) :
-    (own γ x ∧ own γ y) ⊢ ∃ z , own γ z ∗ x ≼ z ∗ y ≼ z.
-  Proof.
-    iIntros "and_own". iDestruct (and_own with "and_own") as (z) "[own [a b]]".
-    iExists z. iFrame "own".
-    iSplitL "a".
-    - iDestruct "a" as (t) "a". setoid_rewrite option_equivI.
-      destruct t as [t|].
-      + setoid_rewrite <- Some_op. iExists t. iFrame "a".
-      + simpl. iExists ε. rewrite ucmra_unit_right_id. iFrame "a".
-    - iDestruct "b" as (t) "b". setoid_rewrite option_equivI.
-      destruct t as [t|].
-      + setoid_rewrite <- Some_op. iExists t. iFrame "b".
-      + simpl. iExists ε. rewrite ucmra_unit_right_id. iFrame "b".
-  Qed.
-
-  Local Lemma uPred_cmra_incl_ucmra_discrete_implies_pure {D : CmraDiscrete A} (x y : A) :
-    ((Some x ≼ Some y) : iProp Σ)  ⊢ ⌜ x ≼ y ⌝.
-  Proof.
-    unfold internal_included. iIntros "eq". iDestruct "eq" as (c) "eq".
-    iDestruct (discrete_eq_1 with "eq") as "%eq". unfold "≼". iPureIntro. destruct c as [c|].
-    - exists c. setoid_rewrite <- Some_op in eq. inversion eq. trivial.
-    - exists ε. rewrite right_id. inversion eq. trivial.
-  Qed.
-
-  Lemma and_own_discrete_ucmra {D : CmraDiscrete A} (γ : gname) (x y : A) :
-    (own γ x ∧ own γ y) ⊢ ∃ z , own γ z ∗ ⌜ x ≼ z ∧ y ≼ z ⌝.
-  Proof.
-    iIntros "and_own". iDestruct (and_own with "and_own") as (z) "[own [a b]]".
-    iExists z. iFrame "own".
-    iDestruct (uPred_cmra_incl_ucmra_discrete_implies_pure with "a") as "%a".
-    iDestruct (uPred_cmra_incl_ucmra_discrete_implies_pure with "b") as "%b".
-    iPureIntro; split; trivial.
-  Qed.
-
-  Lemma and_own_discrete_ucmra_specific {D : CmraDiscrete A} (γ : gname) (x y z : A) :
-    (∀ w , ✓ w → x ≼ w → y ≼ w → z ≼ w) →
-    (own γ x ∧ own γ y) ⊢ own γ z.
-  Proof.
-    intros Hw. iIntros "and_own".
-    iDestruct (and_own_discrete_ucmra with "and_own") as (w) "[own [%Hx %Hy]]".
-    iDestruct (own_valid with "own") as "%Hv".
-    assert (z ≼ w) as z_le_w. { apply Hw; trivial. }
-    unfold "≼" in z_le_w. destruct z_le_w as [z1 eq]. setoid_rewrite eq.
-    iDestruct "own" as "[own1 own2]". iFrame.
-  Qed.
-
-  Lemma and_own_discrete_ucmra_contradiction {D : CmraDiscrete A} (γ : gname) (x y : A) :
-    (∀ w , ✓ w → x ≼ w → y ≼ w → False) →
-    (own γ x ∧ own γ y) ⊢ False.
-  Proof.
-    intros Hw. iIntros "and_own".
-    iDestruct (and_own_discrete_ucmra with "and_own") as (w) "[own [%Hx %Hy]]".
-    iDestruct (own_valid with "own") as "%Hv". exfalso. apply (Hw w); trivial.
-  Qed.
-End and_own_ucmra.
+End own_forall.
