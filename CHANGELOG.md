@@ -9,6 +9,12 @@ lemma.
 
 * Add lemma `ufrac_auth_update_surplus_cancel`. 
 
+**Changes in `bi`:**
+
+* Merges the two `BiFUpdPlainly` laws, `fupd_plainly_mask_empty` and
+  `fupd_plainly_keep_l` into a single law, by generalizing `fupd_plainly_keep_l`
+  so that it subsumes both of them.
+
 **Changes in `heap_lang`:**
 
 * Add `Inhabited lock_name` to `lock` class. (by Daniel Nezamabadi)

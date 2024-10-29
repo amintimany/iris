@@ -647,9 +647,7 @@ Section instances.
     BiFUpdPlainly monPredI.
   Proof.
     split; rewrite /bi_except_0; unseal.
-    - intros E P. split=>/= i.
-      by rewrite (bi.forall_elim i) fupd_plainly_mask_empty.
-    - intros E P R. split=>/= i.
+    - intros E E' P R. split=>/= i.
       rewrite (bi.forall_elim i) bi.pure_True // bi.True_impl.
       by rewrite (bi.forall_elim i) fupd_plainly_keep_l.
     - intros E P. split=>/= i.

@@ -84,11 +84,7 @@ Global Instance uPred_bi_fupd_plainly_no_lc `{!invGS_gen HasNoLc Σ} :
   BiFUpdPlainly (uPredI (iResUR Σ)).
 Proof.
   split; rewrite uPred_fupd_unseal /uPred_fupd_def.
-  - iIntros (E P) "H [Hw HE]".
-    iAssert (◇ ■ P)%I as "#>HP".
-    { by iMod ("H" with "[$]") as "(_ & _ & HP)". }
-    by iFrame.
-  - iIntros (E P Q) "[H HQ] [Hw HE]".
+  - iIntros (E E' P Q) "[H HQ] [Hw HE]".
     iAssert (◇ ■ P)%I as "#>HP".
     { by iMod ("H" with "HQ [$]") as "(_ & _ & HP)". }
     by iFrame.
@@ -217,7 +213,7 @@ Proof.
   apply (laterN_soundness _  (S n)); simpl.
   apply (fupd_soundness_no_lc ⊤ ⊤ _ m)=> Hinv. iIntros "Hc".
   iPoseProof (Hiter Hinv) as "H". clear Hiter.
-  iApply fupd_plainly_mask_empty. iSpecialize ("H" with "Hc").
+  iApply fupd_plainly_mask. iSpecialize ("H" with "Hc").
   iMod (step_fupdN_plain with "H") as "H". iMod "H". iModIntro.
   rewrite -later_plainly -laterN_plainly -later_laterN laterN_later.
   iNext. iMod "H" as "#H". auto.

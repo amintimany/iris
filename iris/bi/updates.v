@@ -118,15 +118,12 @@ only make sense for affine logics. From the axioms below, one could derive
 [■ P ={E}=∗ P] (see the lemma [fupd_plainly_elim]), which in turn gives
 [True ={E}=∗ emp]. *)
 Class BiFUpdPlainly (PROP : bi) `{!BiFUpd PROP, !BiPlainly PROP} := {
-  (** When proving a fancy update of a plain proposition, you can also prove it
-  while being allowed to open all invariants. *)
-  fupd_plainly_mask_empty E (P : PROP) :
-    (|={E,∅}=> ■ P) ⊢ |={E}=> P;
-  (** A strong eliminator (a la modus ponens) for the wand-fancy-update with a
-  plain conclusion: We eliminate [R ={E}=∗ ■ P] by supplying an [R], but we get
-  to keep the [R]. *)
-  fupd_plainly_keep_l E (P R : PROP) :
-    (R ={E}=∗ ■ P) ∗ R ⊢ |={E}=> P ∗ R;
+  (** Given a mask-changing non-persistent view shift ending in a plain
+  proposition, and given the precondition of the view shift, we can eliminate
+  the view shift without consuming the precondition and without changing the
+  mask. *)
+  fupd_plainly_keep_l E E' (P R : PROP) :
+    (R ={E,E'}=∗ ■ P) ∗ R ⊢ |={E}=> P ∗ R;
   (** Later "almost" commutes with fancy updates over plain propositions. It
   commutes "almost" because of the ◇ modality, which is needed in the definition
   of fancy updates so one can remove laters of timeless propositions. *)
@@ -568,25 +565,16 @@ Section fupd_derived.
 
     Lemma fupd_plainly_mask E E' P : (|={E,E'}=> ■ P) ⊢ |={E}=> P.
     Proof.
-      rewrite -(fupd_plainly_mask_empty).
-      apply fupd_elim, (fupd_mask_intro_discard _ _ _). set_solver.
+      trans (|={E}=> P ∗ emp)%I; last by rewrite right_id.
+      rewrite -fupd_plainly_keep_l.
+      rewrite right_id left_id. done.
     Qed.
 
     Lemma fupd_plainly_elim E P : ■ P ⊢ |={E}=> P.
     Proof. by rewrite (fupd_intro E (■ P)) fupd_plainly_mask. Qed.
 
-    Lemma fupd_plainly_keep_r E P R : R ∗ (R ={E}=∗ ■ P) ⊢ |={E}=> R ∗ P.
+    Lemma fupd_plainly_keep_r E E' P R : R ∗ (R ={E,E'}=∗ ■ P) ⊢ |={E}=> R ∗ P.
     Proof. by rewrite !(comm _ R) fupd_plainly_keep_l. Qed.
-
-    Lemma fupd_plain_mask_empty E P `{!Plain P} : (|={E,∅}=> P) ⊢ |={E}=> P.
-    Proof. by rewrite {1}(plain P) fupd_plainly_mask_empty. Qed.
-    Lemma fupd_plain_mask E E' P `{!Plain P} : (|={E,E'}=> P) ⊢ |={E}=> P.
-    Proof. by rewrite {1}(plain P) fupd_plainly_mask. Qed.
-
-    Lemma fupd_plain_keep_l E P R `{!Plain P} : (R ={E}=∗ P) ∗ R ⊢ |={E}=> P ∗ R.
-    Proof. by rewrite {1}(plain P) fupd_plainly_keep_l. Qed.
-    Lemma fupd_plain_keep_r E P R `{!Plain P} : R ∗ (R ={E}=∗ P) ⊢ |={E}=> R ∗ P.
-    Proof. by rewrite {1}(plain P) fupd_plainly_keep_r. Qed.
 
     Lemma fupd_plainly_laterN E n P : (▷^n |={E}=> ■ P) ⊢ |={E}=> ▷^n ◇ P.
     Proof.
@@ -596,6 +584,19 @@ Section fupd_derived.
       rewrite -plainly_idemp fupd_plainly_later.
       by rewrite except_0_plainly_1 later_plainly_1 IH except_0_later.
     Qed.
+
+    (** Laws for general plain propositions. *)
+    Lemma fupd_plain_mask E E' P `{!Plain P} : (|={E,E'}=> P) ⊢ |={E}=> P.
+    Proof. by rewrite {1}(plain P) fupd_plainly_mask. Qed.
+
+    Lemma fupd_plain_keep_l E E' P R `{!Plain P} : (R ={E,E'}=∗ P) ∗ R ⊢ |={E}=> P ∗ R.
+    Proof. rewrite {1}(plain P) fupd_plainly_keep_l //. Qed.
+    Lemma fupd_plain_keep_r E E' P R `{!Plain P} : R ∗ (R ={E,E'}=∗ P) ⊢ |={E}=> R ∗ P.
+    Proof. by rewrite !(comm _ R) fupd_plain_keep_l. Qed.
+
+    Lemma fupd_plain_keep E E' P R `{!Plain P} : (R ={E,E'}=∗ P) -∗ R -∗ |={E}=> P ∗ R.
+    Proof. apply entails_wand, wand_intro_r, fupd_plain_keep_l. done. Qed.
+
     Lemma fupd_plain_later E P `{!Plain P} : (▷ |={E}=> P) ⊢ |={E}=> ▷ ◇ P.
     Proof. by rewrite {1}(plain P) fupd_plainly_later. Qed.
     Lemma fupd_plain_laterN E n P `{!Plain P} : (▷^n |={E}=> P) ⊢ |={E}=> ▷^n ◇ P.
