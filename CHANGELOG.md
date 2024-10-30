@@ -3,9 +3,19 @@ way the logic is used on paper.  We also document changes in the Coq
 development; every API-breaking change should be listed, but not every new
 lemma.
 
-## Iris master
+## Iris 4.3.0 (2024-10-29)
 
-Iris master supports Coq 8.19 and 8.20. Coq 8.18 is no longer supported.
+This Iris release mostly features quality-of-life improvements, such as
+improvements to `iInduction`, a new `iUnfold` tactic, and improved errors
+in `iInv`. Furthermore, like std++, Iris can now be built with dune.
+
+Iris 4.3.0 supports Coq 8.19 and 8.20. Coq 8.18 is no longer supported.
+
+This release was managed by Jesper Bengtson, Ralf Jung and Robbert Krebbers, 
+with contributions from Benjamin Peters, Isaac van Bakel, Jan-Oliver Kaiser,
+Janggun Lee, Michael Sammler, Ralf Jung, Robbert Krebbers, Rodolphe Lepigre
+Sanjit Bhat, Tej Chajed, William Mansky, and Yusuke Matsushita.
+Thanks a lot to everyone involved!
 
 **Changes in `algebra`:**
 
@@ -18,6 +28,12 @@ Iris master supports Coq 8.19 and 8.20. Coq 8.18 is no longer supported.
 * Add lemmas `discrete_fun_singleton_valid` and `discrete_fun_singleton_unit`, which simplify 
   cmra validity and unit used with `discrete_fun_singleton`. (by Janggun Lee)
 * Add `Inhabited` instance for the solution of the COFE solver.
+
+**Changes in `bi`:**
+
+* Add instances for `match _ with _ end` (and thus `if _ then _ else` and
+  `'(_, _)` pair destructuring) for `Persistent`, `Affine`, `Absorbing`,
+  `Timeless`, and `Plain`. (by Sanjit Bhat)
 
 **Changes in `proofmode`:**
 
@@ -55,11 +71,6 @@ Iris master supports Coq 8.19 and 8.20. Coq 8.18 is no longer supported.
 
 * Add support for compiling the packages with dune. (by Rodolphe Lepigre) 
 
-**Changes in `bi`:**
-
-* Add instances for `match _ with _ end` (and thus `if _ then _ else` and
-  `'(_, _)` pair destructuring) for `Persistent`, `Affine`, `Absorbing`,
-  `Timeless`, and `Plain`. (by Sanjit Bhat)
 
 ## Iris 4.2.0 (2024-04-12)
 
