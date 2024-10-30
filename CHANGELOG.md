@@ -3,7 +3,7 @@ way the logic is used on paper.  We also document changes in the Coq
 development; every API-breaking change should be listed, but not every new
 lemma.
 
-## Iris 4.3.0 (2024-10-29)
+## Iris 4.3.0 (2024-10-30)
 
 This Iris release mostly features quality-of-life improvements, such as
 improvements to `iInduction`, a new `iUnfold` tactic, and improved errors
@@ -16,6 +16,7 @@ with contributions from Benjamin Peters, Isaac van Bakel, Jan-Oliver Kaiser,
 Janggun Lee, Michael Sammler, Ralf Jung, Robbert Krebbers, Rodolphe Lepigre
 Sanjit Bhat, Tej Chajed, William Mansky, and Yusuke Matsushita.
 Thanks a lot to everyone involved!
+
 
 **Changes in `algebra`:**
 
