@@ -485,10 +485,7 @@ Section own_forall.
   (** Now some corollaries *)
   Lemma own_forall_total `{!CmraTotal A, !Inhabited B} γ (f : B → A) :
     (∀ b, own γ (f b)) ⊢ ∃ c, own γ c ∗ (∀ b, f b ≼ c).
-  Proof.
-    iIntros "Hown". iDestruct (own_forall with "Hown") as (c) "[$ Hincl]".
-    iIntros (b). iDestruct (option_included_totalI with "Hincl") as "$".
-  Qed.
+  Proof. setoid_rewrite <-Some_included_totalI. apply own_forall. Qed.
 
   Lemma own_and γ a1 a2 :
     own γ a1 ∧ own γ a2 ⊢ ∃ c, own γ c ∗ Some a1 ≼ Some c ∗ Some a2 ≼ Some c.
@@ -501,10 +498,7 @@ Section own_forall.
   Qed.
   Lemma own_and_total `{!CmraTotal A} γ a1 a2 :
     own γ a1 ∧ own γ a2 ⊢ ∃ c, own γ c ∗ a1 ≼ c ∗ a2 ≼ c.
-  Proof.
-    iIntros "Hown". iDestruct (own_and with "Hown") as (c) "[$ [??]]".
-    rewrite !option_included_totalI; eauto.
-  Qed.
+  Proof. setoid_rewrite <-Some_included_totalI. apply own_and. Qed.
 
   Lemma own_forall_pred {B} γ (φ : B → Prop) (f : B → A) :
     (∃ b, φ b) →
@@ -521,11 +515,7 @@ Section own_forall.
   Lemma own_forall_pred_total `{!CmraTotal A} {B} γ (φ : B → Prop) (f : B → A) :
     (∃ b, φ b) →
     (∀ b, ⌜ φ b ⌝ -∗ own γ (f b)) ⊢ ∃ c, own γ c ∗ (∀ b, ⌜ φ b ⌝ -∗ f b ≼ c).
-  Proof.
-    iIntros (Hφ) "Hown".
-    iDestruct (own_forall_pred with "Hown") as (z) "[$ Hincl]"; first done.
-    iIntros (b ?). iApply (@option_included_totalI with "(Hincl [//])").
-  Qed.
+  Proof. setoid_rewrite <-Some_included_totalI. apply own_forall_pred. Qed.
 
   Lemma own_and_discrete_total `{!CmraDiscrete A, !CmraTotal A} γ a1 a2 c :
     (∀ c', ✓ c' → a1 ≼ c' → a2 ≼ c' → c ≼ c') →
