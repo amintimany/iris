@@ -26,6 +26,7 @@ Class lock := Lock {
   lockG : gFunctors → Type;
   (** [name] is used to associate [locked] with [is_lock] *)
   lock_name : Type;
+  #[global] lock_name_inhabited :: Inhabited lock_name;
   (** * Predicates *)
   (** No namespace [N] parameter because we only expose program specs, which
   anyway have the full mask. *)
