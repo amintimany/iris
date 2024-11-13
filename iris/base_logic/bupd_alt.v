@@ -18,9 +18,9 @@ of the day (via [bupd_alt (■ P) ⊢ ■ P]).
 We show that:
 
 1. [bupd_alt] enjoys the usual rules of the basic update modality.
-2. [bupd_alt] entails any other modality that enjoys the laws of a basic update
-   modality (see [bupd_bupd_alt]).
-3. The ordinary basic update modality [|==>] on [uPred] entails [bupd_alt]
+2. Any other modality that enjoys the laws of a basic update modality
+   entails [bupd_alt] (see [bupd_bupd_alt]).
+3. [bupd_alt] entails the ordinary basic update modality [|==>] on [uPred] 
    (see [bupd_alt_bupd]). This result is proven in the model of [uPred].
 
 The first two points are shown for any BI with a plain modality. *)
