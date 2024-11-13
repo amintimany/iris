@@ -178,10 +178,9 @@ Getting along with Iris in Coq:
 
 Contacting the developers:
 
-* Discussion about the Iris Coq development happens on the mailing list
-  [iris-club@lists.mpi-sws.org](https://lists.mpi-sws.org/listinfo/iris-club)
-  and in the [Iris Chat](https://iris-project.org/chat.html).  This is also the
-  right place to ask questions.
+* Discussion about the Iris Coq development happens in the [Iris
+  Chat](https://iris-project.org/chat.html). This is also the right place to ask
+  questions.
 * If you want to report a bug, please use the
   [issue tracker](https://gitlab.mpi-sws.org/iris/iris/issues), which requires
   an MPI-SWS GitLab account. The [chat page](https://iris-project.org/chat.html)
