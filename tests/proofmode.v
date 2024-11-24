@@ -846,6 +846,24 @@ Proof.
   by iExists 0.
 Qed.
 
+(** Test that [iFrame] fails if the goal turns into [True]/[emp], but hypotheses
+are given to frame. See https://gitlab.mpi-sws.org/iris/iris/-/issues/582 *)
+Check "test_iFrame_useless".
+Lemma test_iFrame_useless `{BiAffine PROP} P Q : P -∗ Q -∗ P.
+Proof.
+  iIntros "HP HQ".
+  Fail iFrame "HP HQ".
+  Fail iFrame "HQ HP".
+Abort.
+
+Check "test_iDestruct_frame_useless".
+Lemma test_iDestruct_frame_useless `{!BiAffine PROP} P Q :
+  (P -∗ True) ∗ P ∗ Q -∗ Q.
+Proof.
+  iIntros "(Hwand & HP & HQ)".
+  Fail iDestruct ("Hwand" with "[$HP $HQ]") as "_".
+Abort.
+
 Lemma test_iAssert_modality P : ◇ False -∗ ▷ P.
 Proof.
   iIntros "HF".
