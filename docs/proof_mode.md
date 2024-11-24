@@ -180,7 +180,10 @@ Separation logic-specific tactics
           is the unicode symbol `∗`, not the regular asterisk `*`.)
   Notice that framing spatial hypotheses makes them disappear, but framing Coq
   or intuitionistic hypotheses does not make them disappear.
-  This tactic solves the goal if everything in the conclusion has been framed.
+  This tactic solves the goal if everything in the conclusion has been framed,
+  i.e., the conclusion turned into `True`/`emp`. If multiple selection patterns
+  are given, and the goal turns into `True`/`emp` while not all have been
+  processed, the `iFrame` tactic fails.
 - `iFrame select (pat)%I` : cancel the last hypothesis of the intuitionistic
   of spatial context that matches pattern `pat`.
 - `iCombine "H1 H2" as "ipat"` : combine `H1 : P1` and `H2 : P2` into `H: P1 ∗
