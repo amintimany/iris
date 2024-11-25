@@ -382,8 +382,6 @@ Tactic Notation "iPureIntro" :=
     |].
 
 (** Framing *)
-(** Helper tactics are exposed for users that build their own custom framing
-logic *)
 Ltac _iFrameFinish :=
   pm_prettify;
   try match goal with
