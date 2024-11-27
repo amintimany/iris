@@ -5,6 +5,10 @@ lemma.
 
 ## Iris master
 
+**Changes in `algebra`:**
+
+* Add lemma `ufrac_auth_update_surplus_cancel`. 
+
 **Changes in `heap_lang`:**
 
 * Add `Inhabited lock_name` to `lock` class. (by Daniel Nezamabadi)

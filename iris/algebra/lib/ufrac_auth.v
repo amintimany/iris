@@ -144,14 +144,34 @@ Section ufrac_auth.
   Qed.
 
   Lemma ufrac_auth_update_surplus p q a b :
-   ✓ (a ⋅ b) → ●U_p a ~~> ●U_(p+q) (a ⋅ b) ⋅ ◯U_q b.
+    ✓ (a ⋅ b) → ●U_p a ~~> ●U_(p+q) (a ⋅ b) ⋅ ◯U_q b.
   Proof.
-    intros Hconsistent. apply: auth_update_alloc.
-    intros n m; simpl; intros [Hvalid1 Hvalid2] Heq.
+    intros Hconsistent. apply: auth_update_alloc. apply local_update_unital.
+    intros n mpa; simpl; intros [Hvalid1 Hvalid2] Heq; simplify_eq/=.
     split.
     - split; by apply cmra_valid_validN.
     - rewrite pair_op Some_op Heq comm.
-      destruct m; simpl; [rewrite left_id | rewrite right_id]; done.
+      destruct mpa; simpl; [rewrite left_id | rewrite right_id]; done.
+  Qed.
+
+  Lemma ufrac_auth_update_surplus_cancel p q a b :
+    Cancelable b →
+    ●U_(p+q) (a ⋅ b) ⋅ ◯U_q b ~~> ●U_p a.
+  Proof.
+    intros. apply: auth_update_dealloc. apply local_update_unital.
+    intros n mpa; simpl; intros [Hvalid1 Hvalid2] Heq; simplify_eq/=.
+    split.
+    { split; by eapply cmra_validN_op_l. }
+    rewrite (comm _ p) (comm _ a) in Heq.
+    destruct mpa as [[p' a']|]; simplify_eq/=.
+    - rewrite -Some_op in Heq.
+      apply (inj _) in Heq as [Hp%leibniz_equiv Ha]; simplify_eq/=.
+      apply (inj _) in Hp as ->.
+      apply (cancelableN _) in Ha; last by rewrite comm.
+      by repeat constructor.
+    - rewrite right_id in Heq.
+      apply (inj _) in Heq as [Hp%leibniz_equiv _]; simplify_eq/=.
+      by apply Qp.add_id_free in Hp.
   Qed.
 End ufrac_auth.
 
