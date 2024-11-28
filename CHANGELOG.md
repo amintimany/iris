@@ -11,7 +11,7 @@ lemma.
 
 **Changes in `bi`:**
 
-* Merges the two `BiFUpdPlainly` laws, `fupd_plainly_mask_empty` and
+* Merge the two `BiFUpdPlainly` laws `fupd_plainly_mask_empty` and
   `fupd_plainly_keep_l` into a single law, by generalizing `fupd_plainly_keep_l`
   so that it subsumes both of them.
 
