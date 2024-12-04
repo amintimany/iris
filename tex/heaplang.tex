@@ -139,54 +139,54 @@ Compare-safe values are basic literals (integers, Booleans, locations, unit) as 
 The intention of this is to forbid directly comparing large values such as pairs, which could not be done in a single atomic step on a real machine.
 
 \begin{figure}[p]
-\judgment[Per-thread reduction]{\expr_1, \state_1 \step [\vec\obs] \expr_2, \state_2, \vec\expr}
+\judgment[Per-thread reduction]{\expr_1, \pstate_1 \step [\vec\obs] \expr_2, \pstate_2, \vec\expr}
 \begin{mathpar}
 \infer
-  {\expr_1, \state_1 \hstep [\vec\obs] \expr_2, \state_2, \vec\expr}
-  {\fillctx\lctx[\expr_1], \state_1 \step[\vec\obs] \fillctx\lctx[\expr_2], \state_2, \vec\expr}
+  {\expr_1, \pstate_1 \hstep [\vec\obs] \expr_2, \pstate_2, \vec\expr}
+  {\fillctx\lctx[\expr_1], \pstate_1 \step[\vec\obs] \fillctx\lctx[\expr_2], \pstate_2, \vec\expr}
 \end{mathpar}
 
-\judgment[``Head'' reduction (pure)]{\expr_1, \state_1 \hstep [\vec\obs] \expr_2, \state_2, \vec\expr}
+\judgment[``Head'' reduction (pure)]{\expr_1, \pstate_1 \hstep [\vec\obs] \expr_2, \pstate_2, \vec\expr}
 \newcommand\alignheader{\kern-30ex}
 \begin{align*}
 &\alignheader\textbf{``Boxing'' reductions} \\
-(\RecE\lvarF(\lvar)= \expr, \state) \hstep[\nil]{}&
-  (\RecV\lvarF(\lvar)= \expr, \state, \nil) \\
-((\val_1, \val_2)_\exprForm, \state) \hstep[\nil]{}&
-  ((\val_1, \val_2)_\valForm, \state, \nil) \\
-(\InlE(\val), \state) \hstep[\nil]{}&
-  (\InlV(\val), \state, \nil) \\
-(\InrE(\val), \state) \hstep[\nil]{}&
-  (\InrV(\val), \state, \nil) \\
+(\RecE\lvarF(\lvar)= \expr, \pstate) \hstep[\nil]{}&
+  (\RecV\lvarF(\lvar)= \expr, \pstate, \nil) \\
+((\val_1, \val_2)_\exprForm, \pstate) \hstep[\nil]{}&
+  ((\val_1, \val_2)_\valForm, \pstate, \nil) \\
+(\InlE(\val), \pstate) \hstep[\nil]{}&
+  (\InlV(\val), \pstate, \nil) \\
+(\InrE(\val), \pstate) \hstep[\nil]{}&
+  (\InrV(\val), \pstate, \nil) \\
 &\alignheader\textbf{Pure reductions} \\
-((\RecV\lvarF(\lvar)= \expr)(\val), \state) \hstep[\nil]{}&
-  (\subst {\subst \expr \lvarF {(\Rec\lvarF(\lvar)= \expr)}} \lvar \val, \state, \nil) \\
-(-_{\HLOp} z, \state) \hstep[\nil]{}&
-  (-z, \state, \nil) \\
-(z_1 +_{\HLOp} z_2, \state) \hstep[\nil]{}&
-  (z_1 + z_2, \state, \nil) \\
-(z_1 -_{\HLOp} z_2, \state) \hstep[\nil]{}&
-  (z_1 - z_2, \state, \nil) \\
-(\loc \Ptradd z, \state) \hstep[\nil]{}&
-  (\loc + z, \state, \nil) \\
-(\val_1 =_{\HLOp} \val_2, \state) \hstep[\nil]{}&
-  (\True, \state, \nil)
+((\RecV\lvarF(\lvar)= \expr)(\val), \pstate) \hstep[\nil]{}&
+  (\subst {\subst \expr \lvarF {(\Rec\lvarF(\lvar)= \expr)}} \lvar \val, \pstate, \nil) \\
+(-_{\HLOp} z, \pstate) \hstep[\nil]{}&
+  (-z, \pstate, \nil) \\
+(z_1 +_{\HLOp} z_2, \pstate) \hstep[\nil]{}&
+  (z_1 + z_2, \pstate, \nil) \\
+(z_1 -_{\HLOp} z_2, \pstate) \hstep[\nil]{}&
+  (z_1 - z_2, \pstate, \nil) \\
+(\loc \Ptradd z, \pstate) \hstep[\nil]{}&
+  (\loc + z, \pstate, \nil) \\
+(\val_1 =_{\HLOp} \val_2, \pstate) \hstep[\nil]{}&
+  (\True, \pstate, \nil)
   &&\text{if $\val_1 \valeq \val_2$} \\
-(\val_1 =_{\HLOp} \val_2, \state) \hstep[\nil]{}&
-  (\False, \state, \nil)
+(\val_1 =_{\HLOp} \val_2, \pstate) \hstep[\nil]{}&
+  (\False, \pstate, \nil)
   &&\text{if $\val_1 \valne \val_2$} \\
-(\If \True then \expr_1 \Else \expr_2, \state) \hstep[\nil]{}&
-  (\expr_1, \state, \nil) \\
-(\If \False then \expr_1 \Else \expr_2, \state) \hstep[\nil]{}&
-  (\expr_2, \state, \nil) \\
-(\Fst((\val_1, \val_2)_\valForm), \state) \hstep[\nil]{}&
-  (\val_1, \state, \nil) \\
-(\Snd((\val_1, \val_2)_\valForm), \state) \hstep[\nil]{}&
-  (\val_2, \state, \nil) \\
-(\Match \InlV(\val) with \Inl => \expr_1 | \Inr => \expr_2 end, \state) \hstep[\nil]{}&
-  (\expr_1(\val), \state, \nil) \\
-(\Match \InrV(\val) with \Inl => \expr_1 | \Inr => \expr_2 end, \state) \hstep[\nil]{}&
-  (\expr_2(\val), \state, \nil)
+(\If \True then \expr_1 \Else \expr_2, \pstate) \hstep[\nil]{}&
+  (\expr_1, \pstate, \nil) \\
+(\If \False then \expr_1 \Else \expr_2, \pstate) \hstep[\nil]{}&
+  (\expr_2, \pstate, \nil) \\
+(\Fst((\val_1, \val_2)_\valForm), \pstate) \hstep[\nil]{}&
+  (\val_1, \pstate, \nil) \\
+(\Snd((\val_1, \val_2)_\valForm), \pstate) \hstep[\nil]{}&
+  (\val_2, \pstate, \nil) \\
+(\Match \InlV(\val) with \Inl => \expr_1 | \Inr => \expr_2 end, \pstate) \hstep[\nil]{}&
+  (\expr_1(\val), \pstate, \nil) \\
+(\Match \InrV(\val) with \Inl => \expr_1 | \Inr => \expr_2 end, \pstate) \hstep[\nil]{}&
+  (\expr_2(\val), \pstate, \nil)
 \end{align*}
 \caption{HeapLang pure and boxed reduction rules. \\ \small
 The $\HLOp$ subscript indicates that this is the HeapLang operator, not the mathematical operator.}
@@ -194,43 +194,43 @@ The $\HLOp$ subscript indicates that this is the HeapLang operator, not the math
 \end{figure}
 
 \begin{figure}
-\judgment[``Head'' reduction (impure)]{\expr_1, \state_1 \hstep [\vec\obs] \expr_2, \state_2, \vec\expr}
+\judgment[``Head'' reduction (impure)]{\expr_1, \pstate_1 \hstep [\vec\obs] \expr_2, \pstate_2, \vec\expr}
 \newcommand\alignheader{\kern-30ex}
 \begin{align*}
 &\alignheader\textbf{Heap reductions} \\
-(\AllocN(z, \val), \state) \hstep[\nil]{}&
-  (\loc, \mapinsert {[\loc,\loc+z)} \val {\state:\stateHeap}, \nil)
-  &&\text{if $z>0$ and \(\All i<z. \state.\stateHeap(\loc+i) = \bot\)} \\
-(\Free(\loc), \state) \hstep[\nil]{}&
-  ((), \mapinsert \loc \bot {\state:\stateHeap}, \nil) &&\text{if $\state.\stateHeap(l) = \val$} \\
-(\deref\loc, \state) \hstep[\nil]{}&
-  (\val, \state, \nil) &&\text{if $\state.\stateHeap(l) = \val$} \\
-(\loc\gets\valB, \state) \hstep[\nil]{}&
-  (\TT, \mapinsert \loc \valB {\state:\stateHeap}, \nil)  &&\text{if $\state.\stateHeap(l) = \val$} \\
-(\CmpXchg(\loc,\valB_1,\valB_2), \state) \hstep[\nil]{}&
-  ((\val, \True), \mapinsert\loc{\valB_2}{\state:\stateHeap}, \nil)
-  &&\text{if $\state.\stateHeap(l) = \val$ and $\val \valeq \valB_1$} \\
-(\CmpXchg(\loc,\valB_1,\valB_2), \state) \hstep[\nil]{}&
-  ((\val, \False), \state, \nil)
-  &&\text{if $\state.\stateHeap(l) = \val$ and $\val \valne \valB_1$} \\
+(\AllocN(z, \val), \pstate) \hstep[\nil]{}&
+  (\loc, \mapinsert {[\loc,\loc+z)} \val {\pstate:\stateHeap}, \nil)
+  &&\text{if $z>0$ and \(\All i<z. \pstate.\stateHeap(\loc+i) = \bot\)} \\
+(\Free(\loc), \pstate) \hstep[\nil]{}&
+  ((), \mapinsert \loc \bot {\pstate:\stateHeap}, \nil) &&\text{if $\pstate.\stateHeap(l) = \val$} \\
+(\deref\loc, \pstate) \hstep[\nil]{}&
+  (\val, \pstate, \nil) &&\text{if $\pstate.\stateHeap(l) = \val$} \\
+(\loc\gets\valB, \pstate) \hstep[\nil]{}&
+  (\TT, \mapinsert \loc \valB {\pstate:\stateHeap}, \nil)  &&\text{if $\pstate.\stateHeap(l) = \val$} \\
+(\CmpXchg(\loc,\valB_1,\valB_2), \pstate) \hstep[\nil]{}&
+  ((\val, \True), \mapinsert\loc{\valB_2}{\pstate:\stateHeap}, \nil)
+  &&\text{if $\pstate.\stateHeap(l) = \val$ and $\val \valeq \valB_1$} \\
+(\CmpXchg(\loc,\valB_1,\valB_2), \pstate) \hstep[\nil]{}&
+  ((\val, \False), \pstate, \nil)
+  &&\text{if $\pstate.\stateHeap(l) = \val$ and $\val \valne \valB_1$} \\
 (\Xchg(\loc, \valB) \hstep[\nil]{}&
-  (\val, \mapinsert \loc \valB {\state:\stateHeap}, \nil) &&\text{if $\state.\stateHeap(l) = \val$} \\
+  (\val, \mapinsert \loc \valB {\pstate:\stateHeap}, \nil) &&\text{if $\pstate.\stateHeap(l) = \val$} \\
 (\FAA(\loc, z_2) \hstep[\nil]{}&
-  (z_1, \mapinsert \loc {z_1+z_2} {\state:\stateHeap}, \nil) &&\text{if $\state.\stateHeap(l) = z_1$} \\
+  (z_1, \mapinsert \loc {z_1+z_2} {\pstate:\stateHeap}, \nil) &&\text{if $\pstate.\stateHeap(l) = z_1$} \\
 &\alignheader\textbf{Special reductions} \\
-(\Fork\expr, \state) \hstep[\nil]{}&
-  (\TT, \state, \expr) \\
-(\NewProph, \state) \hstep[\nil]{}&
-  (\prophid, \state:\stateProphs \uplus \set{\prophid}, \nil)
-  &&\text{if $\prophid \notin \state.\stateProphs$}
+(\Fork\expr, \pstate) \hstep[\nil]{}&
+  (\TT, \pstate, \expr) \\
+(\NewProph, \pstate) \hstep[\nil]{}&
+  (\prophid, \pstate:\stateProphs \uplus \set{\prophid}, \nil)
+  &&\text{if $\prophid \notin \pstate.\stateProphs$}
 \end{align*}
 \begin{mathpar}
 \infer
-  {(\expr, \state) \hstep[\vec\obs] (\val, \state', \vec\expr')}
-  {(\ResolveWith \expr at \prophid to \valB, \state) \hstep[\vec\obs \dplus [(\prophid, (\val, \valB))]] (\val, \state', \vec\expr')}
+  {(\expr, \pstate) \hstep[\vec\obs] (\val, \pstate', \vec\expr')}
+  {(\ResolveWith \expr at \prophid to \valB, \pstate) \hstep[\vec\obs \dplus [(\prophid, (\val, \valB))]] (\val, \pstate', \vec\expr')}
 \end{mathpar}
 \caption{HeapLang impure reduction rules. \\ \small
-Here, $\state:\stateHeap$ denotes $\sigma$ with the $\stateHeap$ field updated as indicated.
+Here, $\pstate:\stateHeap$ denotes $\sigma$ with the $\stateHeap$ field updated as indicated.
 $[\loc,\loc+z)$ in the $\AllocN$ rule indicates that we update all locations in this (left-closed, right-open) interval.}
 \label{fig:heaplang-reduction-impure}
 \end{figure}

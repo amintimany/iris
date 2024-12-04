@@ -135,11 +135,10 @@
 
 \newcommand{\wtt}[2]{#1 : #2} % well-typed term
 
-\newcommand{\nequiv}[1]{\ensuremath{\mathrel{\stackrel{#1}{=}}}}
-\newcommand{\nincl}[1]{\ensuremath{\mathrel{\stackrel{#1}{\subseteq}}}}
-\newcommand{\notnequiv}[1]{\ensuremath{\mathrel{\stackrel{#1}{\neq}}}}
-\newcommand{\nequivset}[2]{\ensuremath{\mathrel{\stackrel{#1}{=}_{#2}}}}
-\newcommand{\nequivB}[1]{\ensuremath{\mathrel{\stackrel{#1}{\equiv}}}}
+\newcommand{\dist}[1]{\ensuremath{\mathrel{\stackrel{#1}{=}}}}
+\newcommand{\subseteqN}[1]{\ensuremath{\mathrel{\stackrel{#1}{\subseteq}}}}
+\newcommand{\ndist}[1]{\ensuremath{\mathrel{\stackrel{#1}{\neq}}}}
+\newcommand{\distset}[2]{\ensuremath{\mathrel{\stackrel{#1}{=}_{#2}}}}
 \newcommand{\latert}{\mathord{\blacktriangleright}}
 \newcommand{\latertinj}{\textlog{next}}
 
@@ -423,7 +422,7 @@
 \newcommand{\expr}{e}
 \newcommand{\val}{v}
 \newcommand{\valB}{w}
-\newcommand{\state}{\sigma}
+\newcommand{\pstate}{\sigma} % acmart grabbed \state :(
 \newcommand{\step}[1][]{\xrightarrow{{#1}}_{\textlog{t}}}
 \newcommand{\hstep}[1][]{\xrightarrow{{#1}}_{\textlog{h}}}
 \newcommand{\tpstep}[1][]{\xrightarrow{{#1}}_{\textlog{tp}}}
