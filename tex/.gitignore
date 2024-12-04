@@ -6,9 +6,9 @@
 *.txss
 *.thm
 *.toc
-*.bbl
+*.bbl*
 *.blg
-*.bcf
+*.bcf*
 *.run.xml
 *.fdb_latexmk
 *.fls
