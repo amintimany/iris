@@ -466,7 +466,8 @@ Section own_forall.
     by iRewrite "Hincl".
   Qed.
 
-  (** Finally we tie it all together. *)
+  (** Finally we tie it all together.
+  As usual, we use [Some a ≼ Some c] for the reflexive closure of [a ≼ c]. *)
   Lemma own_forall `{!Inhabited B} γ (f : B → A) :
     (∀ b, own γ (f b)) ⊢ ∃ c, own γ c ∗ (∀ b, Some (f b) ≼ Some c).
   Proof.
@@ -482,7 +483,7 @@ Section own_forall.
       rewrite option_equivI. by destruct mx.
   Qed.
 
-  (** Now some corollaries *)
+  (** Now some corollaries. *)
   Lemma own_forall_total `{!CmraTotal A, !Inhabited B} γ (f : B → A) :
     (∀ b, own γ (f b)) ⊢ ∃ c, own γ c ∗ (∀ b, f b ≼ c).
   Proof. setoid_rewrite <-Some_included_totalI. apply own_forall. Qed.
