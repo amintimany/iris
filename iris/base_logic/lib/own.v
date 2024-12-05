@@ -501,8 +501,10 @@ Section own_forall.
     own γ a1 ∧ own γ a2 ⊢ ∃ c, own γ c ∗ a1 ≼ c ∗ a2 ≼ c.
   Proof. setoid_rewrite <-Some_included_totalI. apply own_and. Qed.
 
+  (** A version of [own_forall] for bounded quantification. Here [φ : B → Prop]
+  is a pure predicate that restricts the elements of [B]. *)
   Lemma own_forall_pred {B} γ (φ : B → Prop) (f : B → A) :
-    (∃ b, φ b) →
+    (∃ b, φ b) → (* [φ] is non-empty *)
     (∀ b, ⌜ φ b ⌝ -∗ own γ (f b)) ⊢
     ∃ c, own γ c ∗ (∀ b, ⌜ φ b ⌝ -∗ Some (f b) ≼ Some c).
   Proof.
