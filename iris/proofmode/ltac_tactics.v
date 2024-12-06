@@ -382,6 +382,19 @@ Tactic Notation "iPureIntro" :=
     |].
 
 (** Framing *)
+(** The [iFrame] tactic either finishes the goal (if it becomes [True] or
+[emp]) or makes progress and gives a new goal.
+
+The (internal) tactic [_iFrameFinish] closes the goal if it is [True] or [emp].
+We have to be careful when to call this tactic. We should only call it when
+no more hypotheses to frame are left. For instance, given [H1 : P, H2 : Q] and
+goal [P] a call to [iFrame "H1 H2"] should fail because [H2] has not been
+framed.
+
+This means we should call [_iFrameFinish] only at the very end. Hence, all
+internal helping tactics do not call [_iFrameFinish]. This job is left for the
+top-level tactics [_iFrame0] and [_iFrame] tactics (which underpin the final
+[iFrame] tactic). *)
 Ltac _iFrameFinish :=
   pm_prettify;
   try match goal with
@@ -433,7 +446,7 @@ Ltac _iFrameAnySpatial :=
 
 Ltac _iFrame_go Hs :=
   lazymatch Hs with
-  | [] => _iFrameFinish
+  | [] => idtac
   | SelPure :: ?Hs => _iFrameAnyPure; _iFrame_go Hs
   | SelIntuitionistic :: ?Hs => _iFrameAnyIntuitionistic; _iFrame_go Hs
   | SelSpatial :: ?Hs => _iFrameAnySpatial; _iFrame_go Hs
@@ -442,6 +455,8 @@ Ltac _iFrame_go Hs :=
 
 Ltac _iFrame0 Hs :=
   let Hs := sel_pat.parse Hs in
+  (** An explicit call to frame nothing (i.e., [iFrame ""]) should not
+  accidentally close the goal using [_iFrameFinish]. *)
   lazymatch Hs with
   | [] => idtac
   | _ => _iFrame_go Hs; _iFrameFinish
