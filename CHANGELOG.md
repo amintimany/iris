@@ -9,6 +9,16 @@ lemma.
 
 * Add lemma `ufrac_auth_update_surplus_cancel`. 
 
+**Changes in `base_logic`:**
+
+* Add lemmas `own_forall` and `own_and` to reason about universal quantification
+  (`∀ .. own`) and conjunctions (`own .. ∧ own ..`) of ghost ownership. (by
+  Travis Hance)
+  + These rules are derived from the primitive rule `ownM_forall` (which is
+    proved in the `uPred` model).
+  + Various corollaries for total cmras (which include `ucmra`s) are provided.
+* Add lemma `Some_included_totalI`.
+
 **Changes in `bi`:**
 
 * Merge the two `BiFUpdPlainly` laws `fupd_plainly_mask_empty` and

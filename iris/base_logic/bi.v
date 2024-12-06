@@ -1,4 +1,5 @@
-From iris.bi Require Export derived_connectives extensions updates internal_eq plainly.
+From iris.bi Require Export derived_connectives extensions
+  updates internal_eq plainly cmra.
 From iris.base_logic Require Export upred.
 From iris.prelude Require Import options.
 Import uPred_primitive.
@@ -218,6 +219,9 @@ Section restate.
   Lemma bupd_ownM_updateP x (Φ : M → Prop) :
     x ~~>: Φ → uPred_ownM x ⊢ |==> ∃ y, ⌜Φ y⌝ ∧ uPred_ownM y.
   Proof. exact: uPred_primitive.bupd_ownM_updateP. Qed.
+  Lemma ownM_forall {A} (f : A → M) :
+    (∀ a, uPred_ownM (f a)) ⊢ ∃ z, uPred_ownM z ∧ (∀ a, f a ≼ z).
+  Proof. exact: uPred_primitive.ownM_forall. Qed.
 
   (** This is really just a special case of an entailment
   between two [siProp], but we do not have the infrastructure

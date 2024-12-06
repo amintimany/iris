@@ -396,3 +396,145 @@ Section proofmode_instances.
     destruct Hb; by rewrite persistent_and_sep.
   Qed.
 End proofmode_instances.
+
+Section own_forall.
+  Context `{i : !inG Σ A}.
+  Implicit Types a c : A.
+  Implicit Types x z : iResUR Σ.
+
+  (** Our main goal in this section is to prove [own_forall]:
+
+    (∀ b, own γ (f b)) ⊢ ∃ c : A, own γ c ∗ (∀ b, Some (f b) ≼ Some c)
+
+  We have the analogue in the global ucmra, from [ownM_forall]:
+
+    (∀ a, uPred_ownM (f a)) ⊢ ∃ z : iRes Σ, uPred_ownM z ∧ (∀ a, f a ≼ z)
+
+  We need to relate [uPred_ownM (iRes_singleton γ _)] to [own γ _] so that we
+  can bring this theorem from the global ucmra world to the [A] world.
+  In particular, [ownM_forall] gives us some [z] in the ucmra world, but to prove
+  the theorem in the end, we need to supply a witness [z'] in the [A] world.
+  We start by defining the [iRes_project] function to map from the ucmra world
+  to the [A] world, basically an inverse of [iRes_singleton]: *)
+
+  Local Definition iRes_project (γ : gname) (x : iResUR Σ) : option A :=
+    cmra_transport (eq_sym inG_prf) ∘ inG_fold <$> x (inG_id i) !! γ.
+
+  (* Now we prove some properties about [iRes_project] *)
+  Local Lemma iRes_project_op γ x y :
+    iRes_project γ (x ⋅ y) ≡@{option A} iRes_project γ x ⋅ iRes_project γ y.
+  Proof.
+    rewrite /iRes_project lookup_op.
+    case: (x (inG_id i) !! γ)=> [x1|]; case: (y (inG_id i) !! γ)=> [y1|] //=.
+    rewrite -Some_op -cmra_transport_op. do 2 f_equiv. apply: cmra_morphism_op.
+  Qed.
+
+  Local Instance iRes_project_ne γ : NonExpansive (iRes_project γ).
+  Proof. intros n x1 x2 Hx. rewrite /iRes_project. do 2 f_equiv. apply Hx. Qed.
+
+  Local Lemma iRes_project_singleton γ a :
+    iRes_project γ (iRes_singleton γ a) ≡ Some a.
+  Proof.
+    rewrite /iRes_project /iRes_singleton discrete_fun_lookup_singleton.
+    rewrite lookup_singleton /= inG_fold_unfold.
+    by rewrite cmra_transport_trans eq_trans_sym_inv_r.
+  Qed.
+
+  (** The singleton result [c] of [iRes_project γ z] is below [z] *)
+  Local Lemma iRes_project_below γ z c :
+    iRes_project γ z = Some c → iRes_singleton γ c ≼ z.
+  Proof.
+    rewrite /iRes_project /iRes_singleton fmap_Some.
+    intros (a' & Hγ & ->). rewrite cmra_transport_trans eq_trans_sym_inv_l /=.
+    exists (discrete_fun_insert (inG_id i) (delete γ (z (inG_id i))) z).
+    intros j. rewrite discrete_fun_lookup_op.
+    destruct (decide (j = inG_id i)) as [->|]; last first.
+    { rewrite discrete_fun_lookup_singleton_ne //.
+      rewrite discrete_fun_lookup_insert_ne //. by rewrite left_id. }
+    rewrite discrete_fun_lookup_singleton discrete_fun_lookup_insert.
+    intros γ'. rewrite lookup_op. destruct (decide (γ' = γ)) as [->|].
+    - by rewrite lookup_singleton lookup_delete Hγ inG_unfold_fold.
+    - by rewrite lookup_singleton_ne // lookup_delete_ne // left_id.
+  Qed.
+
+  (** If another singleton [c] is below [z], [iRes_project] is above [c]. *)
+  Local Lemma iRes_project_above γ z c :
+    iRes_singleton γ c ≼ z ⊢@{iProp Σ} Some c ≼ iRes_project γ z.
+  Proof.
+    iIntros "#[%x Hincl]". iExists (iRes_project γ x).
+    rewrite -(iRes_project_singleton γ) -iRes_project_op.
+    by iRewrite "Hincl".
+  Qed.
+
+  (** Finally we tie it all together.
+  As usual, we use [Some a ≼ Some c] for the reflexive closure of [a ≼ c]. *)
+  Lemma own_forall `{!Inhabited B} γ (f : B → A) :
+    (∀ b, own γ (f b)) ⊢ ∃ c, own γ c ∗ (∀ b, Some (f b) ≼ Some c).
+  Proof.
+    rewrite own_eq /own_def. iIntros "Hown".
+    iDestruct (ownM_forall with "Hown") as (z) "[Hown Hincl]".
+    destruct (iRes_project γ z) as [c|] eqn:Hc.
+    - iExists c. iSplitL "Hown".
+      { iApply (ownM_mono with "Hown"). by apply iRes_project_below. }
+      iIntros (b). rewrite -Hc. by iApply iRes_project_above.
+    - iDestruct ("Hincl" $! inhabitant) as "Hincl".
+      iDestruct (iRes_project_above with "Hincl") as "Hincl".
+      rewrite Hc. iDestruct "Hincl" as (mx) "H".
+      rewrite option_equivI. by destruct mx.
+  Qed.
+
+  (** Now some corollaries. *)
+  Lemma own_forall_total `{!CmraTotal A, !Inhabited B} γ (f : B → A) :
+    (∀ b, own γ (f b)) ⊢ ∃ c, own γ c ∗ (∀ b, f b ≼ c).
+  Proof. setoid_rewrite <-Some_included_totalI. apply own_forall. Qed.
+
+  Lemma own_and γ a1 a2 :
+    own γ a1 ∧ own γ a2 ⊢ ∃ c, own γ c ∗ Some a1 ≼ Some c ∗ Some a2 ≼ Some c.
+  Proof.
+    iIntros "Hown". iDestruct (own_forall γ (λ b, if b : bool then a1 else a2)
+      with "[Hown]") as (c) "[$ Hincl]".
+    { rewrite and_alt.
+      iIntros ([]); [iApply ("Hown" $! true)|iApply ("Hown" $! false)]. }
+    iSplit; [iApply ("Hincl" $! true)|iApply ("Hincl" $! false)].
+  Qed.
+  Lemma own_and_total `{!CmraTotal A} γ a1 a2 :
+    own γ a1 ∧ own γ a2 ⊢ ∃ c, own γ c ∗ a1 ≼ c ∗ a2 ≼ c.
+  Proof. setoid_rewrite <-Some_included_totalI. apply own_and. Qed.
+
+  (** A version of [own_forall] for bounded quantification. Here [φ : B → Prop]
+  is a pure predicate that restricts the elements of [B]. *)
+  Lemma own_forall_pred {B} γ (φ : B → Prop) (f : B → A) :
+    (∃ b, φ b) → (* [φ] is non-empty *)
+    (∀ b, ⌜ φ b ⌝ -∗ own γ (f b)) ⊢
+    ∃ c, own γ c ∗ (∀ b, ⌜ φ b ⌝ -∗ Some (f b) ≼ Some c).
+  Proof.
+    iIntros ([b0 pb0]) "Hown".
+    iAssert (∀ b : { b | φ b }, own γ (f (`b)))%I with "[Hown]" as "Hown".
+    { iIntros ([b pb]). by iApply ("Hown" $! b). }
+    iDestruct (@own_forall _ with "Hown") as (c) "[$ Hincl]".
+    { split. apply (b0 ↾ pb0). }
+    iIntros (b pb). iApply ("Hincl" $! (b ↾ pb)).
+  Qed.
+  Lemma own_forall_pred_total `{!CmraTotal A} {B} γ (φ : B → Prop) (f : B → A) :
+    (∃ b, φ b) →
+    (∀ b, ⌜ φ b ⌝ -∗ own γ (f b)) ⊢ ∃ c, own γ c ∗ (∀ b, ⌜ φ b ⌝ -∗ f b ≼ c).
+  Proof. setoid_rewrite <-Some_included_totalI. apply own_forall_pred. Qed.
+
+  Lemma own_and_discrete_total `{!CmraDiscrete A, !CmraTotal A} γ a1 a2 c :
+    (∀ c', ✓ c' → a1 ≼ c' → a2 ≼ c' → c ≼ c') →
+    own γ a1 ∧ own γ a2 ⊢ own γ c.
+  Proof.
+    iIntros (Hvalid) "Hown".
+    iDestruct (own_and_total with "Hown") as (c') "[Hown [%Ha1 %Ha2]]".
+    iDestruct (own_valid with "Hown") as %?.
+    iApply (own_mono with "Hown"); eauto.
+  Qed.
+  Lemma own_and_discrete_total_False `{!CmraDiscrete A, !CmraTotal A} γ a1 a2 :
+    (∀ c', ✓ c' → a1 ≼ c' → a2 ≼ c' → False) →
+    own γ a1 ∧ own γ a2 ⊢ False.
+  Proof.
+    iIntros (Hvalid) "Hown".
+    iDestruct (own_and_total with "Hown") as (c) "[Hown [%Ha1 %Ha2]]".
+    iDestruct (own_valid with "Hown") as %?; eauto.
+  Qed.
+End own_forall.

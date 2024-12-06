@@ -115,6 +115,9 @@ Section internal_included_laws.
     iSplit; [|by auto].
     iIntros "[Hx|Hx] //". iRewrite "Hx". iApply (internal_included_refl y).
   Qed.
+  Lemma Some_included_totalI `{!CmraTotal A} (x y : A) :
+    Some x ≼ Some y ⊣⊢ x ≼ y.
+  Proof. by rewrite option_included_totalI. Qed.
 
   Lemma csum_includedI {A B} (sx sy : csum A B) :
     sx ≼ sy ⊣⊢ match sx, sy with

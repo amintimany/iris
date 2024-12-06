@@ -403,6 +403,7 @@ Furthermore, we have the usual $\eta$ and $\beta$ laws for projections, $\textlo
 \begin{mathpar}
 \begin{array}{rMcMl}
 \ownM{\melt} * \ownM{\meltB} &\provesIff&  \ownM{\melt \mtimes \meltB} \\
+\All x. \ownM{f(x)} &\proves& \Exists \melt. \ownM{\melt} \land (\All x. \Exists \meltB. \melt = f(x) \mtimes \meltB) \\
 \ownM\melt &\proves& \always{\ownM{\mcore\melt}} \\
 \TRUE &\proves&  \ownM{\munit} \\
 \later\ownM\melt &\proves& \Exists\meltB. \ownM\meltB \land \later(\melt = \meltB)
