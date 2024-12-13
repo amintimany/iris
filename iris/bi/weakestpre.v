@@ -64,19 +64,19 @@ mode" where each '/' becomes a line break. Then, as appropriate, nested boxes
 maximally horizontal and suitably indented inside the parentheses that surround
 them. *)
 Notation "'WP' e @ s ; E {{ v , Q } }" := (wp s E e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
+  (at level 20, e, Q at level 200, v at level 200 as pattern,
    format "'[hv' 'WP'  e  '/' @  '[' s ;  '/' E  ']' '/' {{  '[' v ,  '/' Q  ']' } } ']'") : bi_scope.
 Notation "'WP' e @ E {{ v , Q } }" := (wp NotStuck E e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
+  (at level 20, e, Q at level 200, v at level 200 as pattern,
    format "'[hv' 'WP'  e  '/' @  E  '/' {{  '[' v ,  '/' Q  ']' } } ']'") : bi_scope.
 Notation "'WP' e @ E ? {{ v , Q } }" := (wp MaybeStuck E e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
+  (at level 20, e, Q at level 200, v at level 200 as pattern,
    format "'[hv' 'WP'  e  '/' @  E  '/' ? {{  '[' v ,  '/' Q  ']' } } ']'") : bi_scope.
 Notation "'WP' e {{ v , Q } }" := (wp NotStuck ⊤ e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
+  (at level 20, e, Q at level 200, v at level 200 as pattern,
    format "'[hv' 'WP'  e  '/' {{  '[' v ,  '/' Q  ']' } } ']'") : bi_scope.
 Notation "'WP' e ? {{ v , Q } }" := (wp MaybeStuck ⊤ e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
+  (at level 20, e, Q at level 200, v at level 200 as pattern,
    format "'[hv' 'WP'  e  '/' ? {{  '[' v ,  '/' Q  ']' } } ']'") : bi_scope.
 
 (* Texan triples *)
@@ -165,19 +165,19 @@ Notation "'WP' e ? [{ Φ } ]" := (twp MaybeStuck ⊤ e%E Φ)
 
 (** Notations with binder. *)
 Notation "'WP' e @ s ; E [{ v , Q } ]" := (twp s E e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
+  (at level 20, e, Q at level 200, v at level 200 as pattern,
    format "'[hv' 'WP'  e  '/' @  '[' s ;  '/' E  ']' '/' [{  '[' v ,  '/' Q  ']' } ] ']'") : bi_scope.
 Notation "'WP' e @ E [{ v , Q } ]" := (twp NotStuck E e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
+  (at level 20, e, Q at level 200, v at level 200 as pattern,
    format "'[hv' 'WP'  e  '/' @  E  '/' [{  '[' v ,  '/' Q  ']' } ] ']'") : bi_scope.
 Notation "'WP' e @ E ? [{ v , Q } ]" := (twp MaybeStuck E e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
+  (at level 20, e, Q at level 200, v at level 200 as pattern,
    format "'[hv' 'WP'  e  '/' @  E  '/' ? [{  '[' v ,  '/' Q  ']' } ] ']'") : bi_scope.
 Notation "'WP' e [{ v , Q } ]" := (twp NotStuck ⊤ e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
+  (at level 20, e, Q at level 200, v at level 200 as pattern,
    format "'[hv' 'WP'  e  '/' [{  '[' v ,  '/' Q  ']' } ] ']'") : bi_scope.
 Notation "'WP' e ? [{ v , Q } ]" := (twp MaybeStuck ⊤ e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
+  (at level 20, e, Q at level 200, v at level 200 as pattern,
    format "'[hv' 'WP'  e  '/' ? [{  '[' v ,  '/' Q  ']' } ] ']'") : bi_scope.
 
 (* Texan triples *)
