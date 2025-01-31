@@ -24,6 +24,8 @@ lemma.
 * Merge the two `BiFUpdPlainly` laws `fupd_plainly_mask_empty` and
   `fupd_plainly_keep_l` into a single law, by generalizing `fupd_plainly_keep_l`
   so that it subsumes both of them.
+* Change `WP` notation to allow type annotations and (exhaustive) patterns for
+  the return value binder.
 
 **Changes in `heap_lang`:**
 
