@@ -164,7 +164,7 @@ Section upred.
       ✓ x ⊣⊢ match x with
                         | Cinl a => ✓ a
                         | Cinr b => ✓ b
-                        | CsumBot => False
+                        | CSumInvalid => False
                         end.
     Proof. uPred.unseal. by destruct x. Qed.
   End csum_cmra.

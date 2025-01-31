@@ -12,14 +12,14 @@ Local Arguments cmra_valid _  !_ /.
 Inductive csum (A B : Type) :=
   | Cinl : A → csum A B
   | Cinr : B → csum A B
-  | CsumBot : csum A B.
+  | CSumInvalid : csum A B.
 Global Arguments Cinl {_ _} _.
 Global Arguments Cinr {_ _} _.
-Global Arguments CsumBot {_ _}.
+Global Arguments CSumInvalid {_ _}.
 
 Global Instance: Params (@Cinl) 2 := {}.
 Global Instance: Params (@Cinr) 2 := {}.
-Global Instance: Params (@CsumBot) 2 := {}.
+Global Instance: Params (@CSumInvalid) 2 := {}.
 
 Global Instance maybe_Cinl {A B} : Maybe (@Cinl A B) := λ x,
   match x with Cinl a => Some a | _ => None end.
@@ -35,12 +35,12 @@ Implicit Types b : B.
 Inductive csum_equiv : Equiv (csum A B) :=
   | Cinl_equiv a a' : a ≡ a' → Cinl a ≡ Cinl a'
   | Cinr_equiv b b' : b ≡ b' → Cinr b ≡ Cinr b'
-  | CsumBot_equiv : CsumBot ≡ CsumBot.
+  | CsumInvalid_equiv : CSumInvalid ≡ CSumInvalid.
 Local Existing Instance csum_equiv.
 Inductive csum_dist : Dist (csum A B) :=
   | Cinl_dist n a a' : a ≡{n}≡ a' → Cinl a ≡{n}≡ Cinl a'
   | Cinr_dist n b b' : b ≡{n}≡ b' → Cinr b ≡{n}≡ Cinr b'
-  | CsumBot_dist n : CsumBot ≡{n}≡ CsumBot.
+  | CsumInvalid_dist n : CSumInvalid ≡{n}≡ CSumInvalid.
 Local Existing Instance csum_dist.
 
 Global Instance Cinl_ne : NonExpansive (@Cinl A B).
@@ -85,7 +85,7 @@ Definition csum_compl `{!Cofe A, !Cofe B} : Compl csumO := λ c,
   match c 0 with
   | Cinl a => Cinl (compl (csum_chain_l c a))
   | Cinr b => Cinr (compl (csum_chain_r c b))
-  | CsumBot => CsumBot
+  | CSumInvalid => CSumInvalid
   end.
 Global Program Instance csum_cofe `{!Cofe A, !Cofe B} : Cofe csumO :=
   {| compl := csum_compl |}.
@@ -118,7 +118,7 @@ Definition csum_map {A A' B B'} (fA : A → A') (fB : B → B')
   match x with
   | Cinl a => Cinl (fA a)
   | Cinr b => Cinr (fB b)
-  | CsumBot => CsumBot
+  | CSumInvalid => CSumInvalid
   end.
 Global Instance: Params (@csum_map) 4 := {}.
 
@@ -152,25 +152,25 @@ Local Instance csum_valid_instance : Valid (csum A B) := λ x,
   match x with
   | Cinl a => ✓ a
   | Cinr b => ✓ b
-  | CsumBot => False
+  | CSumInvalid => False
   end.
 Local Instance csum_validN_instance : ValidN (csum A B) := λ n x,
   match x with
   | Cinl a => ✓{n} a
   | Cinr b => ✓{n} b
-  | CsumBot => False
+  | CSumInvalid => False
   end.
 Local Instance csum_pcore_instance : PCore (csum A B) := λ x,
   match x with
   | Cinl a => Cinl <$> pcore a
   | Cinr b => Cinr <$> pcore b
-  | CsumBot => Some CsumBot
+  | CSumInvalid => Some CSumInvalid
   end.
 Local Instance csum_op_instance : Op (csum A B) := λ x y,
   match x, y with
   | Cinl a, Cinl a' => Cinl (a ⋅ a')
   | Cinr b, Cinr b' => Cinr (b ⋅ b')
-  | _, _ => CsumBot
+  | _, _ => CSumInvalid
   end.
 
 Lemma Cinl_op a a' : Cinl (a ⋅ a') = Cinl a ⋅ Cinl a'.
@@ -184,14 +184,14 @@ Lemma Cinr_valid b : ✓ (Cinr b) ↔ ✓ b.
 Proof. done. Qed.
 
 Lemma csum_included x y :
-  x ≼ y ↔ y = CsumBot ∨ (∃ a a', x = Cinl a ∧ y = Cinl a' ∧ a ≼ a')
+  x ≼ y ↔ y = CSumInvalid ∨ (∃ a a', x = Cinl a ∧ y = Cinl a' ∧ a ≼ a')
                       ∨ (∃ b b', x = Cinr b ∧ y = Cinr b' ∧ b ≼ b').
 Proof.
   split.
   - unfold included. intros [[a'|b'|] Hy]; destruct x as [a|b|];
       inversion_clear Hy; eauto 10.
   - intros [->|[(a&a'&->&->&c&?)|(b&b'&->&->&c&?)]].
-    + destruct x; exists CsumBot; constructor.
+    + destruct x; exists CSumInvalid; constructor.
     + exists (Cinl c); by constructor.
     + exists (Cinr c); by constructor.
 Qed.
@@ -199,19 +199,19 @@ Lemma Cinl_included a a' : Cinl a ≼ Cinl a' ↔ a ≼ a'.
 Proof. rewrite csum_included. naive_solver. Qed.
 Lemma Cinr_included b b' : Cinr b ≼ Cinr b' ↔ b ≼ b'.
 Proof. rewrite csum_included. naive_solver. Qed.
-Lemma CsumBot_included x : x ≼ CsumBot.
-Proof. exists CsumBot. by destruct x. Qed.
-(** We register a hint for [CsumBot_included] below. *)
+Lemma CSumInvalid_included x : x ≼ CSumInvalid.
+Proof. exists CSumInvalid. by destruct x. Qed.
+(** We register a hint for [CSumInvalid_included] below. *)
 
 Lemma csum_includedN n x y :
-  x ≼{n} y ↔ y = CsumBot ∨ (∃ a a', x = Cinl a ∧ y = Cinl a' ∧ a ≼{n} a')
+  x ≼{n} y ↔ y = CSumInvalid ∨ (∃ a a', x = Cinl a ∧ y = Cinl a' ∧ a ≼{n} a')
                          ∨ (∃ b b', x = Cinr b ∧ y = Cinr b' ∧ b ≼{n} b').
 Proof.
   split.
   - unfold includedN. intros [[a'|b'|] Hy]; destruct x as [a|b|];
       inversion_clear Hy; eauto 10.
   - intros [->|[(a&a'&->&->&c&?)|(b&b'&->&->&c&?)]].
-    + destruct x; exists CsumBot; constructor.
+    + destruct x; exists CSumInvalid; constructor.
     + exists (Cinl c); by constructor.
     + exists (Cinr c); by constructor.
 Qed.
@@ -243,7 +243,7 @@ Proof.
     + destruct (pcore b) as [cb|] eqn:?; simplify_option_eq.
       oinversion (cmra_pcore_idemp b cb); repeat constructor; auto.
   - intros x y ? [->|[(a&a'&->&->&?)|(b&b'&->&->&?)]]%csum_included [=].
-    + exists CsumBot. rewrite csum_included; eauto.
+    + exists CSumInvalid. rewrite csum_included; eauto.
     + destruct (pcore a) as [ca|] eqn:?; simplify_option_eq.
       destruct (cmra_pcore_mono a a' ca) as (ca'&->&?); auto.
       exists (Cinl ca'). rewrite csum_included; eauto 10.
@@ -258,7 +258,7 @@ Proof.
     + destruct y1 as [a1|b1|], y2 as [a2|b2|]; try by exfalso; inversion Hx'.
       destruct (cmra_extend n b b1 b2) as (z1&z2&?&?&?); [done|apply (inj Cinr), Hx'|].
       exists (Cinr z1), (Cinr z2). by repeat constructor.
-    + by exists CsumBot, CsumBot; destruct y1, y2; inversion_clear Hx'.
+    + by exists CSumInvalid, CSumInvalid; destruct y1, y2; inversion_clear Hx'.
 Qed.
 Canonical Structure csumR := Cmra (csum A B) csum_cmra_mixin.
 
@@ -298,7 +298,7 @@ Proof. intros ? [] ? EQ; inversion_clear EQ. by eapply id_free0_r. Qed.
 (** Interaction with [option] *)
 Lemma Some_csum_includedN x y n :
   Some x ≼{n} Some y ↔
-    y = CsumBot ∨
+    y = CSumInvalid ∨
     (∃ a a', x = Cinl a ∧ y = Cinl a' ∧ Some a ≼{n} Some a') ∨
     (∃ b b', x = Cinr b ∧ y = Cinr b' ∧ Some b ≼{n} Some b').
 Proof.
@@ -308,7 +308,7 @@ Proof.
 Qed.
 Lemma Some_csum_included x y :
   Some x ≼ Some y ↔
-    y = CsumBot ∨
+    y = CSumInvalid ∨
     (∃ a a', x = Cinl a ∧ y = Cinl a' ∧ Some a ≼ Some a') ∨
     (∃ b b', x = Cinr b ∧ y = Cinr b' ∧ Some b ≼ Some b').
 Proof.
@@ -372,7 +372,7 @@ End cmra.
 (* We use a [Hint Extern] with [apply:], instead of [Hint Immediate], to invoke
   the new unification algorithm. The old unification algorithm sometimes gets
   confused by going from [ucmra]'s to [cmra]'s and back. *)
-Global Hint Extern 0 (_ ≼ CsumBot) => apply: CsumBot_included : core.
+Global Hint Extern 0 (_ ≼ CSumInvalid) => apply: CSumInvalid_included : core.
 Global Arguments csumR : clear implicits.
 
 (* Functor *)
