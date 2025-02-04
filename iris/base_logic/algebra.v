@@ -84,7 +84,7 @@ Section upred.
     Implicit Types x : excl A.
 
     Lemma excl_validI x :
-      ✓ x ⊣⊢ if x is ExclBot then False else True.
+      ✓ x ⊣⊢ if x is ExclInvalid then False else True.
     Proof. uPred.unseal. by destruct x. Qed.
   End excl.
 

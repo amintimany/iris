@@ -63,19 +63,19 @@ End coPset.
 (* The disjoint union CMRA *)
 Inductive coPset_disj :=
   | CoPset : coPset → coPset_disj
-  | CoPsetBot : coPset_disj.
+  | CoPsetInvalid : coPset_disj.
 
 Section coPset_disj.
   Local Arguments op _ _ !_ !_ /.
   Canonical Structure coPset_disjO := leibnizO coPset_disj.
 
   Local Instance coPset_disj_valid_instance : Valid coPset_disj := λ X,
-    match X with CoPset _ => True | CoPsetBot => False end.
+    match X with CoPset _ => True | CoPsetInvalid => False end.
   Local Instance coPset_disj_unit_instance : Unit coPset_disj := CoPset ∅.
   Local Instance coPset_disj_op_instance : Op coPset_disj := λ X Y,
     match X, Y with
-    | CoPset X, CoPset Y => if decide (X ## Y) then CoPset (X ∪ Y) else CoPsetBot
-    | _, _ => CoPsetBot
+    | CoPset X, CoPset Y => if decide (X ## Y) then CoPset (X ∪ Y) else CoPsetInvalid
+    | _, _ => CoPsetInvalid
     end.
   Local Instance coPset_disj_pcore_instance : PCore coPset_disj := λ _, Some ε.
 

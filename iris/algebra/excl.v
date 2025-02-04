@@ -6,16 +6,16 @@ Local Arguments valid _ _  !_ /.
 
 Inductive excl (A : Type) :=
   | Excl : A → excl A
-  | ExclBot : excl A.
+  | ExclInvalid : excl A.
 Global Arguments Excl {_} _.
-Global Arguments ExclBot {_}.
+Global Arguments ExclInvalid {_}.
 
 Global Instance: Params (@Excl) 1 := {}.
-Global Instance: Params (@ExclBot) 1 := {}.
+Global Instance: Params (@ExclInvalid) 1 := {}.
 
 Notation excl' A := (option (excl A)).
 Notation Excl' x := (Some (Excl x)).
-Notation ExclBot' := (Some ExclBot).
+Notation ExclInvalid' := (Some ExclInvalid).
 
 Global Instance maybe_Excl {A} : Maybe (@Excl A) := λ x,
   match x with Excl a => Some a | _ => None end.
@@ -28,11 +28,11 @@ Implicit Types x y : excl A.
 (* Cofe *)
 Inductive excl_equiv : Equiv (excl A) :=
   | Excl_equiv a b : a ≡ b → Excl a ≡ Excl b
-  | ExclBot_equiv : ExclBot ≡ ExclBot.
+  | ExclInvalid_equiv : ExclInvalid ≡ ExclInvalid.
 Local Existing Instance excl_equiv.
 Inductive excl_dist : Dist (excl A) :=
   | Excl_dist a b n : a ≡{n}≡ b → Excl a ≡{n}≡ Excl b
-  | ExclBot_dist n : ExclBot ≡{n}≡ ExclBot.
+  | ExclInvalid_dist n : ExclInvalid ≡{n}≡ ExclInvalid.
 Local Existing Instance excl_dist.
 
 Global Instance Excl_ne : NonExpansive (@Excl A).
@@ -54,7 +54,7 @@ Canonical Structure exclO : ofe := Ofe (excl A) excl_ofe_mixin.
 
 Global Instance excl_cofe `{!Cofe A} : Cofe exclO.
 Proof.
-  apply (iso_cofe (from_option Excl ExclBot) (maybe Excl)).
+  apply (iso_cofe (from_option Excl ExclInvalid) (maybe Excl)).
   - by intros n [a|] [b|]; split; inversion_clear 1; constructor.
   - by intros []; constructor.
 Qed.
@@ -66,16 +66,16 @@ Proof. by destruct 2; f_equal; apply leibniz_equiv. Qed.
 
 Global Instance Excl_discrete a : Discrete a → Discrete (Excl a).
 Proof. by inversion_clear 2; constructor; apply (discrete_0 _). Qed.
-Global Instance ExclBot_discrete : Discrete (@ExclBot A).
+Global Instance ExclInvalid_discrete : Discrete (@ExclInvalid A).
 Proof. by inversion_clear 1; constructor. Qed.
 
 (* CMRA *)
 Local Instance excl_valid_instance : Valid (excl A) := λ x,
-  match x with Excl _ => True | ExclBot => False end.
+  match x with Excl _ => True | ExclInvalid => False end.
 Local Instance excl_validN_instance : ValidN (excl A) := λ n x,
-  match x with Excl _ => True | ExclBot => False end.
+  match x with Excl _ => True | ExclInvalid => False end.
 Local Instance excl_pcore_instance : PCore (excl A) := λ _, None.
-Local Instance excl_op_instance : Op (excl A) := λ x y, ExclBot.
+Local Instance excl_op_instance : Op (excl A) := λ x y, ExclInvalid.
 
 Lemma excl_cmra_mixin : CmraMixin (excl A).
 Proof.
@@ -112,21 +112,21 @@ Lemma Excl_included a b : Excl' a ≼ Excl' b ↔ a ≡ b.
 Proof.
   split; [|by intros ->]. by intros [[c|] Hb%(inj Some)]; inversion_clear Hb.
 Qed.
-Lemma ExclBot_included ea : ea ≼ ExclBot.
-Proof. by exists ExclBot. Qed.
+Lemma ExclInvalid_included ea : ea ≼ ExclInvalid.
+Proof. by exists ExclInvalid. Qed.
 End excl.
 
 (* We use a [Hint Extern] with [apply:], instead of [Hint Immediate], to invoke
   the new unification algorithm. The old unification algorithm sometimes gets
   confused by going from [ucmra]'s to [cmra]'s and back. *)
-Global Hint Extern 0 (_ ≼ ExclBot) => apply: ExclBot_included : core.
+Global Hint Extern 0 (_ ≼ ExclInvalid) => apply: ExclInvalid_included : core.
 
 Global Arguments exclO : clear implicits.
 Global Arguments exclR : clear implicits.
 
 (* Functor *)
 Definition excl_map {A B} (f : A → B) (x : excl A) : excl B :=
-  match x with Excl a => Excl (f a) | ExclBot => ExclBot end.
+  match x with Excl a => Excl (f a) | ExclInvalid => ExclInvalid end.
 Lemma excl_map_id {A} (x : excl A) : excl_map id x = x.
 Proof. by destruct x. Qed.
 Lemma excl_map_compose {A B C} (f : A → B) (g : B → C) (x : excl A) :

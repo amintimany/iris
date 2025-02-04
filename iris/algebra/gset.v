@@ -78,9 +78,9 @@ Global Arguments gsetUR _ {_ _}.
 (* The disjoint union CMRA *)
 Inductive gset_disj K `{Countable K} :=
   | GSet : gset K → gset_disj K
-  | GSetBot : gset_disj K.
+  | GSetInvalid : gset_disj K.
 Global Arguments GSet {_ _ _} _.
-Global Arguments GSetBot {_ _ _}.
+Global Arguments GSetInvalid {_ _ _}.
 
 Section gset_disj.
   Context `{Countable K}.
@@ -94,12 +94,12 @@ Section gset_disj.
   Canonical Structure gset_disjO := leibnizO (gset_disj K).
 
   Local Instance gset_disj_valid_instance : Valid (gset_disj K) := λ X,
-    match X with GSet _ => True | GSetBot => False end.
+    match X with GSet _ => True | GSetInvalid => False end.
   Local Instance gset_disj_unit_instance : Unit (gset_disj K) := GSet ∅.
   Local Instance gset_disj_op_instance : Op (gset_disj K) := λ X Y,
     match X, Y with
-    | GSet X, GSet Y => if decide (X ## Y) then GSet (X ∪ Y) else GSetBot
-    | _, _ => GSetBot
+    | GSet X, GSet Y => if decide (X ## Y) then GSet (X ∪ Y) else GSetInvalid
+    | _, _ => GSetInvalid
     end.
   Local Instance gset_disj_pcore_instance : PCore (gset_disj K) := λ _, Some ε.
 
@@ -240,7 +240,7 @@ Section gset_disj.
 
   (** Add some basic support for [GSet X = GSet Y], [GSet X ≼ GSet Y], and
   [✓ (GSet X ⋅ GSet Y)] to [set_solver]. There are probably more cases we could
-  cover (e.g., involving [GSetBot], or nesting of [⋅]), but it is not clear
+  cover (e.g., involving [GSetInvalid], or nesting of [⋅]), but it is not clear
   these are useful in practice, nor how to handle them effectively. *)
   Global Instance set_unfold_gset_eq (X Y : gset K) Q :
     SetUnfold (X = Y) Q → SetUnfold (GSet X = GSet Y) Q.

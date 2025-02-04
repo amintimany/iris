@@ -137,13 +137,13 @@ Section internal_included_laws.
 
   Lemma excl_includedI {O : ofe} (x y : excl O) :
     x ≼ y ⊣⊢ match y with
-             | ExclBot => True
+             | ExclInvalid => True
              |  _ => False
              end.
   Proof.
     iSplit.
     - iIntros "[%z Hz]". rewrite excl_equivI. destruct y, x, z; auto.
-    - destruct y; [done|]. iIntros "_". by iExists ExclBot.
+    - destruct y; [done|]. iIntros "_". by iExists ExclInvalid.
   Qed.
 
   Lemma agree_includedI {O : ofe} (x y : agree O) : x ≼ y ⊣⊢ y ≡ x ⋅ y.

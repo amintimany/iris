@@ -8,7 +8,7 @@ lemma.
 **Changes in `algebra`:**
 
 * Add lemma `ufrac_auth_update_surplus_cancel`.
-* Rename `CSumBot` to `CSumInvalid`.
+* Rename `CSumBot`, `GSetBot`, `CoPsetBot` and `ExclBot` to `*Invalid`.
 
 **Changes in `base_logic`:**
 
@@ -37,8 +37,8 @@ replace `sed` by `gsed`, installed via e.g. `brew install gnu-sed`).
 Note that the script is not idempotent, do not run it twice.
 ```
 sed -i -E -f- $(find theories -name "*.v") <<EOF
-# csum rename
-s/\bCsumBot(\b|_)/CSumInvalid\\1/g
+# "*Bot* RA element rename
+s/\b(Csum|GSet|CoPset|Excl)Bot(\b|_)/\\1Invalid\\2/g
 EOF
 ```
 
