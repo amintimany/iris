@@ -106,7 +106,7 @@ Section cmra.
       ✓ (reservation_map_data_proj x) ∧
       (* dom (reservation_map_data_proj x) ⊥ E *)
       ∀ i, reservation_map_data_proj x !! i = None ∨ i ∉ E
-    | CoPsetBot => False
+    | CoPsetInvalid => False
     end.
   Global Arguments reservation_map_valid_instance !_ /.
   Local Instance reservation_map_validN_instance : ValidN (reservation_map A) := λ n x,
@@ -115,7 +115,7 @@ Section cmra.
       ✓{n} (reservation_map_data_proj x) ∧
       (* dom (reservation_map_data_proj x) ⊥ E *)
       ∀ i, reservation_map_data_proj x !! i = None ∨ i ∉ E
-    | CoPsetBot => False
+    | CoPsetInvalid => False
     end.
   Global Arguments reservation_map_validN_instance !_ /.
   Local Instance reservation_map_pcore_instance : PCore (reservation_map A) := λ x,
@@ -130,7 +130,7 @@ Section cmra.
                    ✓ (reservation_map_data_proj x) ∧
                    (* dom (reservation_map_data_proj x) ⊥ E *)
                    ∀ i, reservation_map_data_proj x !! i = None ∨ i ∉ E
-                 | CoPsetBot => False
+                 | CoPsetInvalid => False
                  end := eq_refl _.
   Definition reservation_map_validN_eq :
     validN = λ n x, match reservation_map_token_proj x with
@@ -138,7 +138,7 @@ Section cmra.
                       ✓{n} (reservation_map_data_proj x) ∧
                       (* dom (reservation_map_data_proj x) ⊥ E *)
                       ∀ i, reservation_map_data_proj x !! i = None ∨ i ∉ E
-                    | CoPsetBot => False
+                    | CoPsetInvalid => False
                     end := eq_refl _.
 
   Lemma reservation_map_included x y :

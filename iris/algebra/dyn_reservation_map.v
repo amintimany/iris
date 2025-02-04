@@ -120,7 +120,7 @@ Section cmra.
       ✓ (dyn_reservation_map_data_proj x) ∧ set_infinite (⊤ ∖ E) ∧
       (* dom (dyn_reservation_map_data_proj x) ⊥ E *)
       (∀ i, dyn_reservation_map_data_proj x !! i = None ∨ i ∉ E)
-    | CoPsetBot => False
+    | CoPsetInvalid => False
     end.
   Global Arguments dyn_reservation_map_valid_instance !_ /.
   Local Instance dyn_reservation_map_validN_instance : ValidN (dyn_reservation_map A) := λ n x,
@@ -129,7 +129,7 @@ Section cmra.
       ✓{n} (dyn_reservation_map_data_proj x) ∧ set_infinite (⊤ ∖ E) ∧
       (* dom (dyn_reservation_map_data_proj x) ⊥ E *)
       (∀ i, dyn_reservation_map_data_proj x !! i = None ∨ i ∉ E)
-    | CoPsetBot => False
+    | CoPsetInvalid => False
     end.
   Global Arguments dyn_reservation_map_validN_instance !_ /.
   Local Instance dyn_reservation_map_pcore_instance : PCore (dyn_reservation_map A) := λ x,
@@ -144,7 +144,7 @@ Section cmra.
                    ✓ (dyn_reservation_map_data_proj x) ∧ set_infinite (⊤ ∖ E) ∧
                    (* dom (dyn_reservation_map_data_proj x) ⊥ E *)
                    ∀ i, dyn_reservation_map_data_proj x !! i = None ∨ i ∉ E
-                 | CoPsetBot => False
+                 | CoPsetInvalid => False
                  end := eq_refl _.
   Definition dyn_reservation_map_validN_eq :
     validN = λ n x, match dyn_reservation_map_token_proj x with
@@ -152,7 +152,7 @@ Section cmra.
                       ✓{n} (dyn_reservation_map_data_proj x) ∧ set_infinite (⊤ ∖ E) ∧
                       (* dom (dyn_reservation_map_data_proj x) ⊥ E *)
                       ∀ i, dyn_reservation_map_data_proj x !! i = None ∨ i ∉ E
-                    | CoPsetBot => False
+                    | CoPsetInvalid => False
                     end := eq_refl _.
 
   Lemma dyn_reservation_map_included x y :

@@ -7,7 +7,8 @@ lemma.
 
 **Changes in `algebra`:**
 
-* Add lemma `ufrac_auth_update_surplus_cancel`. 
+* Add lemma `ufrac_auth_update_surplus_cancel`.
+* Rename `CSumBot`, `GSetBot`, `CoPsetBot` and `ExclBot` to `*Invalid`.
 
 **Changes in `base_logic`:**
 
@@ -30,6 +31,16 @@ lemma.
 **Changes in `heap_lang`:**
 
 * Add `Inhabited lock_name` to `lock` class. (by Daniel Nezamabadi)
+
+The following `sed` script helps adjust your code to the renaming (on macOS,
+replace `sed` by `gsed`, installed via e.g. `brew install gnu-sed`).
+Note that the script is not idempotent, do not run it twice.
+```
+sed -i -E -f- $(find theories -name "*.v") <<EOF
+# "*Bot* RA element rename
+s/\b(Csum|GSet|CoPset|Excl)Bot(\b|_)/\\1Invalid\\2/g
+EOF
+```
 
 ## Iris 4.3.0 (2024-10-30)
 

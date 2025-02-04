@@ -167,7 +167,7 @@ Section internal_eq_derived.
     sx ≡ sy ⊣⊢ match sx, sy with
                | Cinl x, Cinl y => x ≡ y
                | Cinr x, Cinr y => x ≡ y
-               | CsumBot, CsumBot => True
+               | CSumInvalid, CSumInvalid => True
                | _, _ => False
                end.
   Proof.
@@ -176,7 +176,7 @@ Section internal_eq_derived.
                match sx, sy' with
                | Cinl x, Cinl y => x ≡ y
                | Cinr x, Cinr y => x ≡ y
-               | CsumBot, CsumBot => True
+               | CSumInvalid, CSumInvalid => True
                | _, _ => False
                end)%I); [solve_proper|auto|].
       destruct sx; eauto.
@@ -187,7 +187,7 @@ Section internal_eq_derived.
   Lemma excl_equivI {O : ofe} (x y : excl O) :
     x ≡ y ⊣⊢ match x, y with
              | Excl a, Excl b => a ≡ b
-             | ExclBot, ExclBot => True
+             | ExclInvalid, ExclInvalid => True
              | _, _ => False
              end.
   Proof.
@@ -195,7 +195,7 @@ Section internal_eq_derived.
     - apply (internal_eq_rewrite' x y (λ y',
                match x, y' with
                | Excl a, Excl b => a ≡ b
-               | ExclBot, ExclBot => True
+               | ExclInvalid, ExclInvalid => True
                | _, _ => False
                end)%I); [solve_proper|auto|].
       destruct x; eauto.
