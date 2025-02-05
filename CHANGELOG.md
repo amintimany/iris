@@ -8,7 +8,7 @@ lemma.
 **Changes in `algebra`:**
 
 * Add lemma `ufrac_auth_update_surplus_cancel`.
-* Rename `CSumBot`, `GSetBot`, `CoPsetBot` and `ExclBot` to `*Invalid`.
+* Rename `CsumBot`, `GSetBot`, `CoPsetBot` and `ExclBot` to `*Invalid`.
 
 **Changes in `base_logic`:**
 

@@ -167,7 +167,7 @@ Section internal_eq_derived.
     sx ≡ sy ⊣⊢ match sx, sy with
                | Cinl x, Cinl y => x ≡ y
                | Cinr x, Cinr y => x ≡ y
-               | CSumInvalid, CSumInvalid => True
+               | CsumInvalid, CsumInvalid => True
                | _, _ => False
                end.
   Proof.
@@ -176,7 +176,7 @@ Section internal_eq_derived.
                match sx, sy' with
                | Cinl x, Cinl y => x ≡ y
                | Cinr x, Cinr y => x ≡ y
-               | CSumInvalid, CSumInvalid => True
+               | CsumInvalid, CsumInvalid => True
                | _, _ => False
                end)%I); [solve_proper|auto|].
       destruct sx; eauto.
