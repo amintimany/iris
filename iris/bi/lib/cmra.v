@@ -123,7 +123,7 @@ Section internal_included_laws.
     sx ≼ sy ⊣⊢ match sx, sy with
                | Cinl x, Cinl y => x ≼ y
                | Cinr x, Cinr y => x ≼ y
-               | _, CSumInvalid => True
+               | _, CsumInvalid => True
                | _, _ => False
                end.
   Proof.
