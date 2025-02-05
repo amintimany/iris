@@ -357,7 +357,16 @@ Section tests.
     ⊢ WP #42 + #420 {{ v, ▷ P ={∅}=∗ P }}.
   Proof.
     wp_pure credit:"Hcred". Show.
-    iIntros "!> HP". iMod (lc_fupd_elim_later with "Hcred HP"). auto.
+    iIntros "!> HP". iNext credit: "Hcred". auto.
+  Qed.
+
+  Check "test_wp_pure_credit_bump".
+  Lemma test_wp_pure_credit_bump P :
+    ⊢ £ 1 -∗ WP #42 + #420 {{ v, ▷ P ={∅}=∗ P }}.
+  Proof.
+    iIntros "Hcred".
+    wp_pure credit:"Hcred". Show.
+    iIntros "!> HP". iNext credit: "Hcred". auto.
   Qed.
 
   Check "test_wp_pure_credit_fail".
@@ -365,7 +374,7 @@ Section tests.
     ⊢ True -∗ WP #42 + #420 {{ v, True }}.
   Proof.
     iIntros "Hcred".
-    Fail wp_pure credit:"Hcred".
+    Fail wp_pure credit: "Hcred".
   Abort.
 
 End tests.

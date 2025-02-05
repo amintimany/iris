@@ -1,6 +1,6 @@
-From stdpp Require Export coPset.
+From stdpp Require Export coPset nat_cancel.
 From iris.algebra Require Import gmap auth agree gset coPset.
-From iris.proofmode Require Import proofmode.
+From iris.proofmode Require Import coq_tactics proofmode reduction.
 From iris.base_logic.lib Require Export own.
 From iris.base_logic.lib Require Import wsat.
 From iris.base_logic Require Export later_credits.
@@ -276,3 +276,66 @@ Proof.
   - apply step_fupdN_soundness_lc. done.
   - apply step_fupdN_soundness_no_lc. done.
 Qed.
+
+(** * Now the coq-level tactics *)
+
+Lemma tac_lc_add_laterN_split `{!invGS_gen HasLc Σ} Δ Δ' E i n m m' P :
+  envs_lookup i Δ = Some (false, £ m)%I →
+  (* Handles all [P] that can add a [fupd], i.e. WP and (mask-changing) fancy updates *)
+  AddModal (|={E}=> P) P P →
+  MaybeIntoLaterNEnvs n (envs_delete false i false Δ) Δ' →
+  NatCancel m m' n 0 →
+  (* FIXME: [envs_entails] is not a typeclass, so using it inside [TCIf] like *)
+  (* this is kind of a hack. However, [tc_to_bool (TCEq m' 0)] always resolves the *)
+  (* implicit parameter [p] to [false] because the value of [m'] is not known. *)
+  TCIf (TCEq m' 0) (envs_entails Δ' P) (
+  match envs_app false (Esnoc Enil i (£ m')) Δ' with
+    | Some Δ'' => envs_entails Δ'' P
+    | None => False
+  end) →
+  envs_entails Δ P.
+Proof.
+  rewrite envs_entails_unseal /NatCancel /AddModal right_id => Hlk Hmod ? Heq He.
+  destruct He as [Hm' He | He]; rewrite -Heq in Hlk.
+  - rewrite Hm' right_id in Hlk.
+    rewrite -Hmod (envs_lookup_sound' _ false) //.
+    rewrite into_laterN_env_sound He /=.
+    rewrite -wand_refl right_id.
+    iIntros "[Hlc ?]".
+    iApply (lc_fupd_add_laterN with "Hlc"). by iNext.
+  - destruct (envs_app _ _ _) as [Δ''|] eqn:HΔ''; [ | contradiction ].
+    rewrite (envs_lookup_sound' _ false) //; simpl.
+    rewrite into_laterN_env_sound envs_app_sound //; simpl.
+    rewrite -Hmod -wand_refl 2!right_id (lc_split n m').
+    rewrite -sep_assoc laterN_wand -(laterN_intro n (£ m')) wand_elim_r.
+    iIntros "[Hlc ?]".
+    iApply (lc_fupd_add_laterN with "Hlc").
+    iNext. iModIntro. by iApply He.
+Qed.
+
+Tactic Notation "iNext" open_constr(n) "credit:" constr(H) :=
+  iStartProof;
+  eapply (tac_lc_add_laterN_split _ _ _ H n);
+    [(* look up the later credit named H *)
+     pm_reflexivity ||
+     fail "iNext credit:" H "is not a later credit"
+    |(* AddModal *)
+     tc_solve ||
+     fail "iNext credit: the goal cannot add the fancy update modality"
+    |(* MaybeIntoLaterNEnvs *)
+     tc_solve
+    |(* NatCancel *)
+     pm_reflexivity ||
+     fail "The credit" H "is not enough"
+    |pm_reduce; pm_prettify;
+     match goal with
+     | |- TCIf (TCEq ?m 0) _ _ =>
+         lazymatch eval lazy in (tc_to_bool (TCEq m 0)) with
+         | (* credit is used up *)
+           true => constructor 1; first tc_solve
+         | (* credit has the residue *)
+           false => constructor 2
+         end
+     end
+    ].
+Tactic Notation "iNext" "credit:" constr(H) := iNext 1 credit: H.

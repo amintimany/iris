@@ -189,10 +189,21 @@ Tactic failure: wp_pure: cannot find ?y in (Var "x") or
   "Hcred" : £ 1
   --------------------------------------∗
   |={⊤}=> ▷ P ={∅}=∗ P
+"test_wp_pure_credit_bump"
+     : string
+1 goal
+  
+  Σ : gFunctors
+  heapGS0 : heapGS Σ
+  P : iProp Σ
+  ============================
+  "Hcred" : £ 2
+  --------------------------------------∗
+  |={⊤}=> ▷ P ={∅}=∗ P
 "test_wp_pure_credit_fail"
      : string
 The command has indeed failed with message:
-Tactic failure: wp_pure: "Hcred" is not fresh.
+Tactic failure: wp_pure: "Hcred" is neither a later credit nor fresh.
 1 goal
   
   Σ : gFunctors

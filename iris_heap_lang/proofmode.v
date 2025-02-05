@@ -57,10 +57,20 @@ Lemma tac_wp_pure_credit `{!heapGS_gen hlc Σ} Δ Δ' s E j K e1 e2 ϕ Φ :
   PureExec ϕ 1 e1 e2 →
   ϕ →
   MaybeIntoLaterNEnvs 1 Δ Δ' →
-  match envs_app false (Esnoc Enil j (£ 1)) Δ' with
-  | Some Δ'' =>
-     envs_entails Δ'' (WP fill K e2 @ s; E {{ Φ }})
-  | None => False
+  match envs_lookup j Δ' with
+  | Some (false, P) =>
+    ∃ n,
+      P = (£ n) ∧
+      match envs_simple_replace j false (Esnoc Enil j (£ (S n))) Δ' with
+      | Some Δ'' => envs_entails Δ'' (WP fill K e2 @ s; E {{ Φ }})
+      | None => False
+      end
+  | None =>
+     match envs_app false (Esnoc Enil j (£ 1)) Δ' with
+     | Some Δ'' => envs_entails Δ'' (WP fill K e2 @ s; E {{ Φ }})
+     | None => False
+     end
+  | _ => False
   end →
   envs_entails Δ (WP (fill K e1) @ s; E {{ Φ }}).
 Proof.
@@ -68,9 +78,16 @@ Proof.
   pose proof @pure_exec_fill.
   rewrite -lifting.wp_pure_step_later; last done.
   rewrite into_laterN_env_sound /=. apply later_mono.
-  destruct (envs_app _ _ _) as [Δ''|] eqn:HΔ'; [ | contradiction ].
-  rewrite envs_app_sound //; simpl.
-  rewrite right_id. apply wand_intro_r. by rewrite wand_elim_l.
+  destruct (envs_lookup j Δ') as [[[ | ] P] | ] eqn:Hlk; first done.
+  - destruct HΔ as [n [-> HΔ]].
+    destruct (envs_simple_replace _ _ _) as [Δ''|] eqn:HΔ'; [ | contradiction ].
+    rewrite envs_simple_replace_sound //; simpl.
+    rewrite right_id. apply wand_intro_r.
+    rewrite sep_comm assoc -lc_succ wand_elim_r.
+    apply HΔ.
+  - destruct (envs_app _ _ _) as [Δ''|] eqn:HΔ'; [ | contradiction ].
+    rewrite envs_app_sound //; simpl.
+    rewrite right_id. apply wand_intro_r. by rewrite wand_elim_l.
 Qed.
 
 Lemma tac_wp_value_nofupd `{!heapGS_gen hlc Σ} Δ s E Φ v :
@@ -158,25 +175,31 @@ Tactic Notation "wp_pure" :=
 
 Tactic Notation "wp_pure" open_constr(efoc) "credit:" constr(H) :=
   iStartProof;
-  let Htmp := iFresh in
-  let finish _ :=
-    pm_reduce;
-    (iDestructHyp Htmp as H || fail 2 "wp_pure:" H "is not fresh");
-    wp_finish
-    in
   lazymatch goal with
   | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
-    let e := eval simpl in e in
+    (let e := eval simpl in e in
     reshape_expr e ltac:(fun K e' =>
       unify e' efoc;
-      eapply (tac_wp_pure_credit _ _ _ _ Htmp K e');
-      [tc_solve                       (* PureExec *)
-      |try solve_vals_compare_safe    (* The pure condition for PureExec --
-         handles trivial goals, including [vals_compare_safe] *)
-      |tc_solve                       (* IntoLaters *)
-      |finish ()                      (* new goal *)
+      eapply (tac_wp_pure_credit _ _ _ _ H K e');
+      [(* PureExec *)
+       tc_solve
+      |(* The pure condition for PureExec --
+          handle trivial goals, including [vals_compare_safe] *)
+       try solve_vals_compare_safe
+      |(* IntoLaters *)
+       tc_solve
+      |..
       ])
-    || fail "wp_pure: cannot find" efoc "in" e "or" efoc "is not a redex"
+    || fail "wp_pure: cannot find" efoc "in" e "or" efoc "is not a redex");
+    pm_reduce;
+    lazymatch goal with
+    | (* create the new later credit *)
+      |- ∃ _, _ => (notypeclasses refine (ex_intro _ _ (conj (eq_refl _) _)) ||
+               fail 0 "wp_pure:" H "is neither a later credit nor fresh");
+               pm_reduce; wp_finish
+    | (* bump up the existing credit *)
+      _ => pm_reduce; wp_finish
+    end
   | |- envs_entails _ (twp ?s ?E ?e ?Q) =>
     fail "wp_pure: credit generation is not supported for a TWP"
   | _ => fail "wp_pure: not a 'wp'"

@@ -43,13 +43,20 @@ The opam packages have been renamed from `coq-*` to `rocq-*`.
   Only the top-level `iFrame` tactic should be used.
 * Let `iFrame` fail if the goal turns into `True`/`emp` but more given
   hypotheses remain.
-  
+* Add tactic `iNext credit:"H"` which consumes a later credit to strip a later
+  from the hypotheses. (by @ffengyu)
+
 **Changes in `base_logic`:**
 
 * Change `cinv` construction to add lemma `cinv_acc_1` to access the invariant
   non-atomically given full ownership of the token. (by Benjamin Peters)
 * Add `Contractive` instance for `na_inv`.
 
+**Changes in `heap_lang`:**
+
+* Improve `wp_pure credit:"H"` so that if "H" is an existing credit, it gets
+  incremented by 1. (by @ffengyu)
+  
 ## Iris 4.4.0 (2025-06-04)
 
 The main features of this release are support for transfinite step-indexing for

@@ -224,6 +224,10 @@ Modalities
     one later from all the hypotheses.
   + `iNext n` : an alias of `iModIntro (▷^n _)` (that is, introduce the `▷^n`
     modality).
+  + `iNext credit:"H"` : This decreases the later credit `"H"` by 1 to strip
+    one later from all thehypotheses when the goal can add a fancy update.
+  + `iNext n credit:"H"` : This decreases the later credit `"H"` by `n` to strip
+    `n` later from all the hypotheses when the goal can add a fancy update.
   + `iAlways` : a deprecated alias of `iModIntro` (intended to introduce the `□`
     modality).
 - `iMod pm_trm as (x1 ... xn) "ipat"` : eliminate a modality `pm_trm` that is
