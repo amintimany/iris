@@ -34,7 +34,7 @@ lemma.
 
 **Infrastructure:**
 
-* Use `gmake` (GNU Make) instead of `make` on BSD systems.
+* Use `gmake` (GNU Make) instead of `make` on BSD systems. (by Yiyun Liu)
 
 The following `sed` script helps adjust your code to the renaming (on macOS,
 replace `sed` by `gsed`, installed via e.g. `brew install gnu-sed`).
