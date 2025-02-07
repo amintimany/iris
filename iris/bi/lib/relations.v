@@ -1,6 +1,6 @@
 (** This file provides constructions to lift
 a PROP-level binary relation to various closures. *)
-From iris.bi.lib Require Export fixpoint.
+From iris.bi.lib Require Export fixpoint_mono.
 From iris.proofmode Require Import proofmode.
 From iris.prelude Require Import options.
 

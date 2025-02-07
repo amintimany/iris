@@ -1,4 +1,4 @@
-From iris.bi Require Import lib.fixpoint.
+From iris.bi Require Import lib.fixpoint_mono.
 From iris.proofmode Require Import proofmode.
 From iris.prelude Require Import options.
 
