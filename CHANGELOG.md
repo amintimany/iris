@@ -27,6 +27,7 @@ lemma.
   so that it subsumes both of them.
 * Change `WP` notation to allow type annotations and (exhaustive) patterns for
   the return value binder.
+* Rename `bi.lib.fixpoint` module to `bi.lib.fixpoint_mono`.
 
 **Changes in `heap_lang`:**
 
@@ -43,6 +44,8 @@ Note that the script is not idempotent, do not run it twice.
 sed -i -E -f- $(find theories -name "*.v") <<EOF
 # "*Bot* RA element rename
 s/\b(Csum|GSet|CoPset|Excl)Bot(\b|_)/\\1Invalid\\2/g
+# bi.lib.fixpoint rename: adjust imports
+s/(From iris.* Require .*|Require iris.*)\bfixpoint\b/\\1fixpoint_mono/g
 EOF
 ```
 
