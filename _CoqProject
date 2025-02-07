@@ -85,6 +85,7 @@ iris/bi/telescopes.v
 iris/bi/lib/cmra.v
 iris/bi/lib/counterexamples.v
 iris/bi/lib/fixpoint_mono.v
+iris/bi/lib/fixpoint_banach.v
 iris/bi/lib/fractional.v
 iris/bi/lib/laterable.v
 iris/bi/lib/atomic.v
