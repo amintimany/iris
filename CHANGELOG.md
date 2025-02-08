@@ -28,6 +28,9 @@ lemma.
 * Change `WP` notation to allow type annotations and (exhaustive) patterns for
   the return value binder.
 * Rename `bi.lib.fixpoint` module to `bi.lib.fixpoint_mono`.
+* Add `bi.lib.fixpoint_banach` module with lemmas for proving that a `fixpoint`
+  (of a contractive function) is persistent/affine/etc. (with help from William
+  Mansky)
 
 **Changes in `heap_lang`:**
 
