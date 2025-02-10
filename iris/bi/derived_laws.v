@@ -1721,21 +1721,13 @@ Proof. split; [by apply _ ..|]. simpl. apply persistently_emp_intro. Qed.
 Lemma limit_preserving_entails {A : ofe} `{!Cofe A} (Φ Ψ : A → PROP) :
   NonExpansive Φ → NonExpansive Ψ → LimitPreserving (λ x, Φ x ⊢ Ψ x).
 Proof.
-  intros HΦ HΨ c Hc. apply entails_eq_True, equiv_dist=>n.
-  rewrite conv_compl. apply equiv_dist, entails_eq_True. done.
+  intros. apply limit_preserving_ext with (λ x, True ⊣⊢ (Φ x → Ψ x)).
+  - intros x. rewrite entails_eq_True. naive_solver.
+  - apply limit_preserving_equiv; solve_proper.
 Qed.
 Lemma limit_preserving_emp_valid {A : ofe} `{!Cofe A} (Φ : A → PROP) :
   NonExpansive Φ → LimitPreserving (λ x, ⊢ Φ x).
-Proof.
-  intros. apply limit_preserving_entails; first solve_proper. done.
-Qed.
-Lemma limit_preserving_equiv {A : ofe} `{!Cofe A} (Φ Ψ : A → PROP) :
-  NonExpansive Φ → NonExpansive Ψ → LimitPreserving (λ x, Φ x ⊣⊢ Ψ x).
-Proof.
-  intros HΦ HΨ. eapply limit_preserving_ext.
-  { intros x. symmetry; apply equiv_entails. }
-  apply limit_preserving_and; by apply limit_preserving_entails.
-Qed.
+Proof. intros. apply limit_preserving_entails; solve_proper. Qed.
 Global Instance limit_preserving_Persistent {A : ofe} `{!Cofe A} (Φ : A → PROP) :
   NonExpansive Φ → LimitPreserving (λ x, Persistent (Φ x)).
 Proof. intros. apply limit_preserving_entails; solve_proper. Qed.
