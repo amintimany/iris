@@ -9,6 +9,7 @@ lemma.
 
 * Add lemma `ufrac_auth_update_surplus_cancel`.
 * Rename `CsumBot`, `GSetBot`, `CoPsetBot` and `ExclBot` to `*Invalid`.
+* Add `agree_includedN`, `excl_included` and `excl_includedN`.
 
 **Changes in `base_logic`:**
 
@@ -19,6 +20,7 @@ lemma.
     proved in the `uPred` model).
   + Various corollaries for total cmras (which include `ucmra`s) are provided.
 * Add lemma `Some_included_totalI`.
+* Simplify lemma `excl_includedI` to use `=` instead of `match`.
 
 **Changes in `bi`:**
 
