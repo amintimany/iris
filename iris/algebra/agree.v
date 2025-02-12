@@ -128,6 +128,11 @@ Proof.
   split; [|by intros ?; exists y].
   by intros [z Hz]; rewrite Hz assoc agree_idemp.
 Qed.
+Lemma agree_includedN n x y : x ≼{n} y ↔ y ≡{n}≡ x ⋅ y.
+Proof.
+  split; [|by intros ?; exists y].
+  by intros [z Hz]; rewrite Hz assoc agree_idemp.
+Qed.
 
 Lemma agree_op_invN n x1 x2 : ✓{n} (x1 ⋅ x2) → x1 ≡{n}≡ x2.
 Proof.

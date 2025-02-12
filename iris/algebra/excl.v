@@ -94,6 +94,19 @@ Canonical Structure exclR := Cmra (excl A) excl_cmra_mixin.
 Global Instance excl_cmra_discrete : OfeDiscrete A → CmraDiscrete exclR.
 Proof. split; first apply _. by intros []. Qed.
 
+Lemma excl_included x y : x ≼ y ↔ y = ExclInvalid.
+Proof.
+  split.
+  - destruct x, y; intros [[] Hxy]; by inv Hxy.
+  - intros ->. by exists ExclInvalid.
+Qed.
+Lemma excl_includedN n x y : x ≼{n} y ↔ y = ExclInvalid.
+Proof.
+  split.
+  - destruct x, y; intros [[] Hxy]; by inv Hxy.
+  - intros ->. by exists ExclInvalid.
+Qed.
+
 (** Exclusive *)
 Global Instance excl_exclusive x : Exclusive x.
 Proof. by destruct x; intros n []. Qed.
