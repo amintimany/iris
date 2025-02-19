@@ -28,6 +28,9 @@ Given a camera $\monoid$, we define the COFE $\UPred(\monoid)$ of \emph{uniform 
   \pred \dist{n} \predB \eqdef{}& \All m \le n, \melt. m \in \mval(\melt) \Ra (m \in \pred(\melt) \iff  m \in \predB(\melt))
 \end{align*}
 You can think of uniform predicates as monotone, step-indexed predicates over a camera that ``ignore'' invalid elements (as defined by the quotient).
+Note that we will not explicitly deal with equivalence classes below but instead just pick an arbitrary element of the class.
+There is an implicit proof obligation for every operation acting on $\UPred$ to show that the concrete representative does not matter.
+This is all explicit in Coq (where we use a setoid to represent the quotient); we do not spell it out on paper.
 
 $\UPred(-)$ is a locally non-expansive functor from $\CMRAs$ to $\COFEs$.
 
