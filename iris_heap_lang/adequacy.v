@@ -24,7 +24,7 @@ with a non-constant step index function. We thus use the more general
 [wp_strong_adequacy] lemma. The proof below replicates part of the proof of
 [wp_adequacy], and it hence would make sense to see if we can prove a version
 of [wp_adequacy] for a non-constant step version. *)
-Definition heap_adequacy Σ `{!heapGpreS Σ} s e σ φ :
+Lemma heap_adequacy Σ `{!heapGpreS Σ} s e σ φ :
   (∀ `{!heapGS Σ}, ⊢ inv_heap_inv -∗ WP e @ s; ⊤ {{ v, ⌜φ v⌝ }}) →
   adequate s e σ (λ v _, φ v).
 Proof.
