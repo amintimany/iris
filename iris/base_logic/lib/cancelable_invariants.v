@@ -115,8 +115,7 @@ Section proofs.
   Proof.
     iIntros (?) "Hinv Hown".
     iMod (inv_acc_strong with "Hinv") as "[[$ | >Hown'] H]"; first done.
-    - iIntros "{$Hown} !>" (E') "HP".
-      iApply "H". iDestruct "HP" as "[?|?]"; eauto.
+    - iIntros "{$Hown} !>" (E') "HP". iApply "H". by iNext.
     - iDestruct (cinv_own_1_l with "Hown' Hown") as %[].
   Qed.
 
