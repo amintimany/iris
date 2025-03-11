@@ -3,7 +3,6 @@ From iris.bi.lib Require Import fractional.
 From iris.proofmode Require Import proofmode.
 From iris.base_logic.lib Require Export invariants.
 From iris.prelude Require Import options.
-Import uPred.
 
 Class cinvG Σ := { #[local] cinv_inG :: inG Σ fracR }.
 
@@ -115,14 +114,8 @@ Section proofs.
     ▷ P ∗ cinv_own γ p ∗ (∀ E' : coPset, ▷ P ∨ cinv_own γ 1 ={E',↑N ∪ E'}=∗ True)).
   Proof.
     iIntros (?) "Hinv Hown".
-    iPoseProof (inv_acc (↑ N) N with "Hinv") as "H"; first done.
-    rewrite difference_diag_L.
-    iPoseProof (fupd_mask_frame_r _ _ (E ∖ ↑ N) with "H") as "H"; first set_solver.
-    rewrite left_id_L -union_difference_L //. iMod "H" as "[[$ | >Hown'] H]".
-    - iIntros "{$Hown} !>" (E') "HP".
-      iPoseProof (fupd_mask_frame_r _ _ E' with "(H [HP])") as "H"; first set_solver.
-      { iDestruct "HP" as "[?|?]"; eauto. }
-      by rewrite left_id_L.
+    iMod (inv_acc_strong with "Hinv") as "[[$ | >Hown'] H]"; first done.
+    - iIntros "{$Hown} !>" (E') "HP". iApply "H". by iNext.
     - iDestruct (cinv_own_1_l with "Hown' Hown") as %[].
   Qed.
 
@@ -133,8 +126,8 @@ Section proofs.
     iIntros (?) "#Hinv Hγ".
     iMod (cinv_acc_strong with "Hinv Hγ") as "($ & $ & H)"; first done.
     iIntros "!> HP".
-    rewrite {2}(union_difference_L (↑N) E)=> //.
-    iApply "H". by iLeft.
+    iMod ("H" with "[$HP]") as "_".
+    rewrite -union_difference_L //.
   Qed.
 
   (*** Other *)
@@ -142,8 +135,8 @@ Section proofs.
   Proof.
     iIntros (?) "#Hinv Hγ".
     iMod (cinv_acc_strong with "Hinv Hγ") as "($ & Hγ & H)"; first done.
-    rewrite {2}(union_difference_L (↑N) E)=> //.
-    iApply "H". by iRight.
+    iMod ("H" with "[$Hγ]") as "_".
+    rewrite -union_difference_L //.
   Qed.
 
   Global Instance into_inv_cinv N γ P : IntoInv (cinv N γ P) N := {}.
@@ -153,9 +146,8 @@ Section proofs.
             (↑N ⊆ E) (cinv_own γ p) (fupd E (E∖↑N)) (fupd (E∖↑N) E)
             (λ _, ▷ P ∗ cinv_own γ p)%I (λ _, ▷ P)%I (λ _, None)%I.
   Proof.
-    rewrite /IntoAcc /accessor. iIntros (?) "#Hinv Hown".
-    rewrite exist_unit -assoc.
-    iApply (cinv_acc with "Hinv"); done.
+    rewrite /IntoAcc /accessor bi.exist_unit -assoc.
+    iIntros (?) "#Hinv Hown". by iApply cinv_acc.
   Qed.
 End proofs.
 
