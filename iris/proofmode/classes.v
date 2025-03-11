@@ -253,10 +253,10 @@ These three classes take two hypotheses [P] and [Q] as input, and return a
 (possibly simplified) new hypothesis [R]. [CombineSepAs P Q R] means that [R]
 may be obtained by deleting both [P] and [Q], and that [R] is not a trivial
 combination. [MaybeCombineSepAs P Q R progress] is like [CombineSepAs], but
-[R] can be the trivial combination [P ∗ Q], and the [progress] parameter 
-indicates whether this trivial combination is used. [CombineSepGives P Q R] 
-means that [□ R] may be obtained 'for free' from [P] and [Q]. The result [R] of 
-[CombineSepAs] and [MaybeCombineSepAs] will not contain the observations 
+[R] can be the trivial combination [P ∗ Q], and the [progress] parameter
+indicates whether this trivial combination is used. [CombineSepGives P Q R]
+means that [□ R] may be obtained 'for free' from [P] and [Q]. The result [R] of
+[CombineSepAs] and [MaybeCombineSepAs] will not contain the observations
 from [CombineSepGives].
 
 We deliberately use separate typeclasses [CombineSepAs] and [CombineSepGives].
@@ -513,20 +513,38 @@ Global Hint Mode IntoEmbed + + + ! -  : typeclass_instances.
    instance is never used when the BI is unknown.
 
    No Hint Modes are declared here. The appropriate one would be
-   [Hint Mode - ! -], but the fact that Coq ignores primitive
-   projections for hints modes would make this fail.*)
-Class AsEmpValid {PROP : bi} (φ : Prop) (P : PROP) :=
-  as_emp_valid : φ ↔ ⊢ P.
-Global Arguments AsEmpValid {_} _%_type _%_I.
-Class AsEmpValid0 {PROP : bi} (φ : Prop) (P : PROP) :=
-  as_emp_valid_0 : AsEmpValid φ P.
-Global Arguments AsEmpValid0 {_} _%_type _%_I.
+   [Hint Mode - + ! -], but the fact that Coq ignores primitive
+   projections for hints modes would make this fail.
+
+   The direction [d] specifies whether [φ] can be converted to resp. from [⊢ P].
+   [iPoseProof] requires [AsEmpValid DirectionIntoEmpValid], while [iStartProof]
+   requires [AsEmpValid DirectionFromEmpValid]. We nevertheless use a single
+   type class to represent both directions since most instances can be parametric
+   in the direction.
+*)
+Inductive as_emp_valid_direction :=
+  | DirectionIntoEmpValid
+  | DirectionFromEmpValid.
+
+(** We define [AsEmpValid] using a conjunction (instead of a [match] or a record
+with two fields) to make it possible to "unfold" [AsEmpValid] and handle both
+directions in a uniform manner (e.g., using [rewrite]).
+See [as_emp_valid_tforall] for an example. *)
+Class AsEmpValid {PROP : bi} (d : as_emp_valid_direction) (φ : Prop) (P : PROP) :=
+  as_emp_valid : (d = DirectionIntoEmpValid → φ → ⊢ P) ∧
+                 (d = DirectionFromEmpValid → (⊢ P) → φ).
+Global Arguments AsEmpValid {_} _ _%_type _%_I.
+Class AsEmpValid0 {PROP : bi} (d : as_emp_valid_direction) (φ : Prop) (P : PROP) :=
+  as_emp_valid_0 : AsEmpValid d φ P.
+Global Arguments AsEmpValid0 {_} _ _%_type _%_I.
 Global Existing Instance as_emp_valid_0 | 0.
 
-Lemma as_emp_valid_1 (φ : Prop) {PROP : bi} (P : PROP) `{!AsEmpValid φ P} :
+Lemma as_emp_valid_1 (φ : Prop) {PROP : bi} (P : PROP)
+    `{!AsEmpValid DirectionIntoEmpValid φ P} :
   φ → ⊢ P.
 Proof. by apply as_emp_valid. Qed.
-Lemma as_emp_valid_2 (φ : Prop) {PROP : bi} (P : PROP) `{!AsEmpValid φ P} :
+Lemma as_emp_valid_2 (φ : Prop) {PROP : bi} (P : PROP)
+    `{!AsEmpValid DirectionFromEmpValid φ P} :
   (⊢ P) → φ.
 Proof. by apply as_emp_valid. Qed.
 

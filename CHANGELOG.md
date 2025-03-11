@@ -34,6 +34,12 @@ lemma.
   (of a contractive function) is persistent/affine/etc. (with help from William
   Mansky)
 
+**Changes in `proofmode`:**
+
+* Generalize `AsEmpValid` to allow specifying which directions of the bi-implication
+  hold. This allows embedded logics to enable support for `iPoseProof` and `iStartProof`
+  independently. (by Michael Sammler)
+
 **Changes in `heap_lang`:**
 
 * Add `Inhabited lock_name` to `lock` class. (by Daniel Nezamabadi)

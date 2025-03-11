@@ -31,22 +31,22 @@ Implicit Types P Q R : PROP.
 Implicit Types mP : option PROP.
 
 (** AsEmpValid *)
-Global Instance as_emp_valid_emp_valid P : AsEmpValid0 (⊢ P) P | 0.
+Global Instance as_emp_valid_emp_valid d P : AsEmpValid0 d (⊢ P) P | 0.
 Proof. by rewrite /AsEmpValid. Qed.
-Global Instance as_emp_valid_entails P Q : AsEmpValid0 (P ⊢ Q) (P -∗ Q).
-Proof. split; [ apply bi.entails_wand | apply bi.wand_entails ]. Qed.
-Global Instance as_emp_valid_equiv P Q : AsEmpValid0 (P ≡ Q) (P ∗-∗ Q).
-Proof. split; [ apply bi.equiv_wand_iff | apply bi.wand_iff_equiv ]. Qed.
+Global Instance as_emp_valid_entails d P Q : AsEmpValid0 d (P ⊢ Q) (P -∗ Q).
+Proof. split => _; [ apply bi.entails_wand | apply bi.wand_entails ]. Qed.
+Global Instance as_emp_valid_equiv d P Q : AsEmpValid0 d (P ≡ Q) (P ∗-∗ Q).
+Proof. split => _; [ apply bi.equiv_wand_iff | apply bi.wand_iff_equiv ]. Qed.
 
-Global Instance as_emp_valid_forall {A : Type} (φ : A → Prop) (P : A → PROP) :
-  (∀ x, AsEmpValid (φ x) (P x)) → AsEmpValid (∀ x, φ x) (∀ x, P x).
+Global Instance as_emp_valid_forall d {A : Type} (φ : A → Prop) (P : A → PROP) :
+  (∀ x, AsEmpValid d (φ x) (P x)) → AsEmpValid d (∀ x, φ x) (∀ x, P x).
 Proof.
-  rewrite /AsEmpValid=>H1. split=>H2.
-  - apply bi.forall_intro=>?. apply H1, H2.
-  - intros x. apply H1. revert H2. by rewrite (bi.forall_elim x).
+  move=>H1. split=>? H2.
+  - apply bi.forall_intro=>?. by apply H1, H2.
+  - intros x. apply H1 => //. revert H2. by rewrite (bi.forall_elim x).
 Qed.
-Global Instance as_emp_valid_tforall {TT : tele} (φ : TT → Prop) (P : TT → PROP) :
-  (∀ x, AsEmpValid (φ x) (P x)) → AsEmpValid (∀.. x, φ x) (∀.. x, P x).
+Global Instance as_emp_valid_tforall d {TT : tele} (φ : TT → Prop) (P : TT → PROP) :
+  (∀ x, AsEmpValid d (φ x) (P x)) → AsEmpValid d (∀.. x, φ x) (∀.. x, P x).
 Proof.
   rewrite /AsEmpValid !tforall_forall bi_tforall_forall.
   apply as_emp_valid_forall.

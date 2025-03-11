@@ -547,8 +547,8 @@ Definition IntoEmpValid (φ : Type) (P : PROP) := φ → ⊢ P.
 (** These lemmas are [Defined] because the guardedness checker must see
 through them. See https://gitlab.mpi-sws.org/iris/iris/issues/274. For the
 same reason, their bodies use as little automation as possible. *)
-Lemma into_emp_valid_here φ P : AsEmpValid φ P → IntoEmpValid φ P.
-Proof. by intros [??]. Defined.
+Lemma into_emp_valid_here φ P : AsEmpValid DirectionIntoEmpValid φ P → IntoEmpValid φ P.
+Proof. rewrite /IntoEmpValid. intros [Hi1 ?]. apply Hi1, eq_refl. Defined.
 Lemma into_emp_valid_impl (φ ψ : Type) P :
   φ → IntoEmpValid ψ P → IntoEmpValid (φ → ψ) P.
 Proof. rewrite /IntoEmpValid => Hφ Hi1 Hi2. apply Hi1, Hi2, Hφ. Defined.

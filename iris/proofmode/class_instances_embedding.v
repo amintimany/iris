@@ -7,10 +7,10 @@ Import bi.
 instance is not used when there is no embedding between [PROP] and [PROP']. The
 first [`{BiEmbed PROP PROP'}] is not considered as a premise by Coq TC search
 mechanism because the rest of the hypothesis is dependent on it. *)
-Global Instance as_emp_valid_embed `{!BiEmbed PROP PROP'} (φ : Prop) (P : PROP) :
+Global Instance as_emp_valid_embed `{!BiEmbed PROP PROP'} d (φ : Prop) (P : PROP) :
   BiEmbed PROP PROP' →
-  AsEmpValid0 φ P → AsEmpValid φ ⎡P⎤.
-Proof. rewrite /AsEmpValid0 /AsEmpValid=> _ ->. rewrite embed_emp_valid //. Qed.
+  AsEmpValid0 d φ P → AsEmpValid d φ ⎡P⎤.
+Proof. rewrite /AsEmpValid0 /AsEmpValid=> _ [? ?]. rewrite embed_emp_valid //. Qed.
 
 Section class_instances_embedding.
 Context `{!BiEmbed PROP PROP'}.
