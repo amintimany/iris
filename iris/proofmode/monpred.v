@@ -174,33 +174,38 @@ Proof.
   by rewrite /KnownRFromAssumption /FromAssumption -monPred_subjectively_intro.
 Qed.
 
-Global Instance as_emp_valid_monPred_at φ P (Φ : I → PROP) :
-  AsEmpValid0 φ P → (∀ i, MakeMonPredAt i P (Φ i)) → AsEmpValid φ (∀ i, Φ i) | 100.
+Global Instance as_emp_valid_monPred_at d φ P (Φ : I → PROP) :
+  AsEmpValid0 d φ P →
+  (∀ i, MakeMonPredAt i P (Φ i)) →
+  AsEmpValid d φ (∀ i, Φ i) | 100.
 Proof.
-  rewrite /MakeMonPredAt /AsEmpValid0 /AsEmpValid /bi_emp_valid=> -> EQ.
+  rewrite /MakeMonPredAt /AsEmpValid0 /AsEmpValid /bi_emp_valid=> -[He1 He2] EQ.
   setoid_rewrite <-EQ. split.
-  - move=>[H]. apply bi.forall_intro=>i. rewrite -H. by rewrite monPred_at_emp.
-  - move=>HP. split=>i. rewrite monPred_at_emp HP bi.forall_elim //.
+  - move=>? /He1[//|H]. apply bi.forall_intro=>i. rewrite -H. by rewrite monPred_at_emp.
+  - move=>? HP. apply He2 => //. split=>i. rewrite monPred_at_emp HP bi.forall_elim //.
 Qed.
-Global Instance as_emp_valid_monPred_at_wand φ P Q (Φ Ψ : I → PROP) :
-  AsEmpValid0 φ (P -∗ Q) →
+Global Instance as_emp_valid_monPred_at_wand d φ P Q (Φ Ψ : I → PROP) :
+  AsEmpValid0 d φ (P -∗ Q) →
   (∀ i, MakeMonPredAt i P (Φ i)) → (∀ i, MakeMonPredAt i Q (Ψ i)) →
-  AsEmpValid φ (∀ i, Φ i -∗ Ψ i).
+  AsEmpValid d φ (∀ i, Φ i -∗ Ψ i).
 Proof.
-  rewrite /AsEmpValid0 /AsEmpValid /MakeMonPredAt. intros -> EQ1 EQ2.
+  rewrite /AsEmpValid0 /AsEmpValid /MakeMonPredAt. intros [He1 He2] EQ1 EQ2.
   setoid_rewrite <-EQ1. setoid_rewrite <-EQ2. split.
-  - move=>/bi.wand_entails HP. setoid_rewrite HP. by iIntros (i) "$".
-  - move=>HP. apply bi.entails_wand. split=>i. iIntros "H". by iApply HP.
+  - move=>? /He1/bi.wand_entails HP. setoid_rewrite HP => //. by iIntros (i) "$".
+  - move=>? HP. apply He2 => //. apply bi.entails_wand.
+    split=>i. iIntros "H". by iApply HP.
 Qed.
-Global Instance as_emp_valid_monPred_at_equiv φ P Q (Φ Ψ : I → PROP) :
-  AsEmpValid0 φ (P ∗-∗ Q) →
+Global Instance as_emp_valid_monPred_at_equiv d φ P Q (Φ Ψ : I → PROP) :
+  AsEmpValid0 d φ (P ∗-∗ Q) →
   (∀ i, MakeMonPredAt i P (Φ i)) → (∀ i, MakeMonPredAt i Q (Ψ i)) →
-  AsEmpValid φ (∀ i, Φ i ∗-∗ Ψ i).
+  AsEmpValid d φ (∀ i, Φ i ∗-∗ Ψ i).
 Proof.
-  rewrite /AsEmpValid0 /AsEmpValid /MakeMonPredAt. intros -> EQ1 EQ2.
+  rewrite /AsEmpValid0 /AsEmpValid /MakeMonPredAt. intros [He1 He2] EQ1 EQ2.
   setoid_rewrite <-EQ1. setoid_rewrite <-EQ2. split.
-  - move=>/bi.wand_iff_equiv HP. setoid_rewrite HP. iIntros. iSplit; iIntros "$".
-  - move=>HP. apply bi.equiv_wand_iff. split=>i. by iSplit; iIntros; iApply HP.
+  - move=>? /He1 /bi.wand_iff_equiv HP. setoid_rewrite HP => //.
+    iIntros. iSplit; iIntros "$".
+  - move=>? HP. apply He2 => //. apply bi.equiv_wand_iff.
+    split=>i. by iSplit; iIntros; iApply HP.
 Qed.
 
 Global Instance into_pure_monPred_at P φ i : IntoPure P φ → IntoPure (P i) φ.

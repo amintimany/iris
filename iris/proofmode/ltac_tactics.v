@@ -704,7 +704,7 @@ following shape:
 
 [∀ (x_1 : A_1) .. (x_n : A_n), φ]
 
-for which we have an instance [AsEmpValid φ ?Q].
+for which we have an instance [AsEmpValid DirectionIntoEmpValid φ ?Q].
 
 Examples of such [φ]s are
 
@@ -763,7 +763,7 @@ Ltac iIntoEmpValid :=
   iIntoEmpValid_go;
     [.. (* goals for premises *)
     |tc_solve ||
-     let φ := lazymatch goal with |- AsEmpValid ?φ _ => φ end in
+     let φ := lazymatch goal with |- AsEmpValid _ ?φ _ => φ end in
      fail "iPoseProof:" φ "not a BI assertion"].
 
 Tactic Notation "iPoseProofCoreLem" open_constr(lem) "as" tactic3(tac) :=
