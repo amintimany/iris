@@ -12,12 +12,11 @@ Delimit Scope val_scope with V.
 
 Inductive stuckness := NotStuck | MaybeStuck.
 
-Definition stuckness_leb (s1 s2 : stuckness) : bool :=
+Global Instance stuckness_le : SqSubsetEq stuckness := λ s1 s2,
   match s1, s2 with
-  | MaybeStuck, NotStuck => false
-  | _, _ => true
+  | MaybeStuck, NotStuck => False
+  | _, _ => True
   end.
-Global Instance stuckness_le : SqSubsetEq stuckness := stuckness_leb.
 Global Instance stuckness_le_po : PreOrder (⊑@{stuckness}).
 Proof. split; by repeat intros []. Qed.
 

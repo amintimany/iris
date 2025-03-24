@@ -33,6 +33,8 @@ lemma.
 * Add `bi.lib.fixpoint_banach` module with lemmas for proving that a `fixpoint`
   (of a contractive function) is persistent/affine/etc. (with help from William
   Mansky)
+* Remove the `bool`-valued `stuckness_leb`; use `stuckness_le` (in `Prop`)
+  instead.
 
 **Changes in `heap_lang`:**
 
