@@ -214,6 +214,13 @@ Section sep_list.
     - rewrite big_sepL_lookup_acc // sep_elim_l //.
   Qed.
 
+  Lemma big_sepL_elem_of_acc (Φ : A → PROP) l x :
+    x ∈ l → ([∗ list] y ∈ l, Φ y) ⊢ Φ x ∗ (Φ x -∗ ([∗ list] y ∈ l, Φ y)).
+  Proof.
+    intros [i ?]%elem_of_list_lookup.
+    by apply: big_sepL_lookup_acc.
+  Qed.
+
   Lemma big_sepL_elem_of (Φ : A → PROP) l x
     `{!TCOr (∀ y, Affine (Φ y)) (Absorbing (Φ x))} :
     x ∈ l → ([∗ list] y ∈ l, Φ y) ⊢ Φ x.
