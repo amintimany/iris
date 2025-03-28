@@ -1,4 +1,4 @@
-From iris.algebra Require Export ofe.
+From iris.algebra Require Export ofe stepindex_finite.
 From iris.bi Require Import notation.
 From iris.prelude Require Import options.
 
@@ -24,7 +24,7 @@ Section cofe.
   Local Instance siProp_dist : Dist siProp := siProp_dist'.
   Definition siProp_ofe_mixin : OfeMixin siProp.
   Proof.
-    split.
+    apply ofe_mixin_finite.
     - intros P Q; split.
       + by intros HPQ n; split=> i ?; apply HPQ.
       + intros HPQ; split=> n; apply HPQ with n; auto.
@@ -33,7 +33,7 @@ Section cofe.
       + by intros P Q HPQ; split=> i ?; symmetry; apply HPQ.
       + intros P Q Q' HP HQ; split=> i ?.
         by trans (Q i);[apply HP|apply HQ].
-    - intros n m P Q HPQ Hlt. split=> i ?; apply HPQ; lia.
+    - intros n P Q HPQ. split=> i ?; apply HPQ; lia.
   Qed.
   Canonical Structure siPropO : ofe := Ofe siProp siProp_ofe_mixin.
 
@@ -43,7 +43,7 @@ Section cofe.
     intros c n1 n2 ??; simpl in *.
     apply (chain_cauchy c n2 n1); eauto using siProp_closed.
   Qed.
-  Global Program Instance siProp_cofe : Cofe siPropO := {| compl := siProp_compl |}.
+  Global Program Instance siProp_cofe : Cofe siPropO := cofe_finite siProp_compl _.
   Next Obligation.
     intros n c; split=>i ?; symmetry; apply (chain_cauchy c i n); auto.
   Qed.
@@ -199,7 +199,7 @@ Section primitive.
   Lemma later_contractive : Contractive siProp_later.
   Proof.
     unseal; intros [|n] P Q HPQ; split=> -[|n'] ? //=; try lia.
-    eapply HPQ; eauto with si_solver.
+    eapply HPQ; eauto using cmra_validN_S.
   Qed.
   Lemma internal_eq_ne (A : ofe) : NonExpansive2 (@siProp_internal_eq A).
   Proof.
@@ -260,13 +260,14 @@ Section primitive.
   (** Later *)
   Lemma later_eq_1 {A : ofe} (x y : A) : Next x ≡ Next y ⊢ ▷ (x ≡ y).
   Proof.
-    unseal. split. intros [|n]; simpl; [done|].
-    intros Heq; apply Heq; auto.
+    unseal. split. intros [|n]; simpl; first done.
+    intros Heq; apply Heq, SIdx.lt_succ_diag_r.
   Qed.
   Lemma later_eq_2 {A : ofe} (x y : A) : ▷ (x ≡ y) ⊢ Next x ≡ Next y.
   Proof.
     unseal. split. intros n Hn; split; intros m Hlt; simpl in *.
-    destruct n as [|n]; eauto using dist_le with si_solver.
+    destruct n as [|n]; first lia.
+    eapply dist_le; first done. lia.
   Qed.
 
   Lemma later_mono P Q : (P ⊢ Q) → ▷ P ⊢ ▷ Q.

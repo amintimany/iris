@@ -2,6 +2,7 @@
      : string
 1 goal
   
+  SI : sidx
   X, Y : gset nat
   H : X = Y
   ============================

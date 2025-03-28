@@ -26,6 +26,17 @@ Proof. reflexivity. Qed.
 
 Global Instance test_cofe {Σ} : Cofe (iPrePropO Σ) := _.
 
+(** Make sure that the instance [leibnizO_leibniz] is fired (and does not suffer
+from unification issues. *)
+Goal LeibnizEquiv natO.
+Proof. apply _. Qed.
+Goal LeibnizEquiv nat.
+Proof. apply _. Qed.
+Goal LeibnizEquiv tagO.
+Proof. apply _. Qed.
+Goal LeibnizEquiv tag.
+Proof. apply _. Qed.
+
 Section tests.
   Context `{!invGS_gen hlc Σ}.
 

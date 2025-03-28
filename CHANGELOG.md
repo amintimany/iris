@@ -10,6 +10,46 @@ lemma.
 * Add lemma `ufrac_auth_update_surplus_cancel`.
 * Rename `CsumBot`, `GSetBot`, `CoPsetBot` and `ExclBot` to `*Invalid`.
 * Add `agree_includedN`, `excl_included` and `excl_includedN`.
+* Make the `algebra` folder (OFEs, COFEs, CMRAs, etc) parametric in the type of
+  "step indices" to prepare for the support of transfinite step indexing. This
+  is a large overhaul that involves nearly any file in the `algebra` folder:
+  (by Simon Spies and Lennard Gäher)
+  + Introduce the interface [iris/algebra/stepindex.v](`sidx`), which abstracts
+    over the type of step indices `sidx`. The interface comes with operations
+    `0ᵢ`/`Sᵢ` and orders `<`/`≤` (overloaded in `sidx_scope`). The interface can
+    be instantiated by both `nat` (for finite step indexing, see
+    [iris/algebra/finite_stepindex.v](`finite_stepindex.v`)) and all sorts of
+    ordinal numbers (e.g., ω^2 or Aczel Trees for transfinite step indexing;
+    these instances are not yet present in this version of Iris).
+  + Make all definitions in the `algebra` folder parametric in the type of
+    step indexing by adding an implicit argument `{SI : sidx}` (which always
+    comes first). In addition:
+    * OFE: Change the interface to use `dist_le` instead of `dist_S`. The smart
+      constructor `ofe_mixin_finite` can be used for backwards compatibility in
+      the case of finite step indexing.
+    * COFE: Extend the interface with a completion operator `lbcompl` for
+      "bounded chains". The smart constructor `cofe_finite` can be used to
+      obtain the additional limit operator for free in the case of finite step
+      indexing.
+    * LimitPreserving: Require bounded limits to be preserved too. The lemma
+      `limit_preserving_sidx_finite` provides the simplified definition in the
+      case of finite step indexing.
+    * CMRA: Change the interface to use `cmra_validN_le` instead of
+      `cmra_validN_S`.
+  + Provide an instance `natSI` for finite step indexing based on the natural
+    numbers. Importing [iris/algebra/finite_stepindex.v](`finite_stepindex.v`)
+    has the side-effect of globally enabling finite step indexing (i.e., all
+    `SI : sidx` arguments will be resolved to the instance for finite step
+    indexing).
+  + The COFE solver and the non-`algebra` parts of Iris (particularly, `bi`,
+    `base_logic`, `program_logic` and `heap_lang`) are not yet parametric in the
+    type of step indexing. They import `finite_stepindex.v` and therefore
+    enforce finite step indexing.
+  + Remove the `si_solver` tactic and hint database. Either use the `SIdx`
+    lemmas manually, or in the case of finite step-indexing, use the wrappers
+    in [iris/algebra/finite_stepindex.v](`finite_stepindex.v`) that can be used
+    in combination with `lia`.
+  + Rename `conv_compl'` → `conv_compl_S`.
 
 **Changes in `base_logic`:**
 

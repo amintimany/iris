@@ -227,7 +227,11 @@ Section lemmas.
       %(av' & _ & _ & Hav' & _ & Hincl)%gmap_view_both_dfrac_valid_discrete_total.
     iPureIntro.
     apply lookup_fmap_Some in Hav' as [v' [<- Hv']].
-    apply to_agree_included_L in Hincl. by rewrite Hincl.
+    (* FIXME: Why do we need [(SI:=natSI) (A:=leibnizO V)]
+    https://gitlab.mpi-sws.org/iris/stdpp/-/merge_requests/555 seems to resolve
+    the problem? *)
+    apply (to_agree_included_L (SI:=natSI) (A:=leibnizO V)) in Hincl.
+    by rewrite Hincl.
   Qed.
 
   Global Instance ghost_map_lookup_combine_gives_1 {γ q m k dq v} :
@@ -334,7 +338,7 @@ Section lemmas.
     iApply (own_update_2 with "Hauth Hfrag").
     rewrite map_fmap_union.
     rewrite -!(big_opM_fmap to_agree (λ k, gmap_view_frag k (DfracOwn 1))).
-    apply gmap_view_replace_big.
+    apply: gmap_view_replace_big.
     - rewrite !dom_fmap_L. done.
     - by apply map_Forall_fmap.
   Qed.

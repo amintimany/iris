@@ -1,4 +1,4 @@
-From iris.algebra Require Import gset.
+From iris.algebra Require Import gset stepindex_finite.
 
 Lemma test_op (X Y : gset nat) : X ⊆ Y → X ⋅ Y = Y.
 Proof. set_solver. Qed.

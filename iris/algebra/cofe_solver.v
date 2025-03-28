@@ -1,5 +1,15 @@
 From iris.algebra Require Export ofe.
+From iris.algebra Require Export stepindex_finite.
 From iris.prelude Require Import options.
+
+(** * Solver for recursive domain equations over Cofes for FINITE step-indices *)
+(** This file implements a solver for recursive equations of the form [F X ≃ X],
+where [F] is a locally contractive functor of Cofes. As such, it is an
+implementation of America and Rutten's theorem. More details can be found in the
+Iris Reference.
+
+This implementation only works for the [nat] index type. Importing this file
+will globally fix the index type to [nat]. *)
 
 (* Note that [Inhabited] is not derivable. Take [F X := ▶ X], then a possible
 solution is [Empty_set]. *)
@@ -20,7 +30,7 @@ Notation map := (oFunctor_map F).
 Fixpoint A' (k : nat) : { C : ofe & Cofe C } :=
   match k with
   | 0 => existT (P:=Cofe) unitO _
-  | S k => existT (P:=Cofe) (@oFunctor_apply F (projT1 (A' k)) (projT2 (A' k))) _
+  | S k => existT (P:=Cofe) (@oFunctor_apply _ F (projT1 (A' k)) (projT2 (A' k))) _
   end.
 Notation A k := (projT1 (A' k)).
 Local Instance A_cofe k : Cofe (A k) := projT2 (A' k).
@@ -57,21 +67,22 @@ Global Instance tower_equiv : Equiv tower := λ X Y, ∀ k, X k ≡ Y k.
 Global Instance tower_dist : Dist tower := λ n X Y, ∀ k, X k ≡{n}≡ Y k.
 Definition tower_ofe_mixin : OfeMixin tower.
 Proof.
-  split.
+  apply ofe_mixin_finite.
   - intros X Y; split; [by intros HXY n k; apply equiv_dist|].
     intros HXY k; apply equiv_dist; intros n; apply HXY.
   - intros k; split.
     + by intros X n.
     + by intros X Y ? n.
     + by intros X Y Z ?? n; trans (Y n).
-  - intros k j X Y HXY Hlt n. apply (dist_le k); [|lia].
-    by rewrite -(g_tower X) (HXY (S n)) g_tower.
+  - intros k X Y HXY n. specialize (HXY (S n)).
+    apply (dist_le _ k) in HXY; [|apply SIdx.le_succ_diag_r].
+    by rewrite -(g_tower X) HXY g_tower.
 Qed.
 Definition T : ofe := Ofe tower tower_ofe_mixin.
 
 Program Definition tower_chain (c : chain T) (k : nat) : chain (A k) :=
   {| chain_car i := c i k |}.
-Next Obligation. intros c k n i ?; apply (chain_cauchy c n); lia. Qed.
+Next Obligation. intros c k n i ?; by apply (chain_cauchy c n). Qed.
 Program Definition tower_compl : Compl T := λ c,
   {| tower_car n := compl (tower_chain c n) |}.
 Next Obligation.
@@ -79,10 +90,9 @@ Next Obligation.
   by rewrite (conv_compl n (tower_chain c k))
     (conv_compl n (tower_chain c (S k))) /= (g_tower (c _) k).
 Qed.
-Global Program Instance tower_cofe : Cofe T := { compl := tower_compl }.
+Global Program Instance tower_cofe : Cofe T := cofe_finite tower_compl _.
 Next Obligation.
-  intros n c k; rewrite /= (conv_compl n (tower_chain c k)).
-  apply (chain_cauchy c); lia.
+  intros n c k; rewrite /= (conv_compl n (tower_chain c k)). done.
 Qed.
 
 Fixpoint ff {k} (i : nat) : A k -n> A (i + k) :=
@@ -185,7 +195,7 @@ Global Instance tower_inhabited : Inhabited tower := populate (embed 0 ()).
 Program Definition unfold_chain (X : T) : chain (oFunctor_apply F T) :=
   {| chain_car n := map (project n,embed' n) (X (S n)) |}.
 Next Obligation.
-  intros X n i Hi.
+  simpl; intros X n i Hi.
   assert (∃ k, i = k + n) as [k ?] by (exists (i - n); lia); subst; clear Hi.
   induction k as [|k IH]; simpl; first done.
   rewrite -IH -(dist_le _ _ _ _ (f_tower (k + n) _)); last lia.
@@ -234,7 +244,7 @@ Proof using Type*.
     rewrite (map_ff_gg _ _ _ H).
     apply (_ : Proper (_ ==> _) (gg _)); by destruct H.
   - intros X; rewrite equiv_dist=> n /=.
-    rewrite /unfold /= (conv_compl' n (unfold_chain (fold X))) /=.
+    rewrite /unfold /= (conv_compl_S n (unfold_chain (fold X))) /=.
     rewrite g_S -!oFunctor_map_compose -{2}[X]oFunctor_map_id.
     apply (contractive_ne map); split => Y /=.
     + rewrite f_tower. apply dist_S. by rewrite embed_tower.
