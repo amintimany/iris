@@ -4,9 +4,9 @@ From iris.prelude Require Import options.
 
 Local Arguments pcore _ _ !_ /.
 Local Arguments cmra_pcore _ !_ /.
-Local Arguments validN _ _ _ !_ /.
+Local Arguments validN _ _ _ _ !_ /.
 Local Arguments valid _ _  !_ /.
-Local Arguments cmra_validN _ _ !_ /.
+Local Arguments cmra_validN _ _ _ !_ /.
 Local Arguments cmra_valid _  !_ /.
 
 Inductive csum (A B : Type) :=
@@ -27,7 +27,7 @@ Global Instance maybe_Cinr {A B} : Maybe (@Cinr A B) := λ x,
   match x with Cinr b => Some b | _ => None end.
 
 Section ofe.
-Context {A B : ofe}.
+Context {SI : sidx} {A B : ofe}.
 Implicit Types a : A.
 Implicit Types b : B.
 
@@ -65,13 +65,13 @@ Proof.
   split.
   - intros mx my; split.
     + by destruct 1; constructor; try apply equiv_dist.
-    + intros Hxy; oinversion (Hxy 0); subst; constructor; try done;
+    + intros Hxy; oinversion (Hxy 0ᵢ); subst; constructor; try done;
       apply equiv_dist=> n; by oinversion (Hxy n).
   - intros n; split.
     + by intros [|a|]; constructor.
     + by destruct 1; constructor.
     + destruct 1; inversion_clear 1; constructor; etrans; eauto.
-  - by inversion_clear 1; constructor; eauto using dist_le with si_solver.
+  - inversion_clear 1; intros Hlt; constructor; eauto using dist_le.
 Qed.
 Canonical Structure csumO : ofe := Ofe (csum A B) csum_ofe_mixin.
 
@@ -82,18 +82,53 @@ Program Definition csum_chain_r (c : chain csumO) (b : B) : chain B :=
   {| chain_car n := match c n return _ with Cinr b' => b' | _ => b end |}.
 Next Obligation. intros c b n i ?; simpl. by destruct (chain_cauchy c n i). Qed.
 Definition csum_compl `{!Cofe A, !Cofe B} : Compl csumO := λ c,
-  match c 0 with
+  match c 0ᵢ with
   | Cinl a => Cinl (compl (csum_chain_l c a))
   | Cinr b => Cinr (compl (csum_chain_r c b))
   | CsumInvalid => CsumInvalid
   end.
+
+Program Definition csum_bchain_l {α} (c : bchain csumO α) (a : A) : bchain A α :=
+  {| bchain_car β Hβ := match c β Hβ return _ with Cinl a' => a' | _ => a end |}.
+Next Obligation.
+  intros α c a β γ Hle Hβ Hγ. simpl.
+  by destruct (bchain_cauchy _ c β γ Hle Hβ Hγ).
+Qed.
+Program Definition csum_bchain_r {α} (c : bchain csumO α) (b : B) : bchain B α :=
+  {| bchain_car β Hβ := match c β Hβ return _ with Cinr b' => b' | _ => b end |}.
+Next Obligation.
+  intros α c b β γ Hle Hβ Hγ. simpl.
+  by destruct (bchain_cauchy _ c β γ Hle Hβ Hγ).
+Qed.
+Definition csum_lbcompl `{!Cofe A, !Cofe B} : LBCompl csumO := λ n Hn c,
+  match c _ (SIdx.limit_lt_0 _ Hn) with
+  | Cinl a => Cinl (lbcompl Hn (csum_bchain_l c a))
+  | Cinr b => Cinr (lbcompl Hn (csum_bchain_r c b))
+  | CsumInvalid => CsumInvalid
+  end.
+
 Global Program Instance csum_cofe `{!Cofe A, !Cofe B} : Cofe csumO :=
-  {| compl := csum_compl |}.
+  {| compl := csum_compl; lbcompl := csum_lbcompl |}.
 Next Obligation.
   intros ?? n c; rewrite /compl /csum_compl.
-  oinversion (chain_cauchy c 0 n); first auto with lia; constructor.
-  + rewrite (conv_compl n (csum_chain_l c _)) /=. destruct (c n); naive_solver.
-  + rewrite (conv_compl n (csum_chain_r c _)) /=. destruct (c n); naive_solver.
+  oinversion (chain_cauchy c 0ᵢ n); first apply SIdx.le_0_l; constructor.
+  - rewrite (conv_compl n (csum_chain_l c _)) /=. destruct (c n); naive_solver.
+  - rewrite (conv_compl n (csum_chain_r c _)) /=. destruct (c n); naive_solver.
+Qed.
+Next Obligation.
+  intros ?? n Hn c m Hm. rewrite /lbcompl /csum_lbcompl.
+  oinversion (bchain_cauchy _ c 0ᵢ m (SIdx.limit_lt_0 _ Hn) Hm);
+    [apply SIdx.le_0_l|..]; f_equiv.
+  - rewrite (conv_lbcompl Hn (csum_bchain_l c _) Hm) /=.
+    destruct (c m); naive_solver.
+  - rewrite (conv_lbcompl Hn (csum_bchain_r c _) Hm) /=.
+    destruct (c m); naive_solver.
+Qed.
+Next Obligation.
+  intros ?? n Hn c1 c2 m Hc. rewrite /lbcompl /csum_lbcompl.
+  destruct (Hc 0ᵢ (SIdx.limit_lt_0 _ Hn)); f_equiv.
+  - apply lbcompl_ne=> p Hp /=. by destruct (Hc p Hp).
+  - apply lbcompl_ne=> p Hp /=. by destruct (Hc p Hp).
 Qed.
 
 Global Instance csum_ofe_discrete :
@@ -110,7 +145,7 @@ Proof. by inversion_clear 2; constructor; apply (discrete_0 _). Qed.
 
 End ofe.
 
-Global Arguments csumO : clear implicits.
+Global Arguments csumO {_} _ _.
 
 (* Functor on COFEs *)
 Definition csum_map {A A' B B'} (fA : A → A') (fB : B → B')
@@ -128,22 +163,22 @@ Lemma csum_map_compose {A A' A'' B B' B''} (f : A → A') (f' : A' → A'')
                        (g : B → B') (g' : B' → B'') (x : csum A B) :
   csum_map (f' ∘ f) (g' ∘ g) x = csum_map f' g' (csum_map f g x).
 Proof. by destruct x. Qed.
-Lemma csum_map_ext {A A' B B' : ofe} (f f' : A → A') (g g' : B → B') x :
+Lemma csum_map_ext {SI : sidx} {A A' B B' : ofe} (f f' : A → A') (g g' : B → B') x :
   (∀ x, f x ≡ f' x) → (∀ x, g x ≡ g' x) → csum_map f g x ≡ csum_map f' g' x.
 Proof. by destruct x; constructor. Qed.
-Global Instance csum_map_cmra_ne {A A' B B' : ofe} n :
+Global Instance csum_map_cmra_ne {SI : sidx} {A A' B B' : ofe} n :
   Proper ((dist n ==> dist n) ==> (dist n ==> dist n) ==> dist n ==> dist n)
          (@csum_map A A' B B').
 Proof. intros f f' Hf g g' Hg []; destruct 1; constructor; by apply Hf || apply Hg. Qed.
-Definition csumO_map {A A' B B'} (f : A -n> A') (g : B -n> B') :
+Definition csumO_map {SI : sidx} {A A' B B'} (f : A -n> A') (g : B -n> B') :
   csumO A B -n> csumO A' B' :=
   OfeMor (csum_map f g).
-Global Instance csumO_map_ne A A' B B' :
-  NonExpansive2 (@csumO_map A A' B B').
+Global Instance csumO_map_ne {SI : sidx} A A' B B' :
+  NonExpansive2 (@csumO_map SI A A' B B').
 Proof. by intros n f f' Hf g g' Hg []; constructor. Qed.
 
 Section cmra.
-Context {A B : cmra}.
+Context {SI : sidx} {A B : cmra}.
 Implicit Types a : A.
 Implicit Types b : B.
 
@@ -228,8 +263,8 @@ Proof.
       destruct (cmra_pcore_ne n b b' cb) as (cb'&->&?); auto.
       exists (Cinr cb'); by repeat constructor.
   - intros ? [a|b|] [a'|b'|] H; inversion_clear H; ofe_subst; done.
-  - intros [a|b|]; rewrite /= ?cmra_valid_validN; naive_solver eauto using O.
-  - intros n [a|b|]; simpl; auto using cmra_validN_S.
+  - pose 0ᵢ. intros [a|b|]; rewrite /= ?cmra_valid_validN; naive_solver.
+  - intros n m [a|b|]; simpl; eauto using cmra_validN_le.
   - intros [a1|b1|] [a2|b2|] [a3|b3|]; constructor; by rewrite ?assoc.
   - intros [a1|b1|] [a2|b2|]; constructor; by rewrite 1?comm.
   - intros [a|b|] ? [=]; subst; auto.
@@ -373,10 +408,12 @@ End cmra.
   the new unification algorithm. The old unification algorithm sometimes gets
   confused by going from [ucmra]'s to [cmra]'s and back. *)
 Global Hint Extern 0 (_ ≼ CsumInvalid) => apply: CsumInvalid_included : core.
-Global Arguments csumR : clear implicits.
+
+Global Arguments csumR {_} _ _.
 
 (* Functor *)
-Global Instance csum_map_cmra_morphism {A A' B B' : cmra} (f : A → A') (g : B → B') :
+Global Instance csum_map_cmra_morphism {SI : sidx} {A A' B B' : cmra}
+    (f : A → A') (g : B → B') :
   CmraMorphism f → CmraMorphism g → CmraMorphism (csum_map f g).
 Proof.
   split; try apply _.
@@ -385,26 +422,29 @@ Proof.
   - intros [xa|ya|] [xb|yb|]=>//=; by rewrite cmra_morphism_op.
 Qed.
 
-Program Definition csumRF (Fa Fb : rFunctor) : rFunctor := {|
+Program Definition csumRF {SI : sidx} (Fa Fb : rFunctor) : rFunctor := {|
   rFunctor_car A _ B _ := csumR (rFunctor_car Fa A B) (rFunctor_car Fb A B);
-  rFunctor_map A1 _ A2 _ B1 _ B2 _ fg := csumO_map (rFunctor_map Fa fg) (rFunctor_map Fb fg)
+  rFunctor_map A1 _ A2 _ B1 _ B2 _ fg :=
+    csumO_map (rFunctor_map Fa fg) (rFunctor_map Fb fg)
 |}.
 Next Obligation.
-  by intros Fa Fb A1 ? A2 ? B1 ? B2 ? n f g Hfg; apply csumO_map_ne; try apply rFunctor_map_ne.
+  intros ? Fa Fb A1 ? A2 ? B1 ? B2 ? n f g Hfg;
+    by apply csumO_map_ne; try apply rFunctor_map_ne.
 Qed.
 Next Obligation.
-  intros Fa Fb A ? B ? x. rewrite /= -{2}(csum_map_id x).
+  intros ? Fa Fb A ? B ? x. rewrite /= -{2}(csum_map_id x).
   apply csum_map_ext=>y; apply rFunctor_map_id.
 Qed.
 Next Obligation.
-  intros Fa Fb A1 ? A2 ? A3 ? B1 ? B2 ? B3 ? f g f' g' x. rewrite /= -csum_map_compose.
+  intros ? Fa Fb A1 ? A2 ? A3 ? B1 ? B2 ? B3 ? f g f' g' x.
+  rewrite /= -csum_map_compose.
   apply csum_map_ext=>y; apply rFunctor_map_compose.
 Qed.
 
-Global Instance csumRF_contractive Fa Fb :
+Global Instance csumRF_contractive {SI : sidx} Fa Fb :
   rFunctorContractive Fa → rFunctorContractive Fb →
   rFunctorContractive (csumRF Fa Fb).
 Proof.
-  intros ?? A1 ? A2 ? B1 ? B2 ? n f g Hfg.
+  intros ??? A1 ? A2 ? B1 ? B2 ? n f g Hfg.
   by apply csumO_map_ne; try apply rFunctor_map_contractive.
 Qed.

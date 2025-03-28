@@ -8,7 +8,7 @@ From iris.prelude Require Import options.
 
 (* CMRA. Only works if [A] has a unit! *)
 Section cmra.
-  Context {A : ucmra}.
+  Context {SI : sidx} {A : ucmra}.
   Implicit Types l : list A.
   Local Arguments op _ _ !_ !_ / : simpl nomatch.
 
@@ -81,7 +81,7 @@ Section cmra.
       by rewrite -Hl.
     - intros l. rewrite list_lookup_valid. setoid_rewrite list_lookup_validN.
       setoid_rewrite cmra_valid_validN. naive_solver.
-    - intros n x. rewrite !list_lookup_validN. auto using cmra_validN_S.
+    - intros n m x. rewrite !list_lookup_validN. eauto using cmra_validN_le.
     - intros l1 l2 l3; rewrite list_equiv_lookup=> i.
       by rewrite !list_lookup_op assoc.
     - intros l1 l2; rewrite list_equiv_lookup=> i.
@@ -136,14 +136,15 @@ Section cmra.
 
 End cmra.
 
-Global Arguments listR : clear implicits.
-Global Arguments listUR : clear implicits.
+Global Arguments listR {_} _.
+Global Arguments listUR {_} _.
 
-Global Instance list_singletonM {A : ucmra} : SingletonM nat A (list A) := λ n x,
+Global Instance list_singletonM {SI : sidx} {A : ucmra} :
+    SingletonM nat A (list A) := λ n x,
   replicate n ε ++ [x].
 
 Section properties.
-  Context {A : ucmra}.
+  Context {SI : sidx} {A : ucmra}.
   Implicit Types l : list A.
   Implicit Types x y z : A.
   Local Arguments op _ _ !_ !_ / : simpl nomatch.
@@ -196,7 +197,8 @@ Section properties.
 
   Lemma replicate_valid n (x : A) : ✓ x → ✓ replicate n x.
   Proof. apply Forall_replicate. Qed.
-  Global Instance list_singletonM_ne i : NonExpansive (singletonM (M:=list A) i).
+  Global Instance list_singletonM_ne i :
+    NonExpansive (singletonM (M:=list A) i).
   Proof. intros n l1 l2 ?. apply Forall2_app; by repeat constructor. Qed.
   Global Instance list_singletonM_proper i :
     Proper ((≡) ==> (≡)) (singletonM (M:=list A) i) := ne_proper _.
@@ -518,7 +520,7 @@ Section properties.
 End properties.
 
 (** Functor *)
-Global Instance list_fmap_cmra_morphism {A B : ucmra} (f : A → B)
+Global Instance list_fmap_cmra_morphism {SI : sidx} {A B : ucmra} (f : A → B)
   `{!CmraMorphism f} : CmraMorphism (fmap f : list A → list B).
 Proof.
   split; try apply _.
@@ -530,34 +532,37 @@ Proof.
     by rewrite list_lookup_op !list_lookup_fmap list_lookup_op cmra_morphism_op.
 Qed.
 
-Program Definition listURF (F : urFunctor) : urFunctor := {|
+Program Definition listURF {SI : sidx} (F : urFunctor) : urFunctor := {|
   urFunctor_car A _ B _ := listUR (urFunctor_car F A B);
   urFunctor_map A1 _ A2 _ B1 _ B2 _ fg := listO_map (urFunctor_map F fg)
 |}.
 Next Obligation.
-  by intros F A1 ? A2 ? B1 ? B2 ? n f g Hfg; apply listO_map_ne, urFunctor_map_ne.
+  intros ? F A1 ? A2 ? B1 ? B2 ? n f g Hfg;
+    by apply listO_map_ne, urFunctor_map_ne.
 Qed.
 Next Obligation.
-  intros F A ? B ? x. rewrite /= -{2}(list_fmap_id x).
+  intros ? F A ? B ? x. rewrite /= -{2}(list_fmap_id x).
   apply list_fmap_equiv_ext=>???. apply urFunctor_map_id.
 Qed.
 Next Obligation.
-  intros F A1 ? A2 ? A3 ? B1 ? B2 ? B3 ? f g f' g' x. rewrite /= -list_fmap_compose.
+  intros ? F A1 ? A2 ? A3 ? B1 ? B2 ? B3 ? f g f' g' x.
+  rewrite /= -list_fmap_compose.
   apply list_fmap_equiv_ext=>???; apply urFunctor_map_compose.
 Qed.
 
-Global Instance listURF_contractive F :
+Global Instance listURF_contractive {SI : sidx} F :
   urFunctorContractive F → urFunctorContractive (listURF F).
 Proof.
-  by intros ? A1 ? A2 ? B1 ? B2 ? n f g Hfg; apply listO_map_ne, urFunctor_map_contractive.
+  intros ? A1 ? A2 ? B1 ? B2 ? n f g Hfg;
+    by apply listO_map_ne, urFunctor_map_contractive.
 Qed.
 
-Program Definition listRF (F : urFunctor) : rFunctor := {|
+Program Definition listRF {SI : sidx} (F : urFunctor) : rFunctor := {|
   rFunctor_car A _ B _ := listR (urFunctor_car F A B);
   rFunctor_map A1 _ A2 _ B1 _ B2 _ fg := listO_map (urFunctor_map F fg)
 |}.
-Solve Obligations with apply listURF.
+Solve Obligations with apply @listURF.
 
-Global Instance listRF_contractive F :
+Global Instance listRF_contractive {SI : sidx} F :
   urFunctorContractive F → rFunctorContractive (listRF F).
 Proof. apply listURF_contractive. Qed.

@@ -1,4 +1,5 @@
 From iris.algebra Require Export cmra updates.
+From iris.algebra Require Export stepindex_finite.
 From iris.bi Require Import notation.
 From iris.prelude Require Import options.
 
@@ -129,7 +130,7 @@ Section cofe.
   Local Instance uPred_dist : Dist (uPred M) := uPred_dist'.
   Definition uPred_ofe_mixin : OfeMixin (uPred M).
   Proof.
-    split.
+    apply ofe_mixin_finite.
     - intros P Q; split.
       + by intros HPQ n; split=> i x ??; apply HPQ.
       + intros HPQ; split=> n x ?; apply HPQ with n; auto.
@@ -138,7 +139,7 @@ Section cofe.
       + by intros P Q HPQ; split=> x i ??; symmetry; apply HPQ.
       + intros P Q Q' HP HQ; split=> i x ??.
         by trans (Q i x);[apply HP|apply HQ].
-    - intros n m P Q HPQ Hlt. split=> i x ??; apply HPQ; eauto with lia.
+    - intros n P Q HPQ. split=> i x ??; apply HPQ; eauto with lia.
   Qed.
   Canonical Structure uPredO : ofe := Ofe (uPred M) uPred_ofe_mixin.
 
@@ -150,10 +151,11 @@ Section cofe.
     - eapply cmra_includedN_le=>//; lia.
     - done.
   Qed.
-  Global Program Instance uPred_cofe : Cofe uPredO := {| compl := uPred_compl |}.
+  Global Program Instance uPred_cofe : Cofe uPredO := cofe_finite uPred_compl _.
   Next Obligation.
     intros n c; split=>i x Hin Hv.
-    etrans; [|by symmetry; apply (chain_cauchy c i n)]. split=>H; [by apply H|].
+    etrans; [|by symmetry; apply (chain_cauchy c i n)].
+    split=>H; [by apply H|].
     repeat intro. apply (chain_cauchy c _ i)=>//. by eapply uPred_mono.
   Qed.
 End cofe.
@@ -218,7 +220,7 @@ Lemma uPredO_map_ne {M1 M2 : ucmra} (f g : M2 -n> M1)
   f ≡{n}≡ g → uPredO_map f ≡{n}≡ uPredO_map g.
 Proof.
   by intros Hfg P; split=> n' y ??;
-    rewrite /uPred_holds /= (dist_le _ _ _ _(Hfg y)); last lia.
+  rewrite /uPred_holds /= (dist_le _ _ _ _(Hfg y)).
 Qed.
 
 Program Definition uPredOF (F : urFunctor) : oFunctor := {|
@@ -243,8 +245,7 @@ Global Instance uPredOF_contractive F :
 Proof.
   intros ? A1 ? A2 ? B1 ? B2 ? n P Q HPQ.
   apply uPredO_map_ne, urFunctor_map_contractive.
-  destruct HPQ as [HPQ]. constructor. intros ??.
-  split; by eapply HPQ.
+  destruct HPQ as [HPQ]; split; intros ??; split; simpl; by eapply HPQ.
 Qed.
 
 (** logical entailement *)
@@ -409,7 +410,7 @@ Local Program Definition uPred_bupd_def {M} (Q : uPred M) : uPred M :=
       k ≤ n → ✓{k} (x ⋅ yf) → ∃ x', ✓{k} (x' ⋅ yf) ∧ Q k x' |}.
 Next Obligation.
   intros M Q n1 n2 x1 x2 HQ [x3 Hx] Hn k yf Hk.
-  rewrite (dist_le _ _ _ _ Hx); last lia. intros Hxy.
+  rewrite (dist_le _ _ _ _ Hx Hk). intros Hxy.
   destruct (HQ k (x3 ⋅ yf)) as (x'&?&?); [auto|by rewrite assoc|].
   exists (x' ⋅ x3); split; first by rewrite -assoc.
   eauto using uPred_mono, cmra_includedN_l.
@@ -488,7 +489,7 @@ Section primitive.
     (∀ n, cP n ⊢ cQ n) → compl cP ⊢ compl cQ.
   Proof.
     intros Hlim; split=> n m ? HP.
-    eapply uPred_holds_ne, Hlim, HP; rewrite ?conv_compl; eauto.
+    eapply uPred_holds_ne, Hlim; [..|apply: HP]; rewrite ?conv_compl; eauto.
   Qed.
 
   (** Non-expansiveness and setoid morphisms *)
@@ -571,14 +572,14 @@ Section primitive.
   Lemma ownM_ne : NonExpansive (@uPred_ownM M).
   Proof.
     intros n a b Ha.
-    unseal; split=> n' x ? /=. by rewrite (dist_le _ _ _ _ Ha); last lia.
+    unseal; split=> n' x ? /=. by rewrite (dist_le _ _ _ _ Ha).
   Qed.
 
   Lemma cmra_valid_ne {A : cmra} :
     NonExpansive (@uPred_cmra_valid M A).
   Proof.
     intros n a b Ha; unseal; split=> n' x ? /=.
-    by rewrite (dist_le _ _ _ _ Ha); last lia.
+    by rewrite (dist_le _ _ _ _ Ha).
   Qed.
 
   Lemma bupd_ne : NonExpansive (@uPred_bupd M).
@@ -791,13 +792,13 @@ Section primitive.
   Lemma later_eq_1 {A : ofe} (x y : A) : Next x ≡ Next y ⊢ ▷ (x ≡ y).
   Proof.
     unseal. split. intros [|n]; simpl; [done|].
-    intros ?? Heq; apply Heq; auto.
+    intros ?? Heq; apply Heq, SIdx.lt_succ_diag_r.
   Qed.
   Lemma later_eq_2 {A : ofe} (x y : A) : ▷ (x ≡ y) ⊢ Next x ≡ Next y.
   Proof.
     unseal. split. intros n ? ? Hn; split; intros m Hlt; simpl in *.
     destruct n as [|n]; first lia.
-    eauto using dist_le with si_solver.
+    by eapply dist_le, SIdx.lt_succ_r.
   Qed.
 
   Lemma discrete_eq_1 {A : ofe} (a b : A) : Discrete a → a ≡ b ⊢ ⌜a ≡ b⌝.
@@ -835,7 +836,7 @@ Section primitive.
   Proof.
     unseal; split; intros n x ? (x1&x2&Hx&HP&?) k yf ??.
     destruct (HP k (x2 ⋅ yf)) as (x'&?&?); eauto.
-    { by rewrite assoc -(dist_le _ _ _ _ Hx); last lia. }
+    { by rewrite assoc -(dist_le _ _ _ _ Hx). }
     exists (x' ⋅ x2); split; first by rewrite -assoc.
     exists x', x2. eauto using uPred_mono, cmra_validN_op_l, cmra_validN_op_r.
   Qed.
@@ -898,7 +899,7 @@ Section primitive.
   Lemma cmra_valid_intro {A : cmra} P (a : A) : ✓ a → P ⊢ (✓ a).
   Proof. unseal=> ?; split=> n x ? _ /=; by apply cmra_valid_validN. Qed.
   Lemma cmra_valid_elim {A : cmra} (a : A) : ✓ a ⊢ ⌜ ✓{0} a ⌝.
-  Proof. unseal; split=> n x ??; apply cmra_validN_le with n; auto. Qed.
+  Proof. unseal; split=> n x ??; by apply cmra_validN_le with n, SIdx.le_0_l. Qed.
   Lemma plainly_cmra_valid_1 {A : cmra} (a : A) : ✓ a ⊢ ■ ✓ a.
   Proof. by unseal. Qed.
   Lemma cmra_valid_weaken {A : cmra} (a b : A) : ✓ (a ⋅ b) ⊢ ✓ a.

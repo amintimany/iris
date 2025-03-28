@@ -10,6 +10,7 @@ infers the [frac] camera by default when using the [Qp] type. *)
 Definition ufrac := Qp.
 
 Section ufrac.
+  Context {SI : sidx}.
   Implicit Types p q : ufrac.
 
   Canonical Structure ufracO := leibnizO ufrac.
