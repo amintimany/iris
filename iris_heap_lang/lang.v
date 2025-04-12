@@ -155,7 +155,7 @@ architectures). The tags have the following meaning:
 2: Payload is the data for a InjRV (LitV (LitInt _)).
 3: Payload is the data for a LitV (LitLoc _).
 4: Payload is the data for a InjLV (LitV (LitLoc _)).
-4: Payload is the data for a InjRV (LitV (LitLoc _)).
+5: Payload is the data for a InjRV (LitV (LitLoc _)).
 6: Payload is one of the following finitely many values, which 61 bits are more
    than enough to encode:
    LitV LitUnit, InjLV (LitV LitUnit), InjRV (LitV LitUnit),
