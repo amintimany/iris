@@ -72,7 +72,7 @@ build-coq.9.0.0-dune:
   <<: *template
   <<: *branches_and_mr
   variables:
-    OPAM_PINS: "coq version 9.0.0   dune version 3.15.2"
+    OPAM_PINS: "coq version 9.0.0   dune version 3.18.1"
     MAKE_TARGET: "dune"
 
 build-coq.8.20.1:
