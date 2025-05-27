@@ -398,6 +398,12 @@ Section sep_list.
   Lemma big_sepL_laterN_2 Φ n l :
     ([∗ list] k↦x ∈ l, ▷^n Φ k x) ⊢ ▷^n [∗ list] k↦x ∈ l, Φ k x.
   Proof. by rewrite (big_opL_commute _). Qed.
+
+  Lemma big_sepL_zip_seq (Φ : nat * A → PROP) n len l :
+    len = length l →
+    ([∗ list] ky ∈ zip (seq n len) l, Φ ky)
+      ⊣⊢ ([∗ list] k ↦ y ∈ l, Φ (n + k, y)).
+  Proof. intros ->. rewrite big_opL_zip_seq //. Qed.
 End sep_list.
 
 (* Some lemmas depend on the generalized versions of the above ones. *)
@@ -1185,6 +1191,12 @@ Section and_list.
   Lemma big_andL_laterN Φ n l :
     ▷^n ([∧ list] k↦x ∈ l, Φ k x) ⊣⊢ ([∧ list] k↦x ∈ l, ▷^n Φ k x).
   Proof. apply (big_opL_commute _). Qed.
+
+  Lemma big_andL_zip_seq (Φ : nat * A → PROP) n len l :
+    len = length l →
+    ([∧ list] ky ∈ zip (seq n len) l, Φ ky)
+      ⊣⊢ ([∧ list] k ↦ y ∈ l, Φ (n + k, y)).
+  Proof. intros ->. rewrite big_opL_zip_seq //. Qed.
 End and_list.
 
 Section or_list.
@@ -1332,6 +1344,12 @@ Section or_list.
     l ≠ [] →
     ▷^n ([∨ list] k↦x ∈ l, Φ k x) ⊣⊢ ([∨ list] k↦x ∈ l, ▷^n Φ k x).
   Proof. apply (big_opL_commute1 _). Qed.
+
+  Lemma big_orL_zip_seq (Φ : nat * A → PROP) n len l :
+    len = length l →
+    ([∨ list] ky ∈ zip (seq n len) l, Φ ky)
+      ⊣⊢ ([∨ list] k ↦ y ∈ l, Φ (n + k, y)).
+  Proof. intros ->. rewrite big_opL_zip_seq //. Qed.
 End or_list.
 
 (** ** Big ops over finite maps *)

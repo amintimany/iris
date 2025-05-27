@@ -220,6 +220,17 @@ Section list.
     case_match; csimpl; by rewrite IH // left_id.
   Qed.
 
+  Lemma big_opL_zip_seq (f : nat * A → M) n len l :
+    len = length l →
+    ([^o list] ky ∈ zip (seq n len) l, f ky)
+      ≡ ([^o list] k ↦ y ∈ l, f (n + k, y)).
+  Proof.
+    intros ->.
+    induction l as [| x l IHl] in n |- *; rewrite /= //.
+    rewrite Nat.add_0_r IHl.
+    by setoid_rewrite Nat.add_succ_r.
+  Qed.
+
   Lemma big_opL_op f g l :
     ([^o list] k↦x ∈ l, f k x `o` g k x)
     ≡ ([^o list] k↦x ∈ l, f k x) `o` ([^o list] k↦x ∈ l, g k x).
