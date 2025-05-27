@@ -50,6 +50,7 @@ lemma.
     in [iris/algebra/finite_stepindex.v](`finite_stepindex.v`) that can be used
     in combination with `lia`.
   + Rename `conv_compl'` → `conv_compl_S`.
+* Add lemma `big_opL_zip_seq`. (by Rudy Peterson)
 
 **Changes in `base_logic`:**
 
@@ -75,6 +76,8 @@ lemma.
   Mansky)
 * Remove the `bool`-valued `stuckness_leb`; use `stuckness_le` (in `Prop`)
   instead.
+* Add lemmas `big_sepL_zip_seq`, `big_andL_zip_seq`, and `big_orL_zip_seq`. (by
+  Rudy Peterson)
 
 **Changes in `proofmode`:**
 
