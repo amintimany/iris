@@ -3,7 +3,21 @@ way the logic is used on paper.  We also document changes in the Coq
 development; every API-breaking change should be listed, but not every new
 lemma.
 
-## Iris master
+## Iris 4.4.0 (2025-06-04)
+
+The main features of this release are support for transfinite step-indexing for
+resource algebras, and new proof rules for reasoning about propositions
+of the form `∀ .. own` and `own .. ∧ own ..`.
+
+Iris 4.4.0 supports Coq 8.19, 8.20, and Rocq 9.0.
+
+This release was managed by Jesper Bengtson, Ralf Jung and Robbert Krebbers,
+with contributions from Benjamin Peters, Daniel Nezamabadi, Ike Mulder,
+Isaac van Bakel, Jan-Oliver Kaiser, Janggun Lee, Johannes Hostert,
+Lennard Gäher, Michael Sammler, Paolo G. Giarrusso, Pierre Roux, Ralf Jung,
+Robbert Krebbers, Rodolphe Lepigre, Sanjit Bhat, Tej Chajed, Travis Hance,
+William Mansky, Yixuan Chen, Yiyun Liu, Yusuke Matsushita, Rudy Peterson,
+and Thomas Somers. Thank you all for your contributions.
 
 **Changes in `algebra`:**
 
@@ -52,17 +66,6 @@ lemma.
   + Rename `conv_compl'` → `conv_compl_S`.
 * Add lemma `big_opL_zip_seq`. (by Rudy Peterson)
 
-**Changes in `base_logic`:**
-
-* Add lemmas `own_forall` and `own_and` to reason about universal quantification
-  (`∀ .. own`) and conjunctions (`own .. ∧ own ..`) of ghost ownership. (by
-  Travis Hance)
-  + These rules are derived from the new primitive rule `ownM_forall` (which is
-    proved in the `uPred` model).
-  + Various corollaries for total cmras (which include `ucmra`s) are provided.
-* Add lemma `Some_included_totalI`.
-* Simplify lemma `excl_includedI` to use `=` instead of `match`.
-
 **Changes in `bi`:**
 
 * Merge the two `BiFUpdPlainly` laws `fupd_plainly_mask_empty` and
@@ -84,6 +87,17 @@ lemma.
 * Generalize `AsEmpValid` to allow specifying which directions of the bi-implication
   hold. This allows embedded logics to enable support for `iPoseProof` and `iStartProof`
   independently. (by Michael Sammler)
+
+**Changes in `base_logic`:**
+
+* Add lemmas `own_forall` and `own_and` to reason about universal quantification
+  (`∀ .. own`) and conjunctions (`own .. ∧ own ..`) of ghost ownership. (by
+  Travis Hance)
+  + These rules are derived from the new primitive rule `ownM_forall` (which is
+    proved in the `uPred` model).
+  + Various corollaries for total cmras (which include `ucmra`s) are provided.
+* Add lemma `Some_included_totalI`.
+* Simplify lemma `excl_includedI` to use `=` instead of `match`.
 
 **Changes in `heap_lang`:**
 
