@@ -235,6 +235,10 @@ theories/base_logic/lib is for constructions in the base logic (using own)
     ```
 * Monotonicity lemmas where the relation can be ambiguous are called `<f>_<relation>_mono`, e.g. `Some_included_mono`.
 * For lemmas `f x = g ...` that give a definition of function `f` in terms of `g`, we use `f_as_g`. For example, `map_compose_as_omap : m ∘ₘ n = omap (m !!.) n`.
+* Some private Ltac definitions and Tactic Notations are prefixed with an
+  underscore (e.g., `_iIntros0` and `_iDestructHyp0`) to indicate that they are private to the
+  implementation while still allowing them to be used for debugging and
+  overriding parts of the IPM. They should generally not be used in user proofs.
 
 ### Naming algebra libraries
 
