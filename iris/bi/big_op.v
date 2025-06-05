@@ -6,33 +6,34 @@ From iris.prelude Require Import options.
 Import interface.bi derived_laws.bi derived_laws_later.bi.
 
 (** Notations for unary variants *)
-Notation "'[∗' 'list]' k ↦ x ∈ l , P" :=
-  (big_opL bi_sep (λ k x, P%I) l) : bi_scope.
-Notation "'[∗' 'list]' x ∈ l , P" :=
-  (big_opL bi_sep (λ _ x, P%I) l) : bi_scope.
-Notation "'[∗]' Ps" := (big_opL bi_sep (λ _ x, x) Ps%I) : bi_scope.
+Notation big_sepL := (big_opL bi_sep) (only parsing).
+Notation "'[∗' 'list]' k ↦ x ∈ l , P" := (big_sepL (λ k x, P%I) l) : bi_scope.
+Notation "'[∗' 'list]' x ∈ l , P" := (big_sepL (λ _ x, P%I) l) : bi_scope.
+Notation "'[∗]' Ps" := (big_sepL (λ _ x, x) Ps%I) : bi_scope.
 
-Notation "'[∧' 'list]' k ↦ x ∈ l , P" :=
-  (big_opL bi_and (λ k x, P%I) l) : bi_scope.
-Notation "'[∧' 'list]' x ∈ l , P" :=
-  (big_opL bi_and (λ _ x, P%I) l) : bi_scope.
-Notation "'[∧]' Ps" := (big_opL bi_and (λ _ x, x) Ps%I) : bi_scope.
+Notation big_andL := (big_opL bi_and) (only parsing).
+Notation "'[∧' 'list]' k ↦ x ∈ l , P" := (big_andL (λ k x, P%I) l) : bi_scope.
+Notation "'[∧' 'list]' x ∈ l , P" := (big_andL (λ _ x, P%I) l) : bi_scope.
+Notation "'[∧]' Ps" := (big_andL (λ _ x, x) Ps%I) : bi_scope.
 
-Notation "'[∨' 'list]' k ↦ x ∈ l , P" :=
-  (big_opL bi_or (λ k x, P%I) l) : bi_scope.
-Notation "'[∨' 'list]' x ∈ l , P" :=
-  (big_opL bi_or (λ _ x, P%I) l) : bi_scope.
-Notation "'[∨]' Ps" := (big_opL bi_or (λ _ x, x) Ps%I) : bi_scope.
+Notation big_orL := (big_opL bi_or) (only parsing).
+Notation "'[∨' 'list]' k ↦ x ∈ l , P" := (big_orL (λ k x, P%I) l) : bi_scope.
+Notation "'[∨' 'list]' x ∈ l , P" := (big_orL (λ _ x, P%I) l) : bi_scope.
+Notation "'[∨]' Ps" := (big_orL (λ _ x, x) Ps%I) : bi_scope.
 
-Notation "'[∗' 'map]' k ↦ x ∈ m , P" := (big_opM bi_sep (λ k x, P%I) m) : bi_scope.
-Notation "'[∗' 'map]' x ∈ m , P" := (big_opM bi_sep (λ _ x, P%I) m) : bi_scope.
+Notation big_sepM := (big_opM bi_sep) (only parsing).
+Notation "'[∗' 'map]' k ↦ x ∈ m , P" := (big_sepM (λ k x, P%I) m) : bi_scope.
+Notation "'[∗' 'map]' x ∈ m , P" := (big_sepM (λ _ x, P%I) m) : bi_scope.
 
-Notation "'[∧' 'map]' k ↦ x ∈ m , P" := (big_opM bi_and (λ k x, P) m) : bi_scope.
-Notation "'[∧' 'map]' x ∈ m , P" := (big_opM bi_and (λ _ x, P) m) : bi_scope.
+Notation big_andM := (big_opM bi_and) (only parsing).
+Notation "'[∧' 'map]' k ↦ x ∈ m , P" := (big_andM (λ k x, P) m) : bi_scope.
+Notation "'[∧' 'map]' x ∈ m , P" := (big_andM (λ _ x, P) m) : bi_scope.
 
-Notation "'[∗' 'set]' x ∈ X , P" := (big_opS bi_sep (λ x, P%I) X) : bi_scope.
+Notation big_sepS := (big_opS bi_sep) (only parsing).
+Notation "'[∗' 'set]' x ∈ X , P" := (big_sepS (λ x, P%I) X) : bi_scope.
 
-Notation "'[∗' 'mset]' x ∈ X , P" := (big_opMS bi_sep (λ x, P%I) X) : bi_scope.
+Notation big_sepMS := (big_opMS bi_sep) (only parsing).
+Notation "'[∗' 'mset]' x ∈ X , P" := (big_sepMS (λ x, P%I) X) : bi_scope.
 
 (** Definitions and notations for binary variants *)
 (** A version of the separating big operator that ranges over two lists. This
