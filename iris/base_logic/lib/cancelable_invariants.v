@@ -1,12 +1,17 @@
-From iris.algebra Require Export frac.
+From iris.algebra Require Export frac excl.
 From iris.bi.lib Require Import fractional.
 From iris.proofmode Require Import proofmode.
 From iris.base_logic.lib Require Export invariants.
 From iris.prelude Require Import options.
 
-Class cinvG Σ := { #[local] cinv_inG :: inG Σ fracR }.
+(* This is using a pair of options to represent two pieces of ghost state (the
+ * fractional invariant token and an internal exclusive token) using one ghost
+ * name. The exclusive token is used to prove `cinv_acc_1`. *)
+Class cinvG Σ := { 
+  #[local] cinv_inG :: inG Σ (prodR (optionR (exclR unitO)) (optionR fracR)) ;
+}.
 
-Definition cinvΣ : gFunctors := #[GFunctor fracR].
+Definition cinvΣ : gFunctors := #[GFunctor (prodR (optionR (exclR unitO)) (optionR fracR))].
 
 Global Instance subG_cinvΣ {Σ} : subG cinvΣ Σ → cinvG Σ.
 Proof. solve_inG. Qed.
@@ -14,10 +19,11 @@ Proof. solve_inG. Qed.
 Section defs.
   Context `{!invGS_gen hlc Σ, !cinvG Σ}.
 
-  Definition cinv_own (γ : gname) (p : frac) : iProp Σ := own γ p.
+  Definition cinv_own (γ : gname) (p : frac) : iProp Σ := own γ (None, Some p).
+  Definition cinv_excl γ : iProp Σ := own γ (Some (Excl ()), None).
 
   Definition cinv (N : namespace) (γ : gname) (P : iProp Σ) : iProp Σ :=
-    inv N (P ∨ cinv_own γ 1).
+    inv N (P ∗ cinv_excl γ ∨ cinv_own γ 1).
 End defs.
 
 Global Instance: Params (@cinv) 5 := {}.
@@ -45,7 +51,16 @@ Section proofs.
   Proof. split; [done|]. apply _. Qed.
 
   Lemma cinv_own_valid γ q1 q2 : cinv_own γ q1 -∗ cinv_own γ q2 -∗ ⌜q1 + q2 ≤ 1⌝%Qp.
-  Proof. rewrite -frac_valid -uPred.discrete_valid. apply (own_valid_2 γ q1 q2). Qed.
+  Proof.
+    rewrite bi.wand_curry -own_op own_valid.
+    iIntros "%H !%". apply H.
+  Qed.
+
+  Lemma cinv_own_excl_alloc P :
+    pred_infinite P → ⊢ |==> ∃ γ, ⌜P γ⌝ ∗ cinv_excl γ ∗ cinv_own γ 1.
+  Proof.
+    intros HP. setoid_rewrite <-own_op. apply own_alloc_strong; done.
+  Qed.
 
   Lemma cinv_own_1_l γ q : cinv_own γ 1 -∗ cinv_own γ q -∗ False.
   Proof.
@@ -53,10 +68,16 @@ Section proofs.
     iDestruct (cinv_own_valid with "H1 H2") as %[]%(exclusive_l 1%Qp).
   Qed.
 
+  Lemma cinv_excl_excl γ : cinv_excl γ -∗ cinv_excl γ -∗ False.
+  Proof.
+    rewrite bi.wand_curry -own_op own_valid -pair_op.
+    iIntros "%H !%". apply H.
+  Qed.
+
   Lemma cinv_iff N γ P Q : cinv N γ P -∗ ▷ □ (P ↔ Q) -∗ cinv N γ Q.
   Proof.
     iIntros "HI #HPQ". iApply (inv_iff with "HI"). iIntros "!> !>".
-    iSplit; iIntros "[?|$]"; iLeft; by iApply "HPQ".
+    iSplit; iIntros "[[? ?]|$]"; iLeft; iFrame; by iApply "HPQ".
   Qed.
 
   (*** Allocation rules. *)
@@ -66,9 +87,8 @@ Section proofs.
     pred_infinite I →
     ⊢ |={E}=> ∃ γ, ⌜ I γ ⌝ ∗ cinv_own γ 1 ∗ ∀ P, ▷ P ={E}=∗ cinv N γ P.
   Proof.
-    iIntros (?). iMod (own_alloc_strong 1%Qp I) as (γ) "[Hfresh Hγ]"; [done|done|].
-    iExists γ. iIntros "!> {$Hγ $Hfresh}" (P) "HP".
-    iMod (inv_alloc N _ (P ∨ cinv_own γ 1) with "[HP]"); eauto.
+    iIntros (?). iMod cinv_own_excl_alloc as (γ) "[$ [Hexcl $]]"; first done.
+    iIntros "!>" (P) "P". iApply inv_alloc. iLeft. iFrame.
   Qed.
 
   (** The "open" variants create the invariant in the open state, and delay
@@ -80,10 +100,9 @@ Section proofs.
     ⊢ |={E}=> ∃ γ, ⌜ I γ ⌝ ∗ cinv_own γ 1 ∗ ∀ P,
       |={E,E∖↑N}=> cinv N γ P ∗ (▷ P ={E∖↑N,E}=∗ True).
   Proof.
-    iIntros (??). iMod (own_alloc_strong 1%Qp I) as (γ) "[Hfresh Hγ]"; [done|done|].
-    iExists γ. iIntros "!> {$Hγ $Hfresh}" (P).
-    iMod (inv_alloc_open N _ (P ∨ cinv_own γ 1)) as "[Hinv Hclose]"; first by eauto.
-    iIntros "!>". iFrame. iIntros "HP". iApply "Hclose". iLeft. done.
+    iIntros (??). iMod (cinv_own_excl_alloc I) as (γ) "[$ [Hexcl $]]"; first done.
+    iIntros "!>" (P). iMod inv_alloc_open as "[$ Hclose]"; first done.
+    iIntros "!> P". iApply "Hclose". iLeft. iFrame.
   Qed.
 
   Lemma cinv_alloc_cofinite (G : gset gname) E N :
@@ -108,14 +127,17 @@ Section proofs.
   Qed.
 
   (*** Accessors *)
+
+  (* If we any fraction of the invariant token, then we can open the invariant
+  * atomically. *)
   Lemma cinv_acc_strong E N γ p P :
     ↑N ⊆ E →
     cinv N γ P -∗ (cinv_own γ p ={E,E∖↑N}=∗
     ▷ P ∗ cinv_own γ p ∗ (∀ E' : coPset, ▷ P ∨ cinv_own γ 1 ={E',↑N ∪ E'}=∗ True)).
   Proof.
     iIntros (?) "Hinv Hown".
-    iMod (inv_acc_strong with "Hinv") as "[[$ | >Hown'] H]"; first done.
-    - iIntros "{$Hown} !>" (E') "HP". iApply "H". by iNext.
+    iMod (inv_acc_strong with "Hinv") as "[[[$ >Hexcl] | >Hown'] H]"; first done.
+    - iIntros "{$Hown} !>" (E') "[P|Hown]"; iApply "H"; eauto with iFrame.
     - iDestruct (cinv_own_1_l with "Hown' Hown") as %[].
   Qed.
 
@@ -130,13 +152,26 @@ Section proofs.
     rewrite -union_difference_L //.
   Qed.
 
+  (* If we temporarily give up the invariant token at fraction 1, then we can
+   * open the invariant non-atomically. *)
+  Lemma cinv_acc_1 E N γ P :
+    ↑N ⊆ E →
+    cinv N γ P -∗ cinv_own γ 1 ={E}=∗ ▷ P ∗ (▷P ={E}=∗ cinv_own γ 1).
+  Proof.
+    iIntros (?) "#Hinv Hγ".
+    iInv "Hinv" as "[[$ >Hexcl] | >Hγ']" "Hclose".
+    - iMod ("Hclose" with "[$Hγ]") as "_". iIntros "!> HP". 
+      iInv "Hinv" as "[[_ >Hexcl'] | >$]" "Hclose".
+      + iDestruct (cinv_excl_excl with "Hexcl Hexcl'") as %[].
+      + iApply "Hclose". eauto with iFrame.
+    - iDestruct (cinv_own_1_l with "Hγ Hγ'") as %[].
+  Qed.
+
   (*** Other *)
   Lemma cinv_cancel E N γ P : ↑N ⊆ E → cinv N γ P -∗ cinv_own γ 1 ={E}=∗ ▷ P.
   Proof.
     iIntros (?) "#Hinv Hγ".
-    iMod (cinv_acc_strong with "Hinv Hγ") as "($ & Hγ & H)"; first done.
-    iMod ("H" with "[$Hγ]") as "_".
-    rewrite -union_difference_L //.
+    by iDestruct (cinv_acc_1 with "[$] [$]") as "[$ _]".
   Qed.
 
   Global Instance into_inv_cinv N γ P : IntoInv (cinv N γ P) N := {}.

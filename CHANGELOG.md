@@ -3,6 +3,13 @@ way the logic is used on paper.  We also document changes in the Coq
 development; every API-breaking change should be listed, but not every new
 lemma.
 
+## Iris master
+
+**Changes in `base_logic`:**
+
+* Modified `cinv` construction to add lemma `cinv_acc_1` to access
+  the invariant non-atomically given full ownership of the token. (by Benjamin Peters)
+
 ## Iris 4.4.0 (2025-06-04)
 
 The main features of this release are support for transfinite step-indexing for
