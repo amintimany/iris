@@ -279,9 +279,9 @@ Section lemmas.
   Qed.
 
   (** Big-op versions of above lemmas *)
-  Lemma ghost_map_lookup_big {γ q m} m0 :
+  Lemma ghost_map_lookup_big {γ q m dq} m0 :
     ghost_map_auth γ q m -∗
-    ([∗ map] k↦v ∈ m0, k ↪[γ] v) -∗
+    ([∗ map] k↦v ∈ m0, k ↪[γ]{dq} v) -∗
     ⌜m0 ⊆ m⌝.
   Proof.
     iIntros "Hauth Hfrag". rewrite map_subseteq_spec. iIntros (k v Hm0).

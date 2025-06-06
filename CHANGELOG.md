@@ -105,6 +105,8 @@ and Thomas Somers. Thank you all for your contributions.
   + Various corollaries for total cmras (which include `ucmra`s) are provided.
 * Add lemma `Some_included_totalI`.
 * Simplify lemma `excl_includedI` to use `=` instead of `match`.
+* Generalize lemma `ghost_map_lookup_big` to allow fractional permissions. (by
+  Johannes Hostert)
 
 **Changes in `heap_lang`:**
 
