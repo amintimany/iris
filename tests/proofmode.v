@@ -1480,6 +1480,60 @@ Proof.
   - iDestruct "H" as "[_ [_ #$]]".
 Qed.
 
+(* [from_and_pure_iff] and [from_sep_pure_if] instances work correctly. *)
+Lemma test_split_pure_iff (φ : Prop) :
+  ⊢ ⌜φ ↔ φ⌝ : PROP.
+Proof.
+  iSplit; eauto; fail.
+Restart. Proof.
+  iSplitL; eauto; fail.
+Restart. Proof.
+  iSplitR; eauto; fail.
+Qed.
+
+(* Behavior of [⌜φ ↔ ψ⌝] with respect to iSplit is consistent with Iris-level
+ * [∗-∗] and [↔]. *)
+(* [iSplit{L,R}] fail without the [BiAffine] instance. *)
+Lemma test_split_wand_iff (P : PROP) :
+  ⊢ P ∗-∗ P.
+Proof.
+  (* [; fail] ensures that there is no subgoals left after the [eauto]. *)
+  iSplit; eauto; fail.
+Restart.
+  (* fails without an BiAffine instance *)
+  Fail iSplitL. Fail iSplitR.
+Abort.
+
+Lemma test_split_bi_wand_iff_affine `{!BiAffine PROP} (P : PROP) :
+  ⊢ P ∗-∗ P.
+Proof.
+  iSplit; eauto; fail.
+Restart.
+  iSplitL; eauto; fail.
+Restart. Proof.
+  iSplitR; eauto; fail.
+Qed.
+
+Lemma test_split_iff (P : PROP) :
+  ⊢ P ↔ P.
+Proof.
+  iSplit; eauto; fail.
+Restart.
+  (* fails without an BiAffine instance *)
+  Fail iSplitL. Fail iSplitR.
+Abort.
+
+Lemma test_split_bi_iff_affine `{!BiAffine PROP} (P : PROP) :
+  ⊢ P ↔ P.
+Proof.
+  iSplit; eauto; fail.
+Restart.
+  iSplitL; eauto; fail.
+Restart. Proof.
+  iSplitR; eauto; fail.
+Qed.
+
+
 Check "test_and_sep_affine_bi".
 Lemma test_and_sep_affine_bi `{!BiAffine PROP} P Q : □ P ∧ Q ⊢ □ P ∗ Q.
 Proof.
