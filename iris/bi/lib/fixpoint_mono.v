@@ -291,7 +291,7 @@ and [sim e_t e_s := bi_greatest_fixpoint F].
 Suppose you want to show a simulation of two loops,
   [sim (while ...) (while ...)],
 i.e., [Φ '(e_t, e_s) := e_t = while ... ∧ e_s = while ...].
-Then the standard coinduction principle [greatest_fixpoint_iter] requires to
+Then the standard coinduction principle [greatest_fixpoint_coiter] requires to
 establish the coinduction hypothesis [Φ] after precisely one unfolding of [sim],
 which is clearly not strong enough if the loop takes multiple steps of
 computation per iteration. But [greatest_fixpoint_paco] allows to establish a
