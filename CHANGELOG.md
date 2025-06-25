@@ -9,6 +9,7 @@ lemma.
 
 * Modified `cinv` construction to add lemma `cinv_acc_1` to access
   the invariant non-atomically given full ownership of the token. (by Benjamin Peters)
+* Add `Contractive` instance for `na_inv`.
 
 ## Iris 4.4.0 (2025-06-04)
 
