@@ -238,7 +238,7 @@ Section lemmas.
   Lemma gmap_view_frag_valid k dq v : ✓ gmap_view_frag k dq v ↔ ✓ dq ∧ ✓ v.
   Proof.
     rewrite cmra_valid_validN. setoid_rewrite gmap_view_frag_validN.
-    rewrite cmra_valid_validN. pose 0ᵢ. naive_solver.
+    rewrite [_ v]cmra_valid_validN. pose 0ᵢ. naive_solver.
   Qed.
 
   Lemma gmap_view_frag_op k dq1 dq2 v1 v2 :
