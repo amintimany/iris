@@ -36,11 +36,11 @@ and Thomas Somers. Thank you all for your contributions.
   "step indices" to prepare for the support of transfinite step indexing. This
   is a large overhaul that involves nearly any file in the `algebra` folder:
   (by Simon Spies and Lennard Gäher)
-  + Introduce the interface [iris/algebra/stepindex.v](`sidx`), which abstracts
+  + Introduce the interface [`sidx`](iris/algebra/stepindex.v), which abstracts
     over the type of step indices `sidx`. The interface comes with operations
     `0ᵢ`/`Sᵢ` and orders `<`/`≤` (overloaded in `sidx_scope`). The interface can
     be instantiated by both `nat` (for finite step indexing, see
-    [iris/algebra/finite_stepindex.v](`finite_stepindex.v`)) and all sorts of
+    [`stepindex_finite.v`](iris/algebra/stepindex_finite.v)) and all sorts of
     ordinal numbers (e.g., ω^2 or Aczel Trees for transfinite step indexing;
     these instances are not yet present in this version of Iris).
   + Make all definitions in the `algebra` folder parametric in the type of
@@ -59,17 +59,17 @@ and Thomas Somers. Thank you all for your contributions.
     * CMRA: Change the interface to use `cmra_validN_le` instead of
       `cmra_validN_S`.
   + Provide an instance `natSI` for finite step indexing based on the natural
-    numbers. Importing [iris/algebra/finite_stepindex.v](`finite_stepindex.v`)
+    numbers. Importing [`stepindex_finite.v`](iris/algebra/stepindex_finite.v)
     has the side-effect of globally enabling finite step indexing (i.e., all
     `SI : sidx` arguments will be resolved to the instance for finite step
     indexing).
   + The COFE solver and the non-`algebra` parts of Iris (particularly, `bi`,
     `base_logic`, `program_logic` and `heap_lang`) are not yet parametric in the
-    type of step indexing. They import `finite_stepindex.v` and therefore
+    type of step indexing. They import `stepindex_finite.v` and therefore
     enforce finite step indexing.
   + Remove the `si_solver` tactic and hint database. Either use the `SIdx`
     lemmas manually, or in the case of finite step-indexing, use the wrappers
-    in [iris/algebra/finite_stepindex.v](`finite_stepindex.v`) that can be used
+    in [`stepindex_finite.v`](iris/algebra/stepindex_finite.v) that can be used
     in combination with `lia`.
   + Rename `conv_compl'` → `conv_compl_S`.
 * Add lemma `big_opL_zip_seq`. (by Rudy Peterson)
