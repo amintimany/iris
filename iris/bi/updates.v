@@ -230,6 +230,12 @@ Section bupd_derived.
   Lemma big_sepM_bupd {A} `{Countable K} (Φ : K → A → PROP) l :
     ([∗ map] k↦x ∈ l, |==> Φ k x) ⊢ |==> [∗ map] k↦x ∈ l, Φ k x.
   Proof. by rewrite (big_opM_commute _). Qed.
+  Lemma big_sepM2_bupd {A B} `{Countable K} (Φ : K → A → B → PROP) l1 l2 :
+    ([∗ map] k↦a;b ∈ l1;l2, |==> Φ k a b) ⊢ |==> [∗ map] k↦a;b ∈ l1;l2, Φ k a b.
+  Proof.
+    rewrite !big_sepM2_alt big_sepM_bupd.
+    rewrite !persistent_and_affinely_sep_l bupd_frame_l //.
+  Qed.
   Lemma big_sepS_bupd `{Countable A} (Φ : A → PROP) l :
     ([∗ set]  x ∈ l, |==> Φ x) ⊢ |==> [∗ set] x ∈ l, Φ x.
   Proof. by rewrite (big_opS_commute _). Qed.
@@ -452,6 +458,12 @@ Section fupd_derived.
   Lemma big_sepM_fupd `{Countable K} {A} E (Φ : K → A → PROP) m :
     ([∗ map] k↦x ∈ m, |={E}=> Φ k x) ⊢ |={E}=> [∗ map] k↦x ∈ m, Φ k x.
   Proof. by rewrite (big_opM_commute _). Qed.
+  Lemma big_sepM2_fupd `{Countable K} {A B} E (Φ : K → A → B → PROP) m m' :
+    ([∗ map] k↦x;y ∈ m;m', |={E}=> Φ k x y) ⊢ |={E}=> [∗ map] k↦x;y ∈ m;m', Φ k x y.
+  Proof.
+    rewrite !big_sepM2_alt big_sepM_fupd.
+    rewrite !persistent_and_affinely_sep_l fupd_frame_l //.
+  Qed.
   Lemma big_sepS_fupd `{Countable A} E (Φ : A → PROP) X :
     ([∗ set] x ∈ X, |={E}=> Φ x) ⊢ |={E}=> [∗ set] x ∈ X, Φ x.
   Proof. by rewrite (big_opS_commute _). Qed.
