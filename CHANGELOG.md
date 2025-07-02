@@ -7,7 +7,7 @@ lemma.
 
 **Changes in `base_logic`:**
 
-* Modified `cinv` construction to add lemma `cinv_acc_1` to access
+* Change `cinv` construction to add lemma `cinv_acc_1` to access
   the invariant non-atomically given full ownership of the token. (by Benjamin Peters)
 * Add `Contractive` instance for `na_inv`.
 
