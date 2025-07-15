@@ -8,6 +8,7 @@ lemma.
 **Changes in `bi`:**
 
 * Add lemmas `big_sepM2_bupd` and `big_sepM2_fupd`. (by Arnaud Daby-Seesaram)
+* Added `big_sepL_elem_of_acc`. (by Benjamin Peters)
 
 **Changes in `base_logic`:**
 
