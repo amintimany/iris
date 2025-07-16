@@ -221,14 +221,29 @@ Section list.
   Qed.
 
   Lemma big_opL_zip_seq (f : nat * A → M) n len l :
-    len = length l →
+    length l ≤ len →
     ([^o list] ky ∈ zip (seq n len) l, f ky)
       ≡ ([^o list] k ↦ y ∈ l, f (n + k, y)).
   Proof.
-    intros ->.
-    induction l as [| x l IHl] in n |- *; rewrite /= //.
-    rewrite Nat.add_0_r IHl.
+    intros Hlen.
+    induction l as [| x l IHl] in n, len, Hlen |- *; rewrite /= ?zip_nil_r //.
+    destruct len as [| len]; simpl in *; first lia.
+    rewrite Nat.add_0_r IHl; last lia.
     by setoid_rewrite Nat.add_succ_r.
+  Qed.
+
+  Lemma big_opL_zip_seqZ (f : Z * A → M) n len l :
+    length l ≤ len →
+    ([^o list] ky ∈ zip (seqZ n len) l, f ky)
+      ≡ ([^o list] k ↦ y ∈ l, f ((n + k)%Z, y)).
+  Proof.
+    intros Hlen.
+    induction l as [| x l IHl] in n, len, Hlen |- *; rewrite /= ?zip_nil_r //.
+    destruct len as [| len]; simpl in *; first lia.
+    rewrite Nat2Z.inj_0 Z.add_0_r seqZ_cons; last lia.
+    rewrite Nat2Z.inj_succ Z.pred_succ /= IHl; last lia.
+    f_equiv. apply big_opL_proper => ???.
+    rewrite Nat2Z.inj_succ Z.add_succ_l Z.add_succ_r //.
   Qed.
 
   Lemma big_opL_op f g l :
@@ -524,6 +539,30 @@ Lemma big_opM_sep_zip `{Countable K} {A B}
   ([^o map] k↦x ∈ m1, h1 k x) `o` ([^o map] k↦y ∈ m2, h2 k y).
 Proof. intros. by apply big_opM_sep_zip_with. Qed.
 
+Section kmap.
+  Context `{HK1 : Countable K1, HK2 : Countable K2} {A : Type}.
+  Context (h : K1 → K2) `{!Inj (=) (=) h}.
+
+  Lemma big_opM_kmap (f : K2 → A → M) (m : gmap K1 A) :
+    ([^o map] k2 ↦ y ∈ kmap h m, f k2 y) ≡ ([^o map] k1 ↦ y ∈ m, f (h k1) y).
+  Proof using Type*.
+    rewrite big_op.big_opM_unseal /big_op.big_opM_def map_to_list_kmap big_opL_fmap.
+    by apply big_opL_proper => ? [??].
+  Qed.
+End kmap.
+
+Lemma big_opM_map_seq {A} (f : nat → A → M) (start : nat) (l : list A) :
+  ([^o map] k ↦ x ∈ map_seq start l, f k x) ≡ ([^o list] i ↦ x ∈ l, f (start + i) x).
+Proof.
+  rewrite big_op.big_opM_unseal /big_op.big_opM_def map_to_list_seq big_opL_zip_seq //.
+Qed.
+
+Lemma big_opM_map_seqZ {A} (f : Z → A → M) (start : Z) (l : list A) :
+  ([^o map] k ↦ x ∈ map_seqZ start l, f k x) ≡ ([^o list] i ↦ x ∈ l, f (start + i)%Z x).
+Proof.
+  rewrite big_op.big_opM_unseal /big_op.big_opM_def map_to_list_seqZ
+    big_opL_zip_seqZ //.
+Qed.
 
 (** ** Big ops over finite sets *)
 Section gset.
