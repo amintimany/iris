@@ -1434,7 +1434,7 @@ Section sep_map.
     m2 ⊆ m1 → ([∗ map] k ↦ x ∈ m1, Φ k x) ⊢ [∗ map] k ↦ x ∈ m2, Φ k x.
   Proof.
     intros ?. rewrite -(map_difference_union m2 m1) //.
-    rewrite big_opM_union; last by apply map_disjoint_difference_r.
+    rewrite big_opM_union; last by apply map_disjoint_difference_r1.
     assert (∀ kx, Affine (uncurry Φ kx)) by (intros []; apply _).
     by rewrite sep_elim_l.
   Qed.
@@ -1848,7 +1848,7 @@ Section and_map.
     m2 ⊆ m1 → ([∧ map] k ↦ x ∈ m1, Φ k x) ⊢ [∧ map] k ↦ x ∈ m2, Φ k x.
   Proof.
     intros ?. rewrite -(map_difference_union m2 m1) //.
-    rewrite big_opM_union; last by apply map_disjoint_difference_r.
+    rewrite big_opM_union; last by apply map_disjoint_difference_r1.
     by rewrite and_elim_l.
   Qed.
 
