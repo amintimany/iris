@@ -25,7 +25,7 @@ Proof. by rewrite /FromPure pure_internal_eq. Qed.
   The following instance implements above logic, while avoiding a double search
   for [Discrete a]. *)
 Global Instance into_pure_eq {A : ofe} (a b : A) (P : Prop) :
-  Discrete a →
+  TCOr (Discrete a) (Discrete b) →
   TCOr (TCAnd (LeibnizEquiv A) (TCEq P (a = b)))
        (TCEq P (a ≡ b)) →
   @IntoPure PROP (a ≡ b) P.

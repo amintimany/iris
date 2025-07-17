@@ -301,14 +301,18 @@ Section ofe.
   Lemma conv_compl_S `{!Cofe A} n (c : chain A) : compl c ≡{n}≡ c (Sᵢ n).
   Proof. apply conv_compl_le, SIdx.le_succ_diag_r. Qed.
 
-  Lemma discrete_iff n (x : A) `{!Discrete x} y : x ≡ y ↔ x ≡{n}≡ y.
+  Lemma discrete_iff n x y `{!TCOr (Discrete x) (Discrete y)} :
+    x ≡ y ↔ x ≡{n}≡ y.
   Proof.
     split; intros; [by auto|].
-    apply (discrete_0 _), dist_le with n; eauto using SIdx.le_0_l.
+    destruct select (TCOr _ _); [|symmetry];
+      apply (discrete_0 _), dist_le with n; eauto using SIdx.le_0_l.
   Qed.
-  Lemma discrete_iff_0 n (x : A) `{!Discrete x} y : x ≡{0ᵢ}≡ y ↔ x ≡{n}≡ y.
+  Lemma discrete_iff_0 n x `{!TCOr (Discrete x) (Discrete y)} :
+    x ≡{0ᵢ}≡ y ↔ x ≡{n}≡ y.
   Proof. by rewrite -!discrete_iff. Qed.
-  Lemma discrete n (x : A) `{!Discrete x} y : x ≡{n}≡ y → x ≡ y.
+  Lemma discrete n x y `{!TCOr (Discrete x) (Discrete y)} :
+    x ≡{n}≡ y → x ≡ y.
   Proof. intros. eapply discrete_iff; done. Qed.
 
   Global Instance ofe_discrete_subrelation `{!OfeDiscrete A} n :

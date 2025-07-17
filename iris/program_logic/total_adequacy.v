@@ -28,7 +28,7 @@ Qed.
 Local Instance twptp_pre_mono' : BiMonoPred twptp_pre.
 Proof.
   constructor; first (intros ????; apply twptp_pre_mono).
-  intros wp Hwp n t1 t2 ?%(discrete_iff _ _)%leibniz_equiv; solve_proper.
+  intros wp Hwp n t1 t2 ?%(discrete_iff _ _ _)%leibniz_equiv; solve_proper.
 Qed.
 
 Definition twptp (t : list (expr Λ)) : iProp Σ :=
@@ -42,7 +42,7 @@ Lemma twptp_ind Ψ :
 Proof.
   iIntros "#IH" (t) "H".
   assert (NonExpansive Ψ).
-  { by intros n ?? ->%(discrete_iff _ _)%leibniz_equiv. }
+  { by intros n ?? ->%(discrete_iff _ _ _)%leibniz_equiv. }
   iApply (least_fixpoint_ind _ Ψ with "[] H").
   iIntros "!>" (t') "H". by iApply "IH".
 Qed.

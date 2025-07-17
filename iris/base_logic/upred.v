@@ -801,7 +801,9 @@ Section primitive.
     by eapply dist_le, SIdx.lt_succ_r.
   Qed.
 
-  Lemma discrete_eq_1 {A : ofe} (a b : A) : Discrete a → a ≡ b ⊢ ⌜a ≡ b⌝.
+  Lemma discrete_eq_1 {A : ofe} (a b : A) :
+    TCOr (Discrete a) (Discrete b) →
+    a ≡ b ⊢ ⌜a ≡ b⌝.
   Proof.
     unseal=> ?. split=> n x ?. by apply (discrete_iff n).
   Qed.

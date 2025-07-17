@@ -265,7 +265,7 @@ Section cmra.
   Proof.
     split; [apply _|]=> -[[[dq ag]|] b]; rewrite view_valid_eq view_validN_eq /=.
     - rewrite -cmra_discrete_valid_iff.
-      setoid_rewrite <-(discrete_iff _ ag). naive_solver.
+      setoid_rewrite <-(discrete_iff _ ag _). naive_solver.
     - naive_solver.
   Qed.
 
@@ -412,7 +412,7 @@ Section cmra.
   Proof.
     split.
     - intros [[[[dqf agf]|] bf]
-        [[?%(discrete_iff _ _) ?]%(inj Some) _]]; simplify_eq/=.
+        [[?%(discrete_iff _ _ _) ?]%(inj Some) _]]; simplify_eq/=.
       + split; [eauto|]. apply to_agree_includedN. by exists agf.
       + split; [right; done|]. by apply (inj to_agree).
     - intros [[[? ->]| ->] ->].
