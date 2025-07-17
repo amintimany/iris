@@ -396,7 +396,7 @@ Section general.
 End general.
 
 Section timeless.
-  Context {PROP : bi} `{!BiInternalEq PROP, !BiAffine PROP}.
+  Context {PROP : bi} `{!BiInternalEq PROP, !Timeless (@bi_emp PROP)}.
   Context `{!OfeDiscrete A}.
   Context (R : A → A → PROP) `{!NonExpansive2 R}.
 
