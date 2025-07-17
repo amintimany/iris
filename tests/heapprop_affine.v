@@ -88,10 +88,10 @@ Next Obligation.
   assert (σ11 ⊆ σ2) by (by etrans; [apply map_union_subseteq_l|]).
   exists σ11, (σ2 ∖ σ11). split_and!; [| |done|].
   - by rewrite map_difference_union.
-  - by apply map_disjoint_difference_r.
+  - by apply map_disjoint_difference_r1.
   - eapply heapProp_closed; [done|].
     apply map_union_reflecting_l with σ11; [done|..].
-    + by apply map_disjoint_difference_r.
+    + by apply map_disjoint_difference_r1.
     + by rewrite map_difference_union.
 Qed.
 Local Definition heapProp_sep_aux : seal (@heapProp_sep_def). Proof. by eexists. Qed.
