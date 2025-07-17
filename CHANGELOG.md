@@ -8,12 +8,12 @@ lemma.
 **Changes in `bi`:**
 
 * Add lemmas `big_sepM2_bupd` and `big_sepM2_fupd`. (by Arnaud Daby-Seesaram)
-* Added `big_sepL_elem_of_acc`. (by Benjamin Peters)
+* Add lemma `big_sepL_elem_of_acc`. (by Benjamin Peters)
 
 **Changes in `base_logic`:**
 
-* Change `cinv` construction to add lemma `cinv_acc_1` to access
-  the invariant non-atomically given full ownership of the token. (by Benjamin Peters)
+* Change `cinv` construction to add lemma `cinv_acc_1` to access the invariant
+  non-atomically given full ownership of the token. (by Benjamin Peters)
 * Add `Contractive` instance for `na_inv`.
 
 ## Iris 4.4.0 (2025-06-04)
