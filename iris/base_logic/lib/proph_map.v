@@ -66,7 +66,7 @@ Section list_resolves.
   Proof.
     intros Hinlist Hp q vs HEq.
     destruct (decide (p = q)) as [->|NEq].
-    - rewrite lookup_insert in HEq. by inversion HEq.
+    - rewrite lookup_insert_eq in HEq. by inversion HEq.
     - rewrite lookup_insert_ne in HEq; last done. by apply Hinlist.
   Qed.
 End list_resolves.
@@ -126,7 +126,7 @@ Section proph_map.
     - iPureIntro. done.
     - iPureIntro. split.
       + intros q ws HEq. destruct (decide (p = q)) as [<-|NEq].
-        * rewrite lookup_insert in HEq. by inversion HEq.
+        * rewrite lookup_insert_eq in HEq. by inversion HEq.
         * rewrite lookup_insert_ne in HEq; last done.
           rewrite (Hres q ws HEq).
           simpl. rewrite decide_False; done.

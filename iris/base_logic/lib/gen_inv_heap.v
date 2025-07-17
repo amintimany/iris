@@ -247,8 +247,8 @@ Section inv_heap.
       apply: prod_local_update_1. apply: option_local_update.
       apply: exclusive_local_update. done. }
     iDestruct (big_sepM_insert _ _ _ (w, I') with "[$HsepM $Hl //]") as "HsepM".
-    { apply lookup_delete. }
-    rewrite insert_delete_insert -to_inv_heap_insert. iIntros "!> {$H◯}".
+    { apply lookup_delete_eq. }
+    rewrite insert_delete_eq -to_inv_heap_insert. iIntros "!> {$H◯}".
     iApply ("Hclose" with "[H● HsepM]"). iExists _; by iFrame.
   Qed.
 

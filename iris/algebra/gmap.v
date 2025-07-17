@@ -75,7 +75,7 @@ Global Instance partial_alter_ne n :
          (partial_alter (M:=gmap K A)).
 Proof.
   by intros f1 f2 Hf i ? <- m1 m2 Hm j; destruct (decide (i = j)) as [->|];
-    rewrite ?lookup_partial_alter ?lookup_partial_alter_ne //;
+    rewrite ?lookup_partial_alter_eq ?lookup_partial_alter_ne //;
     try apply Hf; apply lookup_ne.
 Qed.
 Global Instance insert_ne i : NonExpansive2 (insert (M:=gmap K A) i).
@@ -101,13 +101,13 @@ Proof.
   intros ? [x|] Hx; [|by symmetry; apply: discrete].
   assert (m ≡{0ᵢ}≡ <[i:=x]> m)
     by (by symmetry in Hx; inversion Hx; ofe_subst; rewrite insert_id).
-  by rewrite (discrete_0 m (<[i:=x]>m)) // lookup_insert.
+  by rewrite (discrete_0 m (<[i:=x]>m)) // lookup_insert_eq.
 Qed.
 Global Instance gmap_insert_discrete m i x :
   Discrete x → Discrete m → Discrete (<[i:=x]>m).
 Proof.
   intros ?? m' Hm j; destruct (decide (i = j)); simplify_map_eq.
-  { by apply: discrete; rewrite -Hm lookup_insert. }
+  { by apply: discrete; rewrite -Hm lookup_insert_eq. }
   by apply: discrete; rewrite -Hm lookup_insert_ne.
 Qed.
 Global Instance gmap_singleton_discrete i x :
@@ -226,7 +226,7 @@ Proof.
     - rewrite lookup_insert_ne // lookup_delete_ne //. }
   destruct (Hm i) as [my Hi']; simplify_map_eq.
   exists (partial_alter (λ _, my) i m2')=>j; destruct (decide (i = j)) as [->|].
-  - by rewrite Hi' lookup_op lookup_insert lookup_partial_alter.
+  - by rewrite Hi' lookup_op lookup_insert_eq lookup_partial_alter_eq.
   - move: (Hm2' j). by rewrite !lookup_op lookup_delete_ne //
       lookup_insert_ne // lookup_partial_alter_ne.
 Qed.
@@ -244,7 +244,7 @@ Proof.
     - rewrite lookup_insert_ne // lookup_delete_ne //. }
   destruct (Hm i) as [my Hi']; simplify_map_eq.
   exists (partial_alter (λ _, my) i m2')=>j; destruct (decide (i = j)) as [->|].
-  - by rewrite Hi' lookup_op lookup_insert lookup_partial_alter.
+  - by rewrite Hi' lookup_op lookup_insert_eq lookup_partial_alter_eq.
   - move: (Hm2' j). by rewrite !lookup_op lookup_delete_ne //
       lookup_insert_ne // lookup_partial_alter_ne.
 Qed.
@@ -346,7 +346,7 @@ Proof. intros Hm j; destruct (decide (i = j)); by simplify_map_eq. Qed.
 Lemma insert_singleton_op m i x : m !! i = None → <[i:=x]> m = {[ i := x ]} ⋅ m.
 Proof.
   intros Hi; apply map_eq=> j; destruct (decide (i = j)) as [->|].
-  - by rewrite lookup_op lookup_insert lookup_singleton Hi right_id_L.
+  - by rewrite lookup_op lookup_insert_eq lookup_singleton_eq Hi right_id_L.
   - by rewrite lookup_op lookup_insert_ne // lookup_singleton_ne // left_id_L.
 Qed.
 
@@ -385,12 +385,12 @@ Lemma singleton_includedN_l n m i x :
   {[ i := x ]} ≼{n} m ↔ ∃ y, m !! i ≡{n}≡ Some y ∧ Some x ≼{n} Some y.
 Proof.
   split.
-  - move=> [m' /(_ i)]; rewrite lookup_op lookup_singleton=> Hi.
+  - move=> [m' /(_ i)]; rewrite lookup_op lookup_singleton_eq=> Hi.
     exists (x ⋅? m' !! i). rewrite -Some_op_opM.
     split; first done. apply cmra_includedN_l.
   - intros (y&Hi&[mz Hy]). exists (partial_alter (λ _, mz) i m).
     intros j; destruct (decide (i = j)) as [->|].
-    + by rewrite lookup_op lookup_singleton lookup_partial_alter Hi.
+    + by rewrite lookup_op lookup_singleton_eq lookup_partial_alter_eq Hi.
     + by rewrite lookup_op lookup_singleton_ne// lookup_partial_alter_ne// left_id.
 Qed.
 (* We do not have [x ≼ y ↔ ∀ n, x ≼{n} y], so we cannot use the previous lemma *)
@@ -398,11 +398,11 @@ Lemma singleton_included_l m i x :
   {[ i := x ]} ≼ m ↔ ∃ y, m !! i ≡ Some y ∧ Some x ≼ Some y.
 Proof.
   split.
-  - move=> [m' /(_ i)]; rewrite lookup_op lookup_singleton.
+  - move=> [m' /(_ i)]; rewrite lookup_op lookup_singleton_eq.
     exists (x ⋅? m' !! i). by rewrite -Some_op_opM.
   - intros (y&Hi&[mz Hy]). exists (partial_alter (λ _, mz) i m).
     intros j; destruct (decide (i = j)) as [->|].
-    + by rewrite lookup_op lookup_singleton lookup_partial_alter Hi.
+    + by rewrite lookup_op lookup_singleton_eq lookup_partial_alter_eq Hi.
     + by rewrite lookup_op lookup_singleton_ne// lookup_partial_alter_ne// left_id.
 Qed.
 Lemma singleton_included_exclusive_l m i x :
@@ -416,8 +416,8 @@ Lemma singleton_included i x y :
   {[ i := x ]} ≼ ({[ i := y ]} : gmap K A) ↔ Some x ≼ Some y.
 Proof.
   rewrite singleton_included_l. split.
-  - intros (y'&Hi&?). rewrite lookup_insert in Hi. by rewrite Hi.
-  - intros ?. exists y. by rewrite lookup_insert.
+  - intros (y'&Hi&?). rewrite lookup_insert_eq in Hi. by rewrite Hi.
+  - intros ?. exists y. by rewrite lookup_insert_eq.
 Qed.
 Lemma singleton_included_total `{!CmraTotal A}  i x y :
   {[ i := x ]} ≼ ({[ i := y ]} : gmap K A) ↔ x ≼ y.
@@ -431,7 +431,7 @@ Global Instance singleton_cancelable i x :
 Proof.
   intros ? n m1 m2 Hv EQ j. move: (Hv j) (EQ j). rewrite !lookup_op.
   destruct (decide (i = j)) as [->|].
-  - rewrite lookup_singleton. by apply cancelableN.
+  - rewrite lookup_singleton_eq. by apply cancelableN.
   - by rewrite lookup_singleton_ne // !(left_id None _).
 Qed.
 
@@ -475,7 +475,7 @@ Proof. apply insert_update. Qed.
 Lemma delete_update m i : m ~~> delete i m.
 Proof.
   apply cmra_total_update=> n mf Hm j; destruct (decide (i = j)); subst.
-  - move: (Hm j). rewrite !lookup_op lookup_delete left_id.
+  - move: (Hm j). rewrite !lookup_op lookup_delete_eq left_id.
     apply cmra_validN_op_r.
   - move: (Hm j). by rewrite !lookup_op lookup_delete_ne.
 Qed.
@@ -580,7 +580,7 @@ Proof.
     intros; by apply cmra_valid_validN. }
   exists {[ i := y ]}; split; first by auto.
   intros i'; destruct (decide (i' = i)) as [->|].
-  - rewrite lookup_op lookup_singleton.
+  - rewrite lookup_op lookup_singleton_eq.
     move:Hy; case: (gf !! i)=>[x|]; rewrite /= ?right_id //.
   - move:(Hg i'). by rewrite !lookup_op lookup_singleton_ne // !left_id.
 Qed.
@@ -609,7 +609,7 @@ Lemma alloc_local_update m1 m2 i x :
 Proof.
   intros Hi ?. apply gmap_local_update=> j.
   destruct (decide (i = j)) as [->|]; last by rewrite !lookup_insert_ne.
-  rewrite !lookup_insert Hi. by apply alloc_option_local_update.
+  rewrite !lookup_insert_eq Hi. by apply alloc_option_local_update.
 Qed.
 
 Lemma alloc_singleton_local_update m i x :
@@ -623,7 +623,7 @@ Lemma insert_local_update m1 m2 i x y x' y' :
 Proof.
   intros Hi1 Hi2 Hup. apply gmap_local_update=> j.
   destruct (decide (i = j)) as [->|]; last by rewrite !lookup_insert_ne.
-  rewrite !lookup_insert Hi1 Hi2. by apply option_local_update.
+  rewrite !lookup_insert_eq Hi1 Hi2. by apply option_local_update.
 Qed.
 
 Lemma singleton_local_update_any m i y x' y' :
@@ -632,7 +632,7 @@ Lemma singleton_local_update_any m i y x' y' :
 Proof.
   intros. apply gmap_local_update=> j.
   destruct (decide (i = j)) as [->|]; last by rewrite !lookup_insert_ne.
-  rewrite !lookup_singleton lookup_insert.
+  rewrite !lookup_singleton_eq lookup_insert_eq.
   destruct (m !! j); first by eauto using option_local_update.
   apply local_update_total_valid0=> _ _ /option_includedN; naive_solver.
 Qed.
@@ -651,14 +651,14 @@ Lemma delete_local_update m1 m2 i x `{!Exclusive x} :
 Proof.
   intros Hi. apply gmap_local_update=> j.
   destruct (decide (i = j)) as [->|]; last by rewrite !lookup_delete_ne.
-  rewrite !lookup_delete Hi. by apply delete_option_local_update.
+  rewrite !lookup_delete_eq Hi. by apply delete_option_local_update.
 Qed.
 
 Lemma delete_singleton_local_update m i x `{!Exclusive x} :
   (m, {[ i := x ]}) ~l~> (delete i m, ∅).
 Proof.
-  rewrite -(delete_singleton i x).
-  by eapply delete_local_update, lookup_singleton.
+  rewrite -(delete_singleton_eq i x).
+  by eapply delete_local_update, lookup_singleton_eq.
 Qed.
 
 Lemma delete_local_update_cancelable m1 m2 i mx `{!Cancelable mx} :
@@ -667,15 +667,15 @@ Lemma delete_local_update_cancelable m1 m2 i mx `{!Cancelable mx} :
 Proof.
   intros Hi1 Hi2. apply gmap_local_update=> j.
   destruct (decide (i = j)) as [->|]; last by rewrite !lookup_delete_ne.
-  rewrite !lookup_delete Hi1 Hi2. by apply delete_option_local_update_cancelable.
+  rewrite !lookup_delete_eq Hi1 Hi2. by apply delete_option_local_update_cancelable.
 Qed.
 
 Lemma delete_singleton_local_update_cancelable m i x `{!Cancelable (Some x)} :
   m !! i ≡ Some x → (m, {[ i := x ]}) ~l~> (delete i m, ∅).
 Proof.
-  intros. rewrite -(delete_singleton i x).
+  intros. rewrite -(delete_singleton_eq i x).
   apply (delete_local_update_cancelable m _ i (Some x));
-    [done|by rewrite lookup_singleton].
+    [done|by rewrite lookup_singleton_eq].
 Qed.
 
 Lemma gmap_fmap_mono {B : cmra} (f : A → B) m1 m2 :

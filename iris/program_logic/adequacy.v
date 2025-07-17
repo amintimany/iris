@@ -146,7 +146,7 @@ Proof.
   iIntros (Hstep Hel) "Hσ Hcred He". iMod (wptp_preservation with "Hσ Hcred He") as "Hwp"; first done.
   iModIntro. iApply (step_fupdN_wand with "Hwp").
   iMod 1 as (nt') "(Hσ & Ht)"; simplify_eq/=.
-  eapply elem_of_list_lookup in Hel as [i Hlook].
+  eapply list_elem_of_lookup in Hel as [i Hlook].
   destruct ((Φs ++ replicate nt' fork_post) !! i) as [Φ|] eqn: Hlook2; last first.
   { rewrite big_sepL2_alt. iDestruct "Ht" as "[%Hlen _]". exfalso.
     eapply lookup_lt_Some in Hlook. rewrite Hlen in Hlook.
@@ -309,7 +309,7 @@ Proof.
   destruct (adequate_not_stuck NotStuck e1 σ1 φ Had t2 σ2 e2) as [?|(κ&e3&σ3&efs&?)];
     rewrite ?eq_None_not_Some; auto.
   { exfalso. eauto. }
-  destruct (elem_of_list_split t2 e2) as (t2'&t2''&->); auto.
+  destruct (list_elem_of_split t2 e2) as (t2'&t2''&->); auto.
   right; exists (t2' ++ e3 :: t2'' ++ efs), σ3, κ; econstructor; eauto.
 Qed.
 

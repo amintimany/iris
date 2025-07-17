@@ -100,13 +100,13 @@ Section rel.
     { naive_solver. }
     induction f as [|k [dq v] f Hk' IH] using map_ind.
     { exists ∅. split; [|done]. apply: map_Forall_empty. }
-    move: (Hf k). rewrite lookup_insert=> -[/= ??].
+    move: (Hf k). rewrite lookup_insert_eq=> -[/= ??].
     destruct IH as (m & Hm & Hdom).
     { intros k'. destruct (decide (k = k')) as [->|?]; [by rewrite Hk'|].
       move: (Hf k'). by rewrite lookup_insert_ne. }
     exists (<[k:=v]> m).
     rewrite /gmap_view_rel /= /gmap_view_rel_raw map_Forall_insert //=. split_and!.
-    - exists v, dq. split; first by rewrite lookup_insert.
+    - exists v, dq. split; first by rewrite lookup_insert_eq.
       split; first by split. done.
     - eapply map_Forall_impl; [apply Hm|]; simpl.
       intros k' [dq' ag'] (v'&?&?&?). exists v'.
@@ -176,11 +176,11 @@ Section lemmas.
     split.
     - intros Hrel.
       edestruct (Hrel k) as (v' & dq' & Hlookup & Hval & Hinc).
-      { rewrite lookup_singleton. done. }
+      { rewrite lookup_singleton_eq. done. }
       simpl in *. eexists _, _. split_and!; done.
     - intros (v' & dq' & Hlookup & Hval & ?) j [df va].
       destruct (decide (k = j)) as [<-|Hne]; last by rewrite lookup_singleton_ne.
-      rewrite lookup_singleton. intros [= <- <-]. simpl.
+      rewrite lookup_singleton_eq. intros [= <- <-]. simpl.
       exists v', dq'. split_and!; by rewrite ?Hv'.
   Qed.
 
@@ -381,9 +381,9 @@ Section lemmas.
       { destruct (bf !! k) as [[df' va']|] eqn:Hbf; last done.
         specialize (Hrel _ _ Hbf). destruct Hrel as (v' & dq' & Hm & _).
         exfalso. rewrite Hm in Hfresh. done. }
-      rewrite lookup_singleton Hbf right_id.
+      rewrite lookup_singleton_eq Hbf right_id.
       intros [= <- <-]. eexists _, _.
-      rewrite lookup_insert. split; first done.
+      rewrite lookup_insert_eq. split; first done.
       split; last by apply: Some_includedN_refl.
       split; first done. by eapply cmra_valid_validN.
     - rewrite lookup_singleton_ne; last done.
@@ -418,7 +418,7 @@ Section lemmas.
     apply view_update_dealloc=>n bf Hrel j [df va] Hbf /=.
     destruct (decide (j = k)) as [->|Hne].
     - edestruct (Hrel k) as (v' & dq' & ? & Hval & Hincl).
-      { rewrite lookup_op Hbf lookup_singleton -Some_op. done. }
+      { rewrite lookup_op Hbf lookup_singleton_eq -Some_op. done. }
       eapply (cmra_validN_Some_includedN _ _ _ Hval) in Hincl as Hval'.
       exfalso. clear Hval Hincl.
       rewrite pair_validN /= in Hval'.
@@ -462,11 +462,11 @@ Section lemmas.
       edestruct (Hrel j) as (mva & mdf & Hlookup & Hval & Hincl).
       { rewrite lookup_op lookup_singleton_ne // left_id //. }
       naive_solver. }
-    simplify_map_eq. rewrite lookup_singleton.
+    simplify_map_eq. rewrite lookup_singleton_eq.
     (* FIXME simplify_map_eq should have done this *)
     intros Hbf.
     edestruct (Hrel k) as (mv & mdf & Hlookup & Hval & Hincl).
-    { rewrite lookup_op lookup_singleton // Some_op_opM //. }
+    { rewrite lookup_op lookup_singleton_eq // Some_op_opM //. }
     rewrite Some_includedN_opM in Hincl.
     destruct Hincl as [f' Hincl]. rewrite cmra_opM_opM_assoc in Hincl.
     set f := bf !! k ⋅ f'. (* the complete frame *)
@@ -546,7 +546,7 @@ Section lemmas.
     rewrite (gmap_view_replace _ _ _ v').
     2:{ eapply Hval. done. }
     rewrite (big_opM_delete _ m1 k v') // -assoc.
-    rewrite insert_union_r; last by rewrite lookup_delete.
+    rewrite insert_union_r; last by rewrite lookup_delete_eq.
     rewrite union_delete_insert //.
   Qed.
 
@@ -569,7 +569,7 @@ Section lemmas.
       |naive_solver].
     intros m n bf Hrel.
     destruct (Hrel k ((dq, v) ⋅? bf !! k)) as (v' & dq' & Hlookup & Hval & Hincl).
-    { by rewrite lookup_op lookup_singleton Some_op_opM. }
+    { by rewrite lookup_op lookup_singleton_eq Some_op_opM. }
     rewrite Some_includedN_opM in Hincl.
     destruct Hincl as [f' Hincl]. rewrite cmra_opM_opM_assoc in Hincl.
     set f := bf !! k ⋅ f'. (* the complete frame *)
@@ -580,7 +580,7 @@ Section lemmas.
     eexists. split; first by exists dq''.
     intros j [df va] Heq.
     destruct (decide (k = j)) as [->|Hne].
-    - rewrite lookup_op lookup_singleton in Heq.
+    - rewrite lookup_op lookup_singleton_eq in Heq.
       eexists v', (dq'' ⋅? (fst <$> f)).
       split; first done. split.
       + split; last by apply Hval. simpl. done.

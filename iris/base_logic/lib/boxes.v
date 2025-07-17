@@ -152,7 +152,7 @@ Proof.
   iModIntro. iSplitL "Hγ HQ"; first (iNext; iExists true; by iFrame).
   iModIntro; iNext; iExists Φ; iSplit.
   - by rewrite big_opM_insert_override.
-  - rewrite -insert_delete_insert big_opM_insert ?lookup_delete //.
+  - rewrite -insert_delete_eq big_opM_insert ?lookup_delete_eq //.
     iFrame; eauto.
 Qed.
 
@@ -171,7 +171,7 @@ Proof.
   iModIntro. iSplitL "Hγ"; first (iNext; iExists false; by repeat iSplit).
   iModIntro; iNext; iExists Φ; iSplit.
   - by rewrite big_opM_insert_override.
-  - rewrite -insert_delete_insert big_opM_insert ?lookup_delete //.
+  - rewrite -insert_delete_eq big_opM_insert ?lookup_delete_eq //.
     iFrame; eauto.
 Qed.
 
@@ -183,8 +183,8 @@ Proof.
   iIntros (?) "HQ Hbox".
   iMod (slice_insert_empty with "Hbox") as (γ ?) "[#Hslice Hbox]".
   iExists γ. iFrame "%#". iMod (slice_fill with "Hslice HQ Hbox"); first done.
-  - by apply lookup_insert.
-  - by rewrite insert_insert.
+  - by apply lookup_insert_eq.
+  - by rewrite insert_insert_eq.
 Qed.
 
 Lemma slice_delete_full E q f P Q γ :
@@ -196,8 +196,8 @@ Proof.
   iIntros (??) "#Hslice Hbox".
   iMod (slice_empty with "Hslice Hbox") as "[$ Hbox]"; try done.
   iMod (slice_delete_empty with "Hslice Hbox") as (P') "[Heq Hbox]"; first done.
-  { by apply lookup_insert. }
-  iExists P'. iFrame. rewrite -insert_delete_insert delete_insert ?lookup_delete //.
+  { by apply lookup_insert_eq. }
+  iExists P'. iFrame. rewrite -insert_delete_eq delete_insert_id ?lookup_delete_eq //.
 Qed.
 
 Lemma box_fill E f P :

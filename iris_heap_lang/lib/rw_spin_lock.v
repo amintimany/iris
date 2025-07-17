@@ -91,7 +91,7 @@ Section proof.
     iIntros "H1 H2". iCombine "H1 H2" gives %Hvalid. exfalso.
     apply auth_both_dfrac_valid in Hvalid as (_ & Hvalid & _).
     generalize (Hvalid 0)=> /cmra_discrete_included_r /gmultiset_included /(_ q).
-    rewrite multiplicity_empty multiplicity_singleton. by lia.
+    rewrite multiplicity_empty multiplicity_singleton_eq. by lia.
   Qed.
 
   Lemma is_rw_lock_iff γ lk Φ Ψ :

@@ -128,7 +128,7 @@ Section cmra.
     intros Hyp. constructor. apply list_equiv_lookup=> i.
     rewrite list_lookup_core.
     destruct (l !! i) eqn:E; last done.
-    by eapply Hyp, elem_of_list_lookup_2.
+    by eapply Hyp, list_elem_of_lookup_2.
   Qed.
 
   Global Instance list_core_id l : (∀ x : A, CoreId x) → CoreId l.
@@ -183,7 +183,7 @@ Section properties.
     apply list_eq. intros j.
     rewrite list_lookup_op.
     destruct (decide (j < i)%nat).
-    - by rewrite !lookup_take // -list_lookup_op.
+    - by rewrite !lookup_take_lt // -list_lookup_op.
     - by rewrite !lookup_take_ge //; lia.
   Qed.
 
@@ -205,7 +205,7 @@ Section properties.
 
   Lemma elem_of_list_singletonM i z x : z ∈ ({[i := x]} : list A) → z = ε ∨ z = x.
   Proof.
-    rewrite elem_of_app elem_of_list_singleton elem_of_replicate. naive_solver.
+    rewrite elem_of_app list_elem_of_singleton elem_of_replicate. naive_solver.
   Qed.
   Lemma list_lookup_singletonM i x : ({[ i := x ]} : list A) !! i = Some x.
   Proof. induction i; by f_equal/=. Qed.
@@ -396,7 +396,7 @@ Section properties.
     apply list_lookup_local_update.
     intros i'.
     destruct (decide (i = i')) as [->|].
-    - rewrite !list_lookup_alter //.
+    - rewrite !list_lookup_alter_eq //.
     - rewrite !list_lookup_alter_ne //.
   Qed.
 
@@ -416,7 +416,7 @@ Section properties.
     apply list_dist_lookup. intros i. rewrite !list_lookup_op.
     destruct (decide (i < length l)%nat) as [HLt|HGe].
     - rewrite !lookup_app_l //; last by rewrite length_replicate.
-      rewrite lookup_take; last done.
+      rewrite lookup_take_lt; last done.
       rewrite lookup_replicate_2; last done.
       rewrite comm assoc -list_lookup_op.
       rewrite (mixin_cmra_comm _ list_cmra_mixin) -Heq.

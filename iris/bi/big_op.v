@@ -217,7 +217,7 @@ Section sep_list.
   Lemma big_sepL_elem_of_acc (Φ : A → PROP) l x :
     x ∈ l → ([∗ list] y ∈ l, Φ y) ⊢ Φ x ∗ (Φ x -∗ ([∗ list] y ∈ l, Φ y)).
   Proof.
-    intros [i ?]%elem_of_list_lookup.
+    intros [i ?]%list_elem_of_lookup.
     by apply: big_sepL_lookup_acc.
   Qed.
 
@@ -225,7 +225,7 @@ Section sep_list.
     `{!TCOr (∀ y, Affine (Φ y)) (Absorbing (Φ x))} :
     x ∈ l → ([∗ list] y ∈ l, Φ y) ⊢ Φ x.
   Proof.
-    intros [i ?]%elem_of_list_lookup.
+    intros [i ?]%list_elem_of_lookup.
     destruct select (TCOr _ _); by apply: big_sepL_lookup.
   Qed.
 
@@ -1125,7 +1125,7 @@ Section and_list.
   Lemma big_andL_elem_of (Φ : A → PROP) l x :
     x ∈ l → ([∧ list] y ∈ l, Φ y) ⊢ Φ x.
   Proof.
-    intros [i ?]%elem_of_list_lookup. by eapply (big_andL_lookup (λ _, Φ)).
+    intros [i ?]%list_elem_of_lookup. by eapply (big_andL_lookup (λ _, Φ)).
   Qed.
 
   Lemma big_andL_fmap {B} (f : A → B) (Φ : nat → B → PROP) l :
@@ -1291,7 +1291,7 @@ Section or_list.
   Lemma big_orL_elem_of (Φ : A → PROP) l x :
     x ∈ l → Φ x ⊢ ([∨ list] y ∈ l, Φ y).
   Proof.
-    intros [i ?]%elem_of_list_lookup; by eapply (big_orL_intro (λ _, Φ)).
+    intros [i ?]%list_elem_of_lookup; by eapply (big_orL_intro (λ _, Φ)).
   Qed.
 
   Lemma big_orL_fmap {B} (f : A → B) (Φ : nat → B → PROP) l :
@@ -1467,8 +1467,8 @@ Section sep_map.
     assert (TCOr (Affine (Φ i y)) (Absorbing (Φ i x))).
     { destruct select (TCOr _ _); apply _. }
     rewrite big_sepM_delete // assoc.
-    rewrite (sep_elim_l (Φ i x)) -big_sepM_insert ?lookup_delete //.
-    by rewrite insert_delete_insert.
+    rewrite (sep_elim_l (Φ i x)) -big_sepM_insert ?lookup_delete_eq //.
+    by rewrite insert_delete_eq.
   Qed.
 
   Lemma big_sepM_lookup_acc Φ m i x :
@@ -1514,7 +1514,7 @@ Section sep_map.
       (Φ i x' -∗ Φ i x) -∗ ([∗ map] k↦y ∈ m, Φ k y).
   Proof.
     intros ?. apply wand_intro_l.
-    rewrite -insert_delete_insert big_sepM_insert ?lookup_delete //.
+    rewrite -insert_delete_eq big_sepM_insert ?lookup_delete_eq //.
     by rewrite assoc wand_elim_l -big_sepM_delete.
   Qed.
 
@@ -1525,7 +1525,7 @@ Section sep_map.
   Proof.
     intros ?. apply wand_intro_l.
     rewrite {1}big_sepM_delete //; rewrite assoc wand_elim_l.
-    rewrite -insert_delete_insert big_sepM_insert ?lookup_delete //.
+    rewrite -insert_delete_eq big_sepM_insert ?lookup_delete_eq //.
   Qed.
 
   Lemma big_sepM_insert_acc Φ m i x :
@@ -1535,7 +1535,7 @@ Section sep_map.
   Proof.
     intros ?. rewrite {1}big_sepM_delete //. apply sep_mono; [done|].
     apply forall_intro=> x'.
-    rewrite -insert_delete_insert big_sepM_insert ?lookup_delete //.
+    rewrite -insert_delete_eq big_sepM_insert ?lookup_delete_eq //.
     by apply wand_intro_l.
   Qed.
 
@@ -1617,7 +1617,7 @@ Section sep_map.
     revert Φ. induction m as [|i x m ? IH] using map_ind=> Φ.
     { by rewrite (affine (□ _)) big_sepM_empty. }
     rewrite big_sepM_insert // intuitionistically_sep_dup. f_equiv.
-    - rewrite (forall_elim i) (forall_elim x) lookup_insert.
+    - rewrite (forall_elim i) (forall_elim x) lookup_insert_eq.
       by rewrite pure_True // True_impl intuitionistically_elim.
     - rewrite -IH. f_equiv. apply forall_mono=> k; apply forall_mono=> y.
       apply impl_intro_l, pure_elim_l=> ?.
@@ -1635,7 +1635,7 @@ Section sep_map.
     revert Φ HΦ. induction m as [|i x m ? IH] using map_ind=> Φ HΦ.
     { rewrite big_sepM_empty. apply: affine. }
     rewrite big_sepM_insert // -persistent_and_sep_1. apply and_intro.
-    - rewrite (forall_elim i) (forall_elim x) lookup_insert.
+    - rewrite (forall_elim i) (forall_elim x) lookup_insert_eq.
       by rewrite pure_True // True_impl.
     - rewrite -IH. apply forall_mono=> k; apply forall_mono=> y.
       apply impl_intro_l, pure_elim_l=> ?.
@@ -1751,7 +1751,7 @@ Proof.
   rewrite intuitionistically_sep_dup.
   rewrite assoc. rewrite (comm _ _ (□ _))%I.
   rewrite {1}intuitionistically_elim {1}(forall_elim i) {1}(forall_elim y).
-  rewrite lookup_insert pure_True // left_id.
+  rewrite lookup_insert_eq pure_True // left_id.
   destruct (m1 !! i) as [x|] eqn:Hx.
   - rewrite big_sepM_delete; last done.
     rewrite assoc assoc wand_elim_l -2!assoc. apply sep_mono_r.
@@ -1875,7 +1875,7 @@ Section and_map.
     Φ i x ∧ ([∧ map] k↦y ∈ m, Φ k y) ⊢ [∧ map] k↦y ∈ <[i:=x]> m, Φ k y.
   Proof.
     rewrite big_andM_insert_delete.
-    destruct (m !! i) eqn:Hi; [ | by rewrite delete_notin ].
+    destruct (m !! i) eqn:Hi; [ | by rewrite delete_id ].
     rewrite big_andM_delete //. apply and_mono_r, and_elim_r.
   Qed.
 
@@ -1942,7 +1942,7 @@ Section and_map.
     revert Φ. induction m as [|i x m ? IH] using map_ind=> Φ.
     { rewrite big_andM_empty. apply: True_intro. }
     rewrite big_andM_insert //. apply and_intro.
-    - rewrite (forall_elim i) (forall_elim x) lookup_insert.
+    - rewrite (forall_elim i) (forall_elim x) lookup_insert_eq.
       by rewrite pure_True // True_impl.
     - rewrite -IH. apply forall_intro=> k. apply forall_intro=> x'.
       rewrite (forall_elim k) (forall_elim x').
@@ -2247,8 +2247,8 @@ Section map2.
     ([∗ map] k↦y1;y2 ∈ <[i:=x1]>m1; <[i:=x2]>m2, Φ k y1 y2)
     ⊣⊢ Φ i x1 x2 ∗ [∗ map] k↦y1;y2 ∈ delete i m1;delete i m2, Φ k y1 y2.
   Proof.
-    rewrite -(insert_delete_insert m1) -(insert_delete_insert m2).
-    apply big_sepM2_insert; by rewrite lookup_delete.
+    rewrite -(insert_delete_eq m1) -(insert_delete_eq m2).
+    apply big_sepM2_insert; by rewrite lookup_delete_eq.
   Qed.
 
   Lemma big_sepM2_insert_acc Φ m1 m2 i x1 x2 :
@@ -2259,8 +2259,8 @@ Section map2.
   Proof.
     intros ??. rewrite {1}big_sepM2_delete //. apply sep_mono; [done|].
     apply forall_intro=> x1'. apply forall_intro=> x2'.
-    rewrite -(insert_delete_insert m1) -(insert_delete_insert m2)
-      big_sepM2_insert ?lookup_delete //.
+    rewrite -(insert_delete_eq m1) -(insert_delete_eq m2)
+      big_sepM2_insert ?lookup_delete_eq //.
     by apply wand_intro_l.
   Qed.
 
@@ -2555,18 +2555,18 @@ Section map2.
     { rewrite -(exist_intro ∅) -(exist_intro m') !left_id_L.
       rewrite !pure_True //; last by apply map_disjoint_empty_l.
       rewrite big_sepM2_empty !left_id //. }
-    rewrite -insert_union_l big_sepM2_delete_l; last by apply lookup_insert.
+    rewrite -insert_union_l big_sepM2_delete_l; last by apply lookup_insert_eq.
     apply exist_elim=> y. apply pure_elim_l=> ?.
-    rewrite delete_insert; last by apply lookup_union_None.
+    rewrite delete_insert_id; last by apply lookup_union_None.
     rewrite IH //.
     rewrite sep_exist_l. eapply exist_elim=> m1'.
     rewrite sep_exist_l. eapply exist_elim=> m2'.
     rewrite comm. apply wand_elim_l', pure_elim_l=> Hm'. apply pure_elim_l=> ?.
     assert ((m1' ∪ m2') !! i = None) as [??]%lookup_union_None.
-    { by rewrite -Hm' lookup_delete. }
+    { by rewrite -Hm' lookup_delete_eq. }
     apply wand_intro_l.
     rewrite -(exist_intro (<[i:=y]> m1')) -(exist_intro m2'). apply and_intro.
-    { apply pure_intro. by rewrite -insert_union_l -Hm' insert_delete. }
+    { apply pure_intro. by rewrite -insert_union_l -Hm' insert_delete_id. }
     apply and_intro.
     { apply pure_intro. by apply map_disjoint_insert_l. }
     by rewrite big_sepM2_insert // -assoc.

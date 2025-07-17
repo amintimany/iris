@@ -63,9 +63,9 @@ Section upred.
     Lemma singleton_validI i x : ✓ ({[ i := x ]} : gmap K A) ⊣⊢ ✓ x.
     Proof.
       rewrite gmap_validI. apply: anti_symm.
-      - rewrite (bi.forall_elim i) lookup_singleton option_validI. done.
+      - rewrite (bi.forall_elim i) lookup_singleton_eq option_validI. done.
       - apply bi.forall_intro=>j. destruct (decide (i = j)) as [<-|Hne].
-        + rewrite lookup_singleton option_validI. done.
+        + rewrite lookup_singleton_eq option_validI. done.
         + rewrite lookup_singleton_ne // option_validI.
           apply bi.True_intro.
     Qed.

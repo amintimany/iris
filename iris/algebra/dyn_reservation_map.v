@@ -317,7 +317,7 @@ Section cmra.
     - destruct (Hdisj k) as [Hmfi|]; last set_solver.
       intros j. rewrite lookup_op.
       destruct (decide (k = j)) as [<-|].
-      + rewrite Hmfi lookup_singleton right_id_L. by apply cmra_valid_validN.
+      + rewrite Hmfi lookup_singleton_eq right_id_L. by apply cmra_valid_validN.
       + by rewrite lookup_singleton_ne // left_id_L.
     - eapply set_infinite_subseteq, Hinf. set_solver.
     - intros j. destruct (decide (k = j)); first set_solver.
@@ -333,11 +333,11 @@ Section cmra.
     rewrite dyn_reservation_map_validN_eq /= left_id_L. intros [Hmf [Hinf Hdisj]].
     destruct (Hup n (mf !! k)) as (a'&?&?).
     { move: (Hmf (k)).
-      by rewrite lookup_op lookup_singleton Some_op_opM. }
+      by rewrite lookup_op lookup_singleton_eq Some_op_opM. }
     exists (dyn_reservation_map_data k a'); split; first by eauto.
     rewrite /= left_id_L. split; last split.
     - intros j. destruct (decide (k = j)) as [<-|].
-      + by rewrite lookup_op lookup_singleton Some_op_opM.
+      + by rewrite lookup_op lookup_singleton_eq Some_op_opM.
       + rewrite lookup_op lookup_singleton_ne // left_id_L.
         move: (Hmf j). rewrite lookup_op. eauto using cmra_validN_op_r.
     - done.

@@ -293,8 +293,8 @@ Lemma big_opM_delete `{Countable K} {B} (f : K → B → M) (m : gmap K B) i x :
   m !! i = Some x →
   ([^o map] k↦y ∈ m, f k y) ≡ f i x `o` [^o map] k↦y ∈ delete i m, f k y.
 Proof.
-  intros. rewrite -big_opM_insert ?lookup_delete //.
-  by rewrite insert_delete.
+  intros. rewrite -big_opM_insert ?lookup_delete_eq //.
+  by rewrite insert_delete_id.
 Qed.
 
 Section gmap.
@@ -318,13 +318,13 @@ Section gmap.
     induction m1 as [|k x1 m1 Hm1k IH] using map_ind=> m2 f g Hfg.
     { destruct m2 as [|k x2 m2 _ _] using map_ind.
       { rewrite !big_opM_empty. by apply HR. }
-      generalize (Hfg k). by rewrite lookup_empty lookup_insert. }
-    generalize (Hfg k). rewrite lookup_insert.
+      generalize (Hfg k). by rewrite lookup_empty lookup_insert_eq. }
+    generalize (Hfg k). rewrite lookup_insert_eq.
     destruct (m2 !! k) as [x2|] eqn:Hm2k; [intros Hk|done].
     etrans; [by apply HR, big_opM_insert|].
     etrans; [|by symmetry; apply HR, big_opM_delete].
     f_equiv; [done|]. apply IH=> k'. destruct (decide (k = k')) as [->|?].
-    - by rewrite lookup_delete Hm1k.
+    - by rewrite lookup_delete_eq Hm1k.
     - generalize (Hfg k'). rewrite lookup_insert_ne // lookup_delete_ne //.
   Qed.
 
@@ -335,7 +335,7 @@ Section gmap.
     R ([^o map] k ↦ x ∈ m, f k x) ([^o map] k ↦ x ∈ m, g k x).
   Proof.
     intros ?? Hf. rewrite big_opM_unseal. apply (big_opL_gen_proper R); auto.
-    intros k [i x] ?%elem_of_list_lookup_2. by apply Hf, elem_of_map_to_list.
+    intros k [i x] ?%list_elem_of_lookup_2. by apply Hf, elem_of_map_to_list.
   Qed.
 
   Lemma big_opM_ext f g m :
@@ -419,21 +419,21 @@ Section gmap.
     assert (omap h m !! i = None) by (by rewrite lookup_omap Hmi).
     destruct (h x) as [y|] eqn:Hhx.
     - by rewrite omap_insert Hhx //= !big_opM_insert // IH Hhx.
-    - rewrite omap_insert_None // delete_notin // big_opM_insert //.
+    - rewrite omap_insert_None // delete_id // big_opM_insert //.
       by rewrite Hhx /= left_id.
   Qed.
 
   Lemma big_opM_insert_delete `{Countable K} {B} (f : K → B → M) (m : gmap K B) i x :
     ([^o map] k↦y ∈ <[i:=x]> m, f k y) ≡ f i x `o` [^o map] k↦y ∈ delete i m, f k y.
   Proof.
-    rewrite -insert_delete_insert big_opM_insert; first done. by rewrite lookup_delete.
+    rewrite -insert_delete_eq big_opM_insert; first done. by rewrite lookup_delete_eq.
   Qed.
 
   Lemma big_opM_insert_override (f : K → A → M) m i x x' :
     m !! i = Some x → f i x ≡ f i x' →
     ([^o map] k↦y ∈ <[i:=x']> m, f k y) ≡ ([^o map] k↦y ∈ m, f k y).
   Proof.
-    intros ? Hx. rewrite -insert_delete_insert big_opM_insert ?lookup_delete //.
+    intros ? Hx. rewrite -insert_delete_eq big_opM_insert ?lookup_delete_eq //.
     by rewrite -Hx -big_opM_delete.
   Qed.
 
@@ -497,7 +497,7 @@ Section gmap.
     intros ?? Hop Hf. induction m as [|k x ?? IH] using map_ind.
     { by rewrite big_opM_empty. }
     rewrite big_opM_insert //. apply Hop.
-    { apply Hf. by rewrite lookup_insert. }
+    { apply Hf. by rewrite lookup_insert_eq. }
     apply IH=> k' x' ?. apply Hf. rewrite lookup_insert_ne; naive_solver.
   Qed.
 End gmap.
@@ -537,7 +537,7 @@ Section gset.
     R ([^o set] x ∈ X, f x) ([^o set] x ∈ X, g x).
   Proof.
     rewrite big_opS_unseal. intros ?? Hf. apply (big_opL_gen_proper R); auto.
-    intros k x ?%elem_of_list_lookup_2. by apply Hf, elem_of_elements.
+    intros k x ?%list_elem_of_lookup_2. by apply Hf, elem_of_elements.
   Qed.
 
   Lemma big_opS_ext f g X :
@@ -696,7 +696,7 @@ Section gmultiset.
     R ([^o mset] x ∈ X, f x) ([^o mset] x ∈ X, g x).
   Proof.
     rewrite big_opMS_unseal. intros ?? Hf. apply (big_opL_gen_proper R); auto.
-    intros k x ?%elem_of_list_lookup_2. by apply Hf, gmultiset_elem_of_elements.
+    intros k x ?%list_elem_of_lookup_2. by apply Hf, gmultiset_elem_of_elements.
   Qed.
 
   Lemma big_opMS_ext f g X :

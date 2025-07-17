@@ -95,7 +95,7 @@ Lemma agree_validN_def n x :
   ✓{n} x ↔ ∀ a b, a ∈ agree_car x → b ∈ agree_car x → a ≡{n}≡ b.
 Proof.
   rewrite /validN /agree_validN_instance. destruct (agree_car _) as [|? [|??]]; auto.
-  setoid_rewrite elem_of_list_singleton; naive_solver.
+  setoid_rewrite list_elem_of_singleton; naive_solver.
 Qed.
 
 Local Instance agree_comm : Comm (≡) (@op (agree A) _).
@@ -173,17 +173,17 @@ Qed.
 Global Instance to_agree_ne : NonExpansive to_agree.
 Proof.
   intros n a1 a2 Hx; split=> b /=;
-    setoid_rewrite elem_of_list_singleton; naive_solver.
+    setoid_rewrite list_elem_of_singleton; naive_solver.
 Qed.
 Global Instance to_agree_proper : Proper ((≡) ==> (≡)) to_agree := ne_proper _.
 
 Global Instance to_agree_discrete a : Discrete a → Discrete (to_agree a).
 Proof.
   intros ? y [H H'] n; split.
-  - intros a' ->%elem_of_list_singleton. destruct (H a) as [b ?]; first by left.
+  - intros a' ->%list_elem_of_singleton. destruct (H a) as [b ?]; first by left.
     exists b. by rewrite -discrete_iff_0.
-  - intros b Hb. destruct (H' b) as (b'&->%elem_of_list_singleton&?); auto.
-    exists a. by rewrite elem_of_list_singleton -discrete_iff_0.
+  - intros b Hb. destruct (H' b) as (b'&->%list_elem_of_singleton&?); auto.
+    exists a. by rewrite list_elem_of_singleton -discrete_iff_0.
 Qed.
 
 Lemma agree_op_inv x y : ✓ (x ⋅ y) → x ≡ y.
@@ -193,7 +193,7 @@ Qed.
 
 Global Instance to_agree_injN n : Inj (dist n) (dist n) (to_agree).
 Proof.
-  move=> a b [_] /=. setoid_rewrite elem_of_list_singleton. naive_solver.
+  move=> a b [_] /=. setoid_rewrite list_elem_of_singleton. naive_solver.
 Qed.
 Global Instance to_agree_inj : Inj (≡) (≡) (to_agree).
 Proof. intros a b ?. apply equiv_dist=>n. by apply (inj to_agree), equiv_dist. Qed.
@@ -202,13 +202,13 @@ Lemma to_agree_uninjN n x : ✓{n} x → ∃ a, to_agree a ≡{n}≡ x.
 Proof.
   rewrite agree_validN_def=> Hv.
   destruct (elem_of_agree x) as [a ?].
-  exists a; split=> b /=; setoid_rewrite elem_of_list_singleton; naive_solver.
+  exists a; split=> b /=; setoid_rewrite list_elem_of_singleton; naive_solver.
 Qed.
 Lemma to_agree_uninj x : ✓ x → ∃ a, to_agree a ≡ x.
 Proof.
   rewrite /valid /agree_valid_instance; setoid_rewrite agree_validN_def.
   destruct (elem_of_agree x) as [a ?].
-  exists a; split=> b /=; setoid_rewrite elem_of_list_singleton; naive_solver.
+  exists a; split=> b /=; setoid_rewrite list_elem_of_singleton; naive_solver.
 Qed.
 
 Lemma agree_valid_includedN n x y : ✓{n} y → x ≼{n} y → x ≡{n}≡ y.
@@ -292,7 +292,7 @@ Section agree_map.
 
   Local Instance agree_map_ne : NonExpansive (agree_map f).
   Proof using Type*.
-    intros n x y [H H']; split=> b /=; setoid_rewrite elem_of_list_fmap.
+    intros n x y [H H']; split=> b /=; setoid_rewrite list_elem_of_fmap.
     - intros (a&->&?). destruct (H a) as (a'&?&?); auto. naive_solver.
     - intros (a&->&?). destruct (H' a) as (a'&?&?); auto. naive_solver.
   Qed.
@@ -301,7 +301,7 @@ Section agree_map.
   Lemma agree_map_ext (g : A → B) x :
     (∀ a, f a ≡ g a) → agree_map f x ≡ agree_map g x.
   Proof using Hf.
-    intros Hfg n; split=> b /=; setoid_rewrite elem_of_list_fmap.
+    intros Hfg n; split=> b /=; setoid_rewrite list_elem_of_fmap.
     - intros (a&->&?). exists (g a). rewrite Hfg; eauto.
     - intros (a&->&?). exists (f a). rewrite -Hfg; eauto.
   Qed.
@@ -310,7 +310,7 @@ Section agree_map.
   Proof using Hf.
     split; first apply _.
     - intros n x. rewrite !agree_validN_def=> Hv b b' /=.
-      intros (a&->&?)%elem_of_list_fmap (a'&->&?)%elem_of_list_fmap.
+      intros (a&->&?)%list_elem_of_fmap (a'&->&?)%list_elem_of_fmap.
       apply Hf; eauto.
     - done.
     - intros x y n; split=> b /=;
@@ -324,7 +324,7 @@ Definition agreeO_map {SI : sidx} {A B : ofe}
 Global Instance agreeO_map_ne {SI : sidx} A B : NonExpansive (@agreeO_map SI A B).
 Proof.
   intros n f g Hfg x; split=> b /=;
-    setoid_rewrite elem_of_list_fmap; naive_solver.
+    setoid_rewrite list_elem_of_fmap; naive_solver.
 Qed.
 
 Program Definition agreeRF {SI : sidx} (F : oFunctor) : rFunctor := {|
