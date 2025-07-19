@@ -9,6 +9,8 @@ lemma.
 
 * Add lemmas `big_sepM2_bupd` and `big_sepM2_fupd`. (by Arnaud Daby-Seesaram)
 * Add lemma `big_sepL_elem_of_acc`. (by Benjamin Peters)
+* Generalize `bi_nsteps_timeless`, `bi_rtc_timeless` and `bi_tc_timeless`
+  to require `Timeless emp` instead of `BiAffine`.
 
 **Changes in `base_logic`:**
 
