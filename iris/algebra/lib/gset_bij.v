@@ -72,7 +72,7 @@ Section gset_bij_view_rel.
     (n2 ≤ n1)%sidx →
     gset_bij_view_rel_raw n2 bijL2 L2.
   Proof.
-    intros [??] <-%(discrete_iff _ _)%leibniz_equiv ?%gset_included _.
+    intros [??] <-%(discrete_iff _ _ _)%leibniz_equiv ?%gset_included _.
     split; [|done]. by trans L1.
   Qed.
 

@@ -71,8 +71,8 @@ Section updates.
     (x,y) ~l~> (x',y') ↔ ∀ mz, ✓ x → x ≡ y ⋅? mz → ✓ x' ∧ x' ≡ y' ⋅? mz.
   Proof.
     rewrite /local_update /=. setoid_rewrite <-cmra_discrete_valid_iff.
-    setoid_rewrite <-(λ n, discrete_iff n x).
-    setoid_rewrite <-(λ n, discrete_iff n x'). pose 0ᵢ. naive_solver.
+    setoid_rewrite <-(λ n, discrete_iff n x _).
+    setoid_rewrite <-(λ n, discrete_iff n x' _). pose 0ᵢ. naive_solver.
   Qed.
 
   Lemma local_update_valid0 x y x' y' :

@@ -165,9 +165,9 @@ Proof. by constructor. Qed.
 Global Instance agree_cmra_discrete : OfeDiscrete A → CmraDiscrete agreeR.
 Proof.
   intros HD. split.
-  - intros x y [H H'] n; split=> a; setoid_rewrite <-(discrete_iff_0 _ _); auto.
+  - intros x y [H H'] n; split=> a; setoid_rewrite <-(discrete_iff_0 _ _ _); auto.
   - intros x; rewrite agree_validN_def=> Hv n. apply agree_validN_def=> a b ??.
-    apply discrete_iff_0; auto.
+    apply (discrete_iff_0 _ _ _); auto.
 Qed.
 
 Global Instance to_agree_ne : NonExpansive to_agree.

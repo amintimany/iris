@@ -614,7 +614,7 @@ Proof. by rewrite -!cmra_discrete_valid_iff. Qed.
 Lemma cmra_discrete_included_iff `{!OfeDiscrete A} n x y : x ≼ y ↔ x ≼{n} y.
 Proof.
   split; first by apply cmra_included_includedN.
-  intros [z ->%(discrete_iff _ _)]; eauto using cmra_included_l.
+  intros [z ->%(discrete_iff _ _ _)]; eauto using cmra_included_l.
 Qed.
 Lemma cmra_discrete_included_iff_0 `{!OfeDiscrete A} n x y : x ≼{0ᵢ} y ↔ x ≼{n} y.
 Proof. by rewrite -!cmra_discrete_included_iff. Qed.

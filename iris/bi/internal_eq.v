@@ -37,7 +37,8 @@ Record BiInternalEqMixin (PROP : bi) `(!InternalEq PROP) := {
   bi_internal_eq_mixin_sig_equivI_1 {A : ofe} (P : A → Prop) (x y : sig P) :
     `x ≡ `y ⊢@{PROP} x ≡ y;
   bi_internal_eq_mixin_discrete_eq_1 {A : ofe} (a b : A) :
-    Discrete a → a ≡ b ⊢@{PROP} ⌜a ≡ b⌝;
+    TCOr (Discrete a) (Discrete b) →
+    a ≡ b ⊢@{PROP} ⌜a ≡ b⌝;
   bi_internal_eq_mixin_later_equivI_1 {A : ofe} (x y : A) :
     Next x ≡ Next y ⊢@{PROP} ▷ (x ≡ y);
   bi_internal_eq_mixin_later_equivI_2 {A : ofe} (x y : A) :
@@ -71,7 +72,8 @@ Section internal_eq_laws.
     `x ≡ `y ⊢@{PROP} x ≡ y.
   Proof. eapply bi_internal_eq_mixin_sig_equivI_1, bi_internal_eq_mixin. Qed.
   Lemma discrete_eq_1 {A : ofe} (a b : A) :
-    Discrete a → a ≡ b ⊢@{PROP} ⌜a ≡ b⌝.
+    TCOr (Discrete a) (Discrete b) →
+    a ≡ b ⊢@{PROP} ⌜a ≡ b⌝.
   Proof. eapply bi_internal_eq_mixin_discrete_eq_1, bi_internal_eq_mixin. Qed.
 
   Lemma later_equivI_1 {A : ofe} (x y : A) : Next x ≡ Next y ⊢@{PROP} ▷ (x ≡ y).
@@ -250,7 +252,9 @@ Section internal_eq_derived.
 
   Lemma pure_internal_eq {A : ofe} (x y : A) : ⌜x ≡ y⌝ ⊢ x ≡ y.
   Proof. apply pure_elim'=> ->. apply internal_eq_refl. Qed.
-  Lemma discrete_eq {A : ofe} (a b : A) : Discrete a → a ≡ b ⊣⊢ ⌜a ≡ b⌝.
+  Lemma discrete_eq {A : ofe} (a b : A) :
+    TCOr (Discrete a) (Discrete b) →
+    a ≡ b ⊣⊢ ⌜a ≡ b⌝.
   Proof.
     intros. apply (anti_symm _); auto using discrete_eq_1, pure_internal_eq.
   Qed.
@@ -296,6 +300,7 @@ Section internal_eq_derived.
   Proof. apply (f_equivI_contractive _). Qed.
 
   Global Instance eq_timeless {A : ofe} (a b : A) :
-    Discrete a → Timeless (PROP:=PROP) (a ≡ b).
+    TCOr (Discrete a) (Discrete b) →
+    Timeless (PROP:=PROP) (a ≡ b).
   Proof. intros. rewrite /Discrete !discrete_eq. apply (timeless _). Qed.
 End internal_eq_derived.

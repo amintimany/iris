@@ -299,7 +299,9 @@ Section primitive.
   Proof. by unseal. Qed.
   Lemma sig_eq {A : ofe} (P : A → Prop) (x y : sig P) : `x ≡ `y ⊢ x ≡ y.
   Proof. by unseal. Qed.
-  Lemma discrete_eq_1 {A : ofe} (a b : A) : Discrete a → a ≡ b ⊢ ⌜a ≡ b⌝.
+  Lemma discrete_eq_1 {A : ofe} (a b : A) :
+    TCOr (Discrete a) (Discrete b) →
+    a ≡ b ⊢ ⌜a ≡ b⌝.
   Proof. unseal=> ?. split=> n. by apply (discrete_iff n). Qed.
 
   Lemma prop_ext_2 P Q : ((P → Q) ∧ (Q → P)) ⊢ P ≡ Q.
