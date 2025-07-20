@@ -308,7 +308,7 @@ Section ofe.
     destruct select (TCOr _ _); [|symmetry];
       apply (discrete_0 _), dist_le with n; eauto using SIdx.le_0_l.
   Qed.
-  Lemma discrete_iff_0 n x `{!TCOr (Discrete x) (Discrete y)} :
+  Lemma discrete_iff_0 n x y `{!TCOr (Discrete x) (Discrete y)} :
     x ≡{0ᵢ}≡ y ↔ x ≡{n}≡ y.
   Proof. by rewrite -!discrete_iff. Qed.
   Lemma discrete n x y `{!TCOr (Discrete x) (Discrete y)} :

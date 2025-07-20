@@ -7,8 +7,8 @@ lemma.
 
 **Changes in `algebra`:**
 
-* Generalize `discrete` and `discrete_iff` and `discrete_iff_0` from
-  `Discrete x` to `TCOr (Discrete x) (Discrete y)`. This might mean an
+* Generalize assumptions of `discrete` and `discrete_iff` and `discrete_iff_0`
+  from `Discrete x` to `TCOr (Discrete x) (Discrete y)`. This might mean an
   additional `_` is needed when using the lemma.
 
 **Changes in `bi`:**
@@ -17,13 +17,13 @@ lemma.
 * Add lemma `big_sepL_elem_of_acc`. (by Benjamin Peters)
 * Generalize `bi_nsteps_timeless`, `bi_rtc_timeless` and `bi_tc_timeless`
   to require `Timeless emp` instead of `BiAffine`.
-* Generalize `discrete_eq_1` from `Discrete x` to
+* Generalize the assumptions of `discrete_eq_1` from `Discrete x` to
   `TCOr (Discrete x) (Discrete y)`.
 
 **Changes in `proofmode`:**
 
 * Generalize `into_pure_eq` from `Discrete x` to
-  `TCOr (Discrete x) (Discrete y)`. This means that performing given `H : x ≡ y`,
+  `TCOr (Discrete x) (Discrete y)`. This means that given `H : x ≡ y`, performing
   the tactic `iDestruct "H" as %H` succeeds if either `x` or `y` is discrete.
 
 **Changes in `base_logic`:**
