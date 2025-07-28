@@ -1,0 +1,8 @@
+# Search paths for all packages.
+# Each line should be of the form "<PACKAGE> <LOGICAL_PATH>",
+# where <PACKAGE> is the name of a directory that matches the
+# corresponding package name.
+iris iris
+iris_heap_lang iris.heap_lang
+iris_unstable iris.unstable
+iris_deprecated iris.deprecated
