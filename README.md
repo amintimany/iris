@@ -1,10 +1,10 @@
-# Iris Coq Development [[coqdoc]](https://plv.mpi-sws.org/coqdoc/iris/)
+# Iris Rocq Development [[rocqdoc]](https://plv.mpi-sws.org/coqdoc/iris/)
 
-This is the Coq development of the [Iris Project](http://iris-project.org),
+This is the Rocq development of the [Iris Project](http://iris-project.org),
 which includes [MoSeL](http://iris-project.org/mosel/), a general proof mode
-for carrying out separation logic proofs in Coq.
+for carrying out separation logic proofs in Rocq.
 
-For using the Coq library, check out the
+For using the Rocq library, check out the
 [API documentation](https://plv.mpi-sws.org/coqdoc/iris/).
 
 For understanding the theory of Iris, a LaTeX version of the core logic
@@ -30,33 +30,33 @@ Importing Iris has some side effects as the library sets some global options.
 
 This version is known to compile with:
 
- - Coq 8.19.2 / 8.20.1 / 9.0.0
+ - Coq 8.19.2 / 8.20.1 / Rocq 9.0.0
  - A development version of [std++](https://gitlab.mpi-sws.org/iris/stdpp)
 
-Generally we always aim to support the last two stable Coq releases. Support for
+Generally we always aim to support the last two stable Rocq releases. Support for
 older versions will be dropped when it is convenient.
 
-If you need to work with older versions of Coq, you can check out the
+If you need to work with older versions of Rocq, you can check out the
 [tags](https://gitlab.mpi-sws.org/iris/iris/-/tags) for old Iris releases that
 still support them.
 
 ### Working *with* Iris
 
 To use Iris in your own proofs, we recommend you install Iris via opam (2.0.0 or
-newer).  To obtain the latest stable release, you have to add the Coq opam
+newer).  To obtain the latest stable release, you have to add the Rocq opam
 repository:
 
-    opam repo add coq-released https://coq.inria.fr/opam/released
+    opam repo add rocq-released https://rocq-prover.github.io/opam/released/
 
 To obtain a development version, also add the Iris opam repository:
 
     opam repo add iris-dev https://gitlab.mpi-sws.org/iris/opam.git
 
 Either way, you can now install Iris:
-- `opam install coq-iris` will install the libraries making up the Iris logic,
+- `opam install rocq-iris` will install the libraries making up the Iris logic,
   but leave it up to you to instantiate the `program_logic.language` interface
   to define a programming language for Iris to reason about.
-- `opam install coq-iris-heap-lang` will additionally install HeapLang, the
+- `opam install rocq-iris-heap-lang` will additionally install HeapLang, the
   default language used by various Iris projects.
 
 To fetch updates later, run `opam update && opam upgrade`.
@@ -103,7 +103,7 @@ modules in separate folders.
     - The subfolder [lib](iris/bi/lib) contains some general derived logical
       constructions.
   + The folder [proofmode](iris/proofmode) contains
-    [MoSeL](http://iris-project.org/mosel/), which extends Coq with contexts for
+    [MoSeL](http://iris-project.org/mosel/), which extends Rocq with contexts for
     intuitionistic and spatial BI++ assertions. It also contains tactics for
     interactive proofs. Documentation can be found in
     [proof_mode.md](docs/proof_mode.md).
@@ -150,7 +150,7 @@ that should be compatible with this version:
 
 * [Iris Examples](https://gitlab.mpi-sws.org/iris/examples) is where we
   collect miscellaneous case studies that do not have their own repository.
-* [LambdaRust](https://gitlab.mpi-sws.org/iris/lambda-rust) is a Coq
+* [LambdaRust](https://gitlab.mpi-sws.org/iris/lambda-rust) is a Rocq
   formalization of the core Rust type system.
 * [GPFSL](https://gitlab.mpi-sws.org/iris/gpfsl) is a logic for release-acquire
   and relaxed memory.
@@ -163,22 +163,22 @@ that should be compatible with this version:
 
 ## Further Resources
 
-Getting along with Iris in Coq:
+Getting along with Iris in Rocq:
 
 * The coding style is documented in the [style guide](docs/style_guide.md).
 * Iris proof patterns and conventions are documented in the
   [proof guide](docs/proof_guide.md).
-* Various notions of equality and logical entailment in Iris and their Coq
+* Various notions of equality and logical entailment in Iris and their Rocq
   interface are described in the
   [equality docs](docs/equalities_and_entailments.md).
 * The Iris tactics are described in the
   [the Iris Proof Mode (IPM) / MoSeL documentation](docs/proof_mode.md) as well as the
   [HeapLang documentation](docs/heap_lang.md).
-* The generated coqdoc is [available online](https://plv.mpi-sws.org/coqdoc/iris/).
+* The generated rocqdoc is [available online](https://plv.mpi-sws.org/coqdoc/iris/).
 
 Contacting the developers:
 
-* Discussion about the Iris Coq development happens in the [Iris
+* Discussion about the Iris Rocq development happens in the [Iris
   Chat](https://iris-project.org/chat.html). This is also the right place to ask
   questions.
 * If you want to report a bug, please use the
