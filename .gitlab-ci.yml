@@ -55,10 +55,10 @@ variables:
 ## Build jobs
 
 # The newest version runs with timing.
-build-coq.9.0.0:
+build-rocq.9.0.0:
   <<: *template
   variables:
-    OPAM_PINS: "coq version 9.0.0"
+    OPAM_PINS: "rocq-core version 9.0.0   rocq-stdlib version 9.0.0"
     DENY_WARNINGS: "1"
     MANGLE_NAMES: "1"
     OPAM_PKG: "1"
@@ -69,11 +69,11 @@ build-coq.9.0.0:
   interruptible: false
 
 # The newest version also runs in MRs, without timing.
-build-coq.9.0.0-mr:
+build-rocq.9.0.0-mr:
   <<: *template
   <<: *only_mr
   variables:
-    OPAM_PINS: "coq version 9.0.0"
+    OPAM_PINS: "rocq-core version 9.0.0   rocq-stdlib version 9.0.0"
     DENY_WARNINGS: "1"
     MANGLE_NAMES: "1"
 
