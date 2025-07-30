@@ -14,8 +14,8 @@ work is needed before they are ready for this.
 """
 
 depends: [
-  "coq-iris" {= version}
-  "coq-iris-heap-lang" {= version}
+  "rocq-iris" {= version}
+  "rocq-iris-heap-lang" {= version}
 ]
 
 build: ["./make-package" "iris_unstable" "-j%{jobs}%"]

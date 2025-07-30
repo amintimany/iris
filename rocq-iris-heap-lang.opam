@@ -17,7 +17,7 @@ tags: [
 ]
 
 depends: [
-  "coq-iris" {= version}
+  "rocq-iris" {= version}
 ]
 
 build: ["./make-package" "iris_heap_lang" "-j%{jobs}%"]

@@ -13,7 +13,7 @@ Iris is a framework for reasoning about the safety of concurrent programs using
 concurrent separation logic. It can be used to develop a program logic, for
 defining logical relations, and for reasoning about type systems, among other
 applications. This package includes the base logic, Iris Proof Mode (IPM) /
-MoSeL, and a general language-independent program logic; see coq-iris-heap-lang
+MoSeL, and a general language-independent program logic; see rocq-iris-heap-lang
 for an instantiation of the program logic to a particular programming language.
 """
 tags: [

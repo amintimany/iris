@@ -14,7 +14,7 @@ entirely removed at some point.
 """
 
 depends: [
-  "coq-iris" {= version}
+  "rocq-iris" {= version}
 ]
 
 build: ["./make-package" "iris_deprecated" "-j%{jobs}%"]

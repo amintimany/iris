@@ -5,6 +5,8 @@ lemma.
 
 ## Iris master
 
+The opam packages have been renamed from `coq-*` to `rocq-*`.
+
 **Changes in `algebra`:**
 
 * Generalize assumptions of `discrete` and `discrete_iff` and `discrete_iff_0`
