@@ -42,6 +42,33 @@ The opam packages have been renamed from `coq-*` to `rocq-*`.
 * Add lemmas `big_sepL_zip_seqZ`, `big_andL_zip_seqZ`, `big_orL_zip_seqZ`,
   `big_sepM_kmap`, `big_sepM_map_seq`, `big_sepM_map_seqZ`, `big_andM_kmap`,
   `big_andM_map_seq` and `big_andM_map_seqZ`. (by Rudy Peterson)
+* Add class `Sbi PROP` of "step-indexed BIs". This class has operations
+  `si_pure : siProp → PROP` and `si_emp_valid : PROP → siProp` that generalize
+  `⌜ _ ⌝` and `⊢` to a step-indexed setting. Through these notions we provide a
+  generic treatment of step-indexed operations such as "internal validity" `≡`,
+  "internal CMRA validity" `✓`, the "plainly modality" `■`, plain propositions
+  `Plain`, and the soundness lemmas (for `⌜ _ ⌝` and `▷`). Concrete changes:
+  + Remove the classes `BiInternalEq` and `BiPlainly`. All definitions and
+    lemmas for these classes are generalized to `Sbi`.
+  + Add `internal_cmra_valid` for "internal CMRA validity" for any `Sbi`. (Prior
+    to this change, there was a notion of internal CMRA validity tailored
+    specifically to `uPred`/`iProp`; it is available for any SBI now.)
+  + Add the tactic `sbi_unfold` that translates entailments about plain
+    propositions into the pure step-indexed model. (This tactic is used to lift
+    laws about `✓{n}` and `≡{n}` to their internalized versions.)
+  + Remove the class `BiPropExt`. This class is subsumed by `Sbi` (i.e., every
+    SBI should satisfy the extensional equality law).
+  + Remove the classes `BiPersistentlyImplPlainly` and `BiPlainlyExist`. These
+    classes are subsumed by `BiPersistentlyImplSiPure` and `SbiEmpValidExist`.
+  + Remove the classes `BiBUpdPlainly` and `BiFUpdPlainly`. These classes are
+    subsumed by `BiBUpdSbi` and `BiFUpdSbi`.
+  + Remove the classes `BiEmbedInternalEq` and `BiEmbedPlainly`. These classes
+    are subsumed by `BiEmbedSbi`.
+  + Remove `embed_interal_inj` as a primitive law from `BiEmbed`. This law can
+    be derived for any `BiEmbedSbi`.
+  + The file `iris.bi.lib.cmra` (with internal CMRA inclusion) has been removed.
+    It has been integrated in the new file `iris.bi.cmra` (with internal CMRA
+    validity).
 
 **Changes in `proofmode`:**
 
@@ -61,6 +88,10 @@ The opam packages have been renamed from `coq-*` to `rocq-*`.
 * Provide proper error when performing `iDestruct` on `▷ ∃ : A, ..` without
   `A` being inhabited.
 
+**Changes in `si_logic`:**
+
+* Make `siProp` an instance of SBI.
+
 **Changes in `base_logic`:**
 
 * Change `cinv` construction to add lemma `cinv_acc_1` to access the invariant
@@ -68,6 +99,26 @@ The opam packages have been renamed from `coq-*` to `rocq-*`.
 * Add `Contractive` instance for `na_inv`.
 * Add lemmas `meta_meta_token_valid` and `meta_meta_token_valid'` and
   integrate them with `iCombine ... gives ...`. (by Arthur Azevedo de Amorim)
+* Make `uPred` an instance of `Sbi`. As a consequence, a number of notions are
+  no longer specific to `uPred`, but generalized to SBIs.
+  + Plainly and internal equality are obtained via the SBI instance.
+  + `uPred_cmra_valid` has been removed in favor of `internal_cmra_valid`.
+    The names of some generalized lemmas have changed:
+    `discrete_valid` → `internal_cmra_valid_discrete`,
+    `plainly_cmra_valid` → `plainly_internal_cmra_valid` and
+    `intuitionistically_cmra_valid` → `intuitionistically_internal_cmra_valid`.
+  + Remove all lemmas about internal equality. Use those for SBI (with the same
+    name) instead.
+  + Remove soundness lemmas `pure_soundness`, `later_soundness`,
+    `laterN_soundness` and `internal_eq_soundness` from `uPred` module.
+    Generalized versions are available for SBIs, with the same name. One now
+    occasionally has to specify `(PROP:=uPredI M)` instead of `(M:=M)`.
+  + The pure embedding `⌜ _ ⌝` is no longer a primitive, but defined through
+    `<si_pure>`. This is an internal change, and should not effect end-users.
+  + The file `iris.upred.algebra` has been removed. It is subsumed by
+    `iris.bi.algebra`.
+* Rename `agree_validI` → `agree_op_invI` (to be consistent with `agree_op_invN`)
+  and generalize to SBI.
 
 **Changes in `heap_lang`:**
 
@@ -81,6 +132,11 @@ Note that the script is not idempotent, do not run it twice.
 sed -i -E -f- $(find theories -name "*.v") <<EOF
 # iris.proofmode.tactics → iris.proofmode.proofmode
 s/(From +iris\.proofmode +Require +(Import|Export).*)\btactics\b/\1proofmode/
+# SBI
+s/\bagree_validI\b/agree_op_invI/g
+s/\b(uPred.)?discrete_valid\b/internal_cmra_valid_discrete/g
+s/\b(uPred.)?plainly_cmra_valid\b/plainly_internal_cmra_valid/g
+s/\b(uPred.)?intuitionistically_cmra_valid\b/intuitionistically_internal_cmra_valid/g
 EOF
 ```
 
