@@ -1481,58 +1481,58 @@ Proof.
 Qed.
 
 (* [from_and_pure_iff] and [from_sep_pure_if] instances work correctly. *)
-Lemma test_split_pure_iff (φ : Prop) :
+Lemma test_iSplit_pure_iff (φ : Prop) :
   ⊢ ⌜φ ↔ φ⌝ : PROP.
 Proof.
-  iSplit; eauto; fail.
+  by iSplit.
 Restart. Proof.
-  iSplitL; eauto; fail.
+  by iSplitL.
 Restart. Proof.
-  iSplitR; eauto; fail.
+  by iSplitR.
 Qed.
 
-(* Behavior of [⌜φ ↔ ψ⌝] with respect to iSplit is consistent with Iris-level
+(* Behavior of [⌜φ ↔ ψ⌝] with respect to [iSplit] is consistent with Iris-level
  * [∗-∗] and [↔]. *)
-(* [iSplit{L,R}] fail without the [BiAffine] instance. *)
-Lemma test_split_wand_iff (P : PROP) :
+(* [iSplit{L,R}] fail without [BiAffine] instance. *)
+Check "test_iSplit_wand_iff".
+Lemma test_iSplit_wand_iff (P : PROP) :
   ⊢ P ∗-∗ P.
 Proof.
-  (* [; fail] ensures that there is no subgoals left after the [eauto]. *)
-  iSplit; eauto; fail.
+  iSplit; by auto.
 Restart.
-  (* fails without an BiAffine instance *)
+  (* fails without [BiAffine] instance *)
   Fail iSplitL. Fail iSplitR.
 Abort.
 
-Lemma test_split_bi_wand_iff_affine `{!BiAffine PROP} (P : PROP) :
+Lemma test_iSplit_bi_wand_iff_affine `{!BiAffine PROP} (P : PROP) :
   ⊢ P ∗-∗ P.
 Proof.
-  iSplit; eauto; fail.
+  iSplit; by auto.
 Restart.
-  iSplitL; eauto; fail.
+  iSplitL; by auto.
 Restart. Proof.
-  iSplitR; eauto; fail.
+  iSplitR; by auto.
 Qed.
 
-Lemma test_split_iff (P : PROP) :
+Check "test_iSplit_iff".
+Lemma test_iSplit_iff (P : PROP) :
   ⊢ P ↔ P.
 Proof.
-  iSplit; eauto; fail.
+  iSplit; by auto.
 Restart.
-  (* fails without an BiAffine instance *)
+  (* fails without [BiAffine] instance *)
   Fail iSplitL. Fail iSplitR.
 Abort.
 
-Lemma test_split_bi_iff_affine `{!BiAffine PROP} (P : PROP) :
+Lemma test_iSplit_bi_iff_affine `{!BiAffine PROP} (P : PROP) :
   ⊢ P ↔ P.
 Proof.
-  iSplit; eauto; fail.
+  iSplit; by auto.
 Restart.
-  iSplitL; eauto; fail.
+  iSplitL; by auto.
 Restart. Proof.
-  iSplitR; eauto; fail.
+  iSplitR; by auto.
 Qed.
-
 
 Check "test_and_sep_affine_bi".
 Lemma test_and_sep_affine_bi `{!BiAffine PROP} P Q : □ P ∧ Q ⊢ □ P ∗ Q.
