@@ -78,14 +78,14 @@ Proof.
   pose proof @pure_exec_fill.
   rewrite -lifting.wp_pure_step_later; last done.
   rewrite into_laterN_env_sound /=. apply later_mono.
-  destruct (envs_lookup j Δ') as [[[ | ] P] | ] eqn:Hlk; first done.
-  - destruct HΔ as [n [-> HΔ]].
-    destruct (envs_simple_replace _ _ _) as [Δ''|] eqn:HΔ'; [ | contradiction ].
+  destruct (envs_lookup j Δ') as [[[] P]|] eqn:Hj; first done.
+  - destruct HΔ as (n & -> & HΔ).
+    destruct (envs_simple_replace _ _ _) as [Δ''|] eqn:HΔ'; last done.
     rewrite envs_simple_replace_sound //; simpl.
     rewrite right_id. apply wand_intro_r.
     rewrite sep_comm assoc -lc_succ wand_elim_r.
     apply HΔ.
-  - destruct (envs_app _ _ _) as [Δ''|] eqn:HΔ'; [ | contradiction ].
+  - destruct (envs_app _ _ _) as [Δ''|] eqn:HΔ'; last done.
     rewrite envs_app_sound //; simpl.
     rewrite right_id. apply wand_intro_r. by rewrite wand_elim_l.
 Qed.
@@ -194,9 +194,10 @@ Tactic Notation "wp_pure" open_constr(efoc) "credit:" constr(H) :=
     pm_reduce;
     lazymatch goal with
     | (* create the new later credit *)
-      |- ∃ _, _ => (notypeclasses refine (ex_intro _ _ (conj (eq_refl _) _)) ||
-               fail 0 "wp_pure:" H "is neither a later credit nor fresh");
-               pm_reduce; wp_finish
+      |- ∃ _, _ => first
+        [notypeclasses refine (ex_intro _ _ (conj (eq_refl _) _));
+         pm_reduce; wp_finish
+        |fail 1 "wp_pure:" H "is neither a later credit nor fresh"]
     | (* bump up the existing credit *)
       _ => pm_reduce; wp_finish
     end

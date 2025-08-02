@@ -54,9 +54,9 @@ The opam packages have been renamed from `coq-*` to `rocq-*`.
 
 **Changes in `heap_lang`:**
 
-* Improve `wp_pure credit:"H"` so that if "H" is an existing credit, it gets
+* Improve `wp_pure credit:"H"` so that if `H` is an existing credit, it gets
   incremented by 1. (by @ffengyu)
-  
+
 ## Iris 4.4.0 (2025-06-04)
 
 The main features of this release are support for transfinite step-indexing for

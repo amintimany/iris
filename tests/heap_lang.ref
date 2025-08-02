@@ -200,6 +200,27 @@ Tactic failure: wp_pure: cannot find ?y in (Var "x") or
   "Hcred" : £ 2
   --------------------------------------∗
   |={⊤}=> ▷ P ={∅}=∗ P
+1 goal
+  
+  Σ : gFunctors
+  heapGS0 : heapGS Σ
+  P : iProp Σ
+  ============================
+  "Hcred" : £ 1
+  "HP" : P
+  --------------------------------------∗
+  |={∅}=> P
+"test_wp_pure_credit_bump_2"
+     : string
+1 goal
+  
+  Σ : gFunctors
+  heapGS0 : heapGS Σ
+  P : iProp Σ
+  ============================
+  "Hcred" : £ 2
+  --------------------------------------∗
+  |={⊤}=> ▷ ▷ P ={∅}=∗ P
 "test_wp_pure_credit_fail"
      : string
 The command has indeed failed with message:

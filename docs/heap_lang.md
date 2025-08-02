@@ -59,7 +59,7 @@ Tactics to take one or more pure program steps:
   defines the pattern that the redex has to match; it defaults to `_` (any
   redex). The `credit:` argument is optional, too; when present, a later credit
   will be generated in a fresh hypothesis named `"H"` or be added to an existing
-  credit name `"H"`.
+  credit named `"H"`.
   Pure steps are defined by the `PureExec` typeclass and include beta reduction,
   projections, constructors, as well as unary and binary arithmetic operators.
 - `wp_pures`: Perform as many pure reduction steps as possible. This
