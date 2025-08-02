@@ -78,7 +78,7 @@ build-rocq.9.0.0-mr:
     MANGLE_NAMES: "1"
 
 # Also ensure Dune works (broken on older Coq versions due to Stdlib split).
-build-coq.9.1.dev-dune:
+build-rocq.9.1.dev-dune:
   <<: *template
   <<: *branches_and_dune_label
   variables:
