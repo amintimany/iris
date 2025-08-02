@@ -13,5 +13,5 @@
           siprop.siProp_or_def
             (siprop.siProp_and_def P
                (siprop.siProp_and_def (siprop.siProp_later_def Q)
-                  (siprop.siProp_pure_def True))) 
+                  (siprop.siProp_pure_def True)))
             (Φ x))
