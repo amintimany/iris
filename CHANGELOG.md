@@ -114,8 +114,8 @@ The opam packages have been renamed from `coq-*` to `rocq-*`.
     Generalized versions are available for SBIs, with the same name. One now
     occasionally has to specify `(PROP:=uPredI M)` instead of `(M:=M)`.
   + The pure embedding `⌜ _ ⌝` is no longer a primitive, but defined through
-    `<si_pure>`. This is an internal change, and should not effect end-users.
-  + The file `iris.upred.algebra` has been removed. It is subsumed by
+    `<si_pure>`. This is an internal change, and should not affect end-users.
+  + The file `iris.base_logic.algebra` has been removed. It is subsumed by
     `iris.bi.algebra`.
 * Rename `agree_validI` → `agree_op_invI` (to be consistent with `agree_op_invN`)
   and generalize to SBI.

@@ -13,7 +13,7 @@ Class BiPositive (PROP : bi) :=
 Global Hint Mode BiPositive ! : typeclass_instances.
 
 (** The class [BiLöb] is required for the [iLöb] tactic. However, for most BI
-logics [BiLaterContractive] should be used, which gives an instance of [BiLöb]
+logics the class [Sbi] should be used, which gives an instance of [BiLöb]
 automatically (see [derived_laws_later]). A direct instance of [BiLöb] is useful
 when considering a BI logic with a discrete OFE, instead of an OFE that takes
 step-indexing of the logic in account.
@@ -25,6 +25,8 @@ Class BiLöb (PROP : bi) :=
 Global Hint Mode BiLöb ! : typeclass_instances.
 Global Arguments löb_weak {_ _} _ _.
 
+(** One should not instantiate this class, and instead provide an instance of
+[Sbi], from which one gets an instance of [BiLaterContractive] for free. *)
 Class BiLaterContractive (PROP : bi) :=
   #[global] later_contractive :: Contractive (bi_later (PROP:=PROP)).
 

@@ -25,7 +25,7 @@ of type [nat → Prop]. The intermediate [siProp] is keps in the field
 [sbi_unfold_car] of the class [SbiUnfold].
 
 Note that this class lives in [Type] instead of [Prop]. To give instances for
-[∀ x : A]/[∃ x : A] we to obtain the witness [sbi_unfold_car] for every [x]. *)
+[∀ x : A]/[∃ x : A] we need to obtain the witness [sbi_unfold_car] for every [x]. *)
 Class SbiUnfold `{!Sbi PROP} (P : PROP) (Pi : nat → Prop) := {
   sbi_unfold_car : siProp;
   sbi_unfold_as_si_pure : P ⊣⊢ <si_pure> sbi_unfold_car;

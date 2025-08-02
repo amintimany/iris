@@ -487,7 +487,7 @@ Section instances.
   Lemma monPred_sbi_prop_ext_mixin `{!Sbi PROP} :
     SbiPropExtMixin monPredI monPred_si_emp_valid.
   Proof.
-    apply sbi_prop_ext_mixin_make=> P Q.
+    apply sbi_prop_ext_mixin=> P Q.
     rewrite /bi_wand_iff
       !(monPred_defs.monPred_si_emp_valid_unseal, monPred_unseal_bi)
       /monPred_defs.monPred_si_emp_valid_def /=.

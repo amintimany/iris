@@ -8,9 +8,14 @@ structure. An SBI has an operation [si_pure : siProp → PROP] that embeds an
 [siProp] (a pure step-indexed proposition, think of [siProp ≈ nat → Prop]) into
 the logic while preserving the step-index, and [si_emp_valid : PROP → siProp]
 expresses that a proposition is valid (under assumption [emp]) at a given
-step-indexed. One should think of [si_pure] as a step-indexed version of
+step-index. One should think of [si_pure] as a step-indexed version of
 [bi_pure] and [si_emp_valid] as a step-indexed version of [bi_emp_valid], in
 both cases with [siProp] instead of [Prop].
+
+Note that typically, all [bi] instances with a non-trivial [▷] operator should
+have an [Sbi] instance. However, it is possible to omit [Sbi] and just prove
+[BiLöb] directly if one does not need the additional results provided by [Sbi].
+This may change in the future, and [▷] might be moved to [Sbi].
 
 ** Derived definitions/results
 
@@ -44,15 +49,14 @@ For any SBI we obtain the following results:
 
 For [uPred M ≈ nat → M → Prop], we define (recall [siProp ≈ nat → Prop]):
 
-  si_pure (φ : siProp) : M := λ n r, φ r
+  si_pure (φ : siProp) : uPred M := λ n r, φ n
   si_emp_valid (P : uPred M) : siProp := λ n, P n ε
 
 In an affine BI like [uPred] we could have equivalently defined [si_emp_valid]
 as [λ n, ∀ x, ✓{n} x → P n x]. However, for a linear version of [uPred] (without
-monotonicity condition on [M]), one really needs [ε]. Otherwise 
-
- Otherwise the law
-[si_emp_valid_affinely_2] does not hold, i.e.,
+monotonicity condition on [M]), one really needs [ε]. Otherwise the law
+[si_emp_valid_affinely_2] does not hold, i.e., [si_emp_valid P] does not say
+[P] holds under [<affine>].
 
 ** [Sbi] versus [siProp]
 
@@ -79,7 +83,7 @@ easier.
 
 To prove lemmas such as [prod_includedI], we typically want to drop down to the
 model of [siProp] and lift the corresponding step-indexed lemmas on OFEs/CMRAs.
-This is done using the tactic [bi_unfold], see [iris.bi.sbi_unfold]. Consider
+This is done using the tactic [sbi_unfold], see [iris.bi.sbi_unfold]. Consider
 the example [prod_includedI] discussed above, calling [sbi_unfold] gives:
 
   ∀ n : nat, x ≼{n} y ↔ x.1 ≼{n} y.1 ∧ x.2 ≼{n} y.2
@@ -123,8 +127,9 @@ Record SbiMixin (PROP : bi) `(!SiPure PROP, SiEmpValid PROP) := {
   not equivalent to [P]. This is easy to see in the prototypical model ([uPred]
   above) as the conversion erases the resources. (In other words, plainly
   is not the identity.) The best we get is that if [<si_pure> <si_emp_valid> P]
-  (i.e., [P] holds under then empty resource), then [P] holds persistently (this
-  is exactly the elimination rule for plainly). *)
+  (i.e., [P] holds under then empty resource), then [P] holds persistently.
+  Note that this is [■ P ⊢ <pers> P] (the usual elimination rule for plainly)
+  but that notation is defined as a derived notion on top of this interface. *)
   sbi_mixin_si_pure_si_emp_valid (P : PROP) :
     <si_pure> <si_emp_valid> P ⊢ <pers> P;
 
@@ -152,23 +157,25 @@ Record SbiMixin (PROP : bi) `(!SiPure PROP, SiEmpValid PROP) := {
     <si_emp_valid> P ⊢@{siPropI} <si_emp_valid> <affine> P;
 }.
 
-(** Propositional extensionality is part of a separate mixin [SbiPropExtMixin]
-for technical reasons.
+(** There is one more law we would like to include in [Sbi], and that is:
 
-There are (at least) two reasonable ways to state propositional extensionality:
+  ∀ P Q : PROP, <si_emp_valid> (P ∗-∗ Q) ⊢@{siPropI} P ≡ Q
+
+However, this law cannot be part of the mixin above since it uses [≡] which is
+defined in terms of [Sbi]. So instead we state the law using lower-level
+primitives such as [siProp_internal_eq]. However, we want to avoid users having
+to see this low-level form, so we make this law a separate mixin that users are
+not expected to construct directly, but instead using the [sbi_prop_ext_mixin]
+smart constructor (see [iris.bi.internal_eq]). This is separate from [SbiMixin]
+since it is easier to have a smart constructor for a single law than for all
+laws.
+
+Similarly, when using the [Sbi] class, end-users should not use the field of the
+mixin, but rather one of the following lemmas:
 
   prop_ext_2 : ■ (P ∗-∗ Q) ⊢@{PROP} P ≡ Q
   prop_ext_si_emp_valid_2 : <si_emp_valid> (P ∗-∗ Q) ⊢@{siPropI} P ≡ Q
-
-None of these laws can be used in the definition of the [Sbi] class (below). The
-definition of plainly [■] and internal equality [≡] depend on [Sbi], so these
-laws would cause a cyclic dependency. We therefore use the private notion
-[siProp_internal_eq] in the definition of [SbiPropExtMixin] and derive the
-above laws as lemmas.
-
-We also provide a smart constructor [sbi_prop_ext_mixin_make] in
-[iris.bi.internal_eq]. When defining your own SBI instances, you should use the
-smart constructor. *)
+*)
 Record SbiPropExtMixin (PROP : bi) `(!SiEmpValid PROP) := {
   sbi_mixin_prop_ext_si_emp_valid_2 (P Q : PROP) :
     <si_emp_valid> (P ∗-∗ Q) ⊢@{siPropI} siProp_internal_eq P Q;
@@ -186,8 +193,15 @@ Global Arguments sbi_si_emp_valid : simpl never.
 
 (** [SbiEmpValidExist] generalizes that plainly [■] commutes with existentials
 and disjunction (in both directions), see [plainly_exist] and [plainly_or]. This
-law does not hold for every SBI, take [monPred I PROP], where it only holds if
-[I] has a bottom element. See [monPred_sbi_emp_valid_exist]. *)
+law does not hold for every SBI.
+
+For instance, for [monPred I PROP] it only
+holds if [I] has a bottom element: Assume that [I] uses equality as its order,
+and [PROP:=siProp], then [<si_emp_valid> P] means that [P] holds for any [i].
+So on the LHS we can have a different [x] for each [i], while on the RHS we need
+one [i] for any [x]. However, if [I] has a bottom element, we can obtain the
+witness [x] for the bottom element on the LHS, and use monotonicy to conclude it
+holds for any [i] on the RHS. See also [monPred_sbi_emp_valid_exist]. *)
 Class SbiEmpValidExist PROP `{!Sbi PROP} :=
   si_emp_valid_exist_1 : ∀ {A} (Φ : A → PROP),
     <si_emp_valid> (∃ x, Φ x) ⊢@{siPropI} ∃ x, <si_emp_valid> Φ x.
@@ -199,7 +213,7 @@ Global Hint Mode SbiEmpValidExist ! - : typeclass_instances.
 closed under implication and wand (subject to other conditions), see
 [impl_persistent] and [wand_persistent]. This property does not hold for every
 BI, take [monPred I PROP], where it only holds if [I] has a bottom element. See
-[monPred_sbi_emp_valid_exist]. *)
+[monPred_bi_persistently_impl_si_pure]. *)
 Class BiPersistentlyImplSiPure PROP `{!Sbi PROP} :=
   persistently_impl_si_pure Pi (Q : PROP) :
     (<si_pure> Pi → <pers> Q) ⊢ <pers> (<si_pure> Pi → Q).
@@ -386,15 +400,6 @@ Section sbi_derived.
   Lemma affinely_si_pure_si_emp_valid P :
     <affine> <si_pure> <si_emp_valid> P ⊢ P.
   Proof. rewrite si_pure_si_emp_valid. apply bi.intuitionistically_elim. Qed.
-
-  (** Version of primitive [si_emp_valid_si_pure] with [<affine>] added. *)
-  Lemma si_emp_valid_si_affinely_embed Pi :
-    <si_emp_valid> <affine> <si_pure>@{PROP} Pi ⊣⊢@{siPropI} Pi.
-  Proof.
-    apply (anti_symm _).
-    - by rewrite bi.affinely_elim si_emp_valid_si_pure.
-    - by rewrite -si_emp_valid_affinely_2 si_emp_valid_si_pure. 
-  Qed.
 
   (** Commuting rules of [<si_emp_valid>] *)
   Lemma si_emp_valid_affinely P :

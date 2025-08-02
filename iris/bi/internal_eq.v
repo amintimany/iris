@@ -18,7 +18,7 @@ Notation "(≡@{ A } )" := (internal_eq (A:=A)) (only parsing) : bi_scope.
 (** A smart constructor for [SbiPropExtMixin] that uses the public notion [≡]
 instead of the private notion [siProp_internal_eq]. See the documentation about
 [SbiPropExtMixin] in [iris.bi.sbi] for more details. *)
-Lemma sbi_prop_ext_mixin_make {PROP : bi} `{!SiEmpValid PROP} :
+Lemma sbi_prop_ext_mixin {PROP : bi} `{!SiEmpValid PROP} :
   (∀ P Q : PROP, <si_emp_valid> (P ∗-∗ Q) ⊢@{siPropI} P ≡ Q) →
   SbiPropExtMixin PROP _.
 Proof. done. Qed.

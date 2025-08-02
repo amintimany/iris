@@ -143,7 +143,7 @@ Proof.
     apply bi.True_intro.
 Qed.
 Lemma uPred_sbi_prop_ext_mixin M : SbiPropExtMixin (uPredI M) uPred_si_emp_valid.
-Proof. apply sbi_prop_ext_mixin_make. apply prop_ext_2. Qed.
+Proof. apply sbi_prop_ext_mixin. apply prop_ext_2. Qed.
 Global Instance uPred_sbi M : Sbi (uPredI M) :=
   {| sbi_sbi_mixin := uPred_sbi_mixin M;
      sbi_sbi_prop_ext_mixin := uPred_sbi_prop_ext_mixin M |}.
