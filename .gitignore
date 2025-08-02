@@ -16,6 +16,7 @@
 *.crashcoqide
 .env
 builddep/
+_CoqProject
 _CoqProject.*
 Makefile.coq
 Makefile.coq.conf
@@ -25,3 +26,4 @@ Makefile.package.*
 _opam
 _build
 *.install
+config/local-flags
