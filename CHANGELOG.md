@@ -25,6 +25,8 @@ lemma.
 * Generalize `into_pure_eq` from `Discrete x` to
   `TCOr (Discrete x) (Discrete y)`. This means that given `H : x ≡ y`, performing
   the tactic `iDestruct "H" as %H` succeeds if either `x` or `y` is discrete.
+* Add `FromAnd` and `FromSep` instances for `⌜φ ↔ ψ⌝` to enable `iSplit` and
+  friends on `⌜φ ↔ ψ⌝`. (by Benjamin Peters)
 
 **Changes in `base_logic`:**
 

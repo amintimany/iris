@@ -586,6 +586,9 @@ Qed.
 
 Global Instance from_and_pure φ ψ : @FromAnd PROP ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
 Proof. by rewrite /FromAnd pure_and. Qed.
+(* additional instance for ↔ because it is typeclasses opaque *)
+Global Instance from_and_pure_iff φ ψ : @FromAnd PROP ⌜φ ↔ ψ⌝ ⌜φ → ψ⌝ ⌜ψ → φ⌝.
+Proof. rewrite /iff. apply _. Qed.
 
 Global Instance from_and_persistently P Q1 Q2 :
   FromAnd P Q1 Q2 →
@@ -646,6 +649,9 @@ Proof. intros. by rewrite /FromSep sep_and. Qed.
 
 Global Instance from_sep_pure φ ψ : @FromSep PROP ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
 Proof. by rewrite /FromSep pure_and sep_and. Qed.
+(* additional instance for ↔ because it is typeclasses opaque *)
+Global Instance from_sep_pure_iff φ ψ : @FromSep PROP ⌜φ ↔ ψ⌝ ⌜φ → ψ⌝ ⌜ψ → φ⌝.
+Proof. rewrite /iff. apply _. Qed.
 
 Global Instance from_sep_affinely P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (<affine> P) (<affine> Q1) (<affine> Q2).
