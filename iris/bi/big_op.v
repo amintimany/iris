@@ -408,10 +408,15 @@ Section sep_list.
   Proof. by rewrite (big_opL_commute _). Qed.
 
   Lemma big_sepL_zip_seq (Φ : nat * A → PROP) n len l :
-    len = length l →
-    ([∗ list] ky ∈ zip (seq n len) l, Φ ky)
-      ⊣⊢ ([∗ list] k ↦ y ∈ l, Φ (n + k, y)).
-  Proof. intros ->. rewrite big_opL_zip_seq //. Qed.
+    length l ≤ len →
+    ([∗ list] ky ∈ zip (seq n len) l, Φ ky) ⊣⊢
+    ([∗ list] k ↦ y ∈ l, Φ (n + k, y)).
+  Proof. apply big_opL_zip_seq. Qed.
+  Lemma big_sepL_zip_seqZ (Φ : Z * A → PROP) n len l :
+    length l ≤ len →
+    ([∗ list] ky ∈ zip (seqZ n len) l, Φ ky) ⊣⊢
+    ([∗ list] k ↦ y ∈ l, Φ ((n + k)%Z, y)).
+  Proof. apply big_opL_zip_seqZ. Qed.
 End sep_list.
 
 (* Some lemmas depend on the generalized versions of the above ones. *)
@@ -1201,10 +1206,15 @@ Section and_list.
   Proof. apply (big_opL_commute _). Qed.
 
   Lemma big_andL_zip_seq (Φ : nat * A → PROP) n len l :
-    len = length l →
+    length l ≤ len →
     ([∧ list] ky ∈ zip (seq n len) l, Φ ky)
       ⊣⊢ ([∧ list] k ↦ y ∈ l, Φ (n + k, y)).
-  Proof. intros ->. rewrite big_opL_zip_seq //. Qed.
+  Proof. apply big_opL_zip_seq. Qed.
+  Lemma big_andL_zip_seqZ (Φ : Z * A → PROP) n len l :
+    length l ≤ len →
+    ([∧ list] ky ∈ zip (seqZ n len) l, Φ ky)
+      ⊣⊢ ([∧ list] k ↦ y ∈ l, Φ ((n + k)%Z, y)).
+  Proof. apply big_opL_zip_seqZ. Qed.
 End and_list.
 
 Section or_list.
@@ -1354,10 +1364,15 @@ Section or_list.
   Proof. apply (big_opL_commute1 _). Qed.
 
   Lemma big_orL_zip_seq (Φ : nat * A → PROP) n len l :
-    len = length l →
-    ([∨ list] ky ∈ zip (seq n len) l, Φ ky)
-      ⊣⊢ ([∨ list] k ↦ y ∈ l, Φ (n + k, y)).
-  Proof. intros ->. rewrite big_opL_zip_seq //. Qed.
+    length l ≤ len →
+    ([∨ list] ky ∈ zip (seq n len) l, Φ ky) ⊣⊢
+    ([∨ list] k ↦ y ∈ l, Φ (n + k, y)).
+  Proof. apply big_opL_zip_seq. Qed.
+  Lemma big_orL_zip_seqZ (Φ : Z * A → PROP) n len l :
+    length l ≤ len →
+    ([∨ list] ky ∈ zip (seqZ n len) l, Φ ky) ⊣⊢
+    ([∨ list] k ↦ y ∈ l, Φ ((n + k)%Z, y)).
+  Proof. apply big_opL_zip_seqZ. Qed.
 End or_list.
 
 (** ** Big ops over finite maps *)
@@ -1795,6 +1810,20 @@ Proof.
     set_solver.
 Qed.
 
+Lemma big_sepM_kmap `{Countable K1, Countable K2} {A}
+    (h : K1 → K2) `{!Inj (=) (=) h} (Φ : K2 → A → PROP) (m : gmap K1 A) :
+  ([∗ map] k2 ↦ y ∈ kmap h m, Φ k2 y) ⊣⊢ ([∗ map] k1 ↦ y ∈ m, Φ (h k1) y).
+Proof. by apply big_opM_kmap. Qed.
+
+Lemma big_sepM_map_seq {A} (Φ : nat → A → PROP) (start : nat) (l : list A) :
+  ([∗ map] k ↦ x ∈ map_seq start l, Φ k x) ⊣⊢
+  ([∗ list] i ↦ x ∈ l, Φ (start + i) x).
+Proof. apply big_opM_map_seq. Qed.
+Lemma big_sepM_map_seqZ {A} (Φ : Z → A → PROP) (start : Z) (l : list A) :
+  ([∗ map] k ↦ x ∈ map_seqZ start l, Φ k x) ⊣⊢
+  ([∗ list] i ↦ x ∈ l, Φ (start + i)%Z x).
+Proof. apply big_opM_map_seqZ. Qed.
+
 Section and_map.
   Context `{Countable K} {A : Type}.
   Implicit Types m : gmap K A.
@@ -1997,6 +2026,20 @@ Section and_map.
     ▷^n ([∧ map] k↦x ∈ m, Φ k x) ⊣⊢ ([∧ map] k↦x ∈ m, ▷^n Φ k x).
   Proof. apply (big_opM_commute _). Qed.
 End and_map.
+
+Lemma big_andM_kmap `{Countable K1, Countable K2} {A}
+    (h : K1 → K2) `{!Inj (=) (=) h} (Φ : K2 → A → PROP) (m : gmap K1 A) :
+  ([∧ map] k2 ↦ y ∈ kmap h m, Φ k2 y) ⊣⊢ ([∧ map] k1 ↦ y ∈ m, Φ (h k1) y).
+Proof. by apply big_opM_kmap. Qed.
+
+Lemma big_andM_map_seq {A} (Φ : nat → A → PROP) (start : nat) (l : list A) :
+  ([∧ map] k ↦ x ∈ map_seq start l, Φ k x) ⊣⊢
+  ([∧ list] i ↦ x ∈ l, Φ (start + i) x).
+Proof. apply big_opM_map_seq. Qed.
+Lemma big_andM_map_seqZ {A} (Φ : Z → A → PROP) (start : Z) (l : list A) :
+  ([∧ map] k ↦ x ∈ map_seqZ start l, Φ k x) ⊣⊢
+  ([∧ list] i ↦ x ∈ l, Φ (start + i)%Z x).
+Proof. apply big_opM_map_seqZ. Qed.
 
 (** ** Big ops over two maps *)
 Lemma big_sepM2_alt `{Countable K} {A B} (Φ : K → A → B → PROP) m1 m2 :

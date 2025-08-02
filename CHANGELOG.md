@@ -10,6 +10,10 @@ lemma.
 * Generalize assumptions of `discrete` and `discrete_iff` and `discrete_iff_0`
   from `Discrete x` to `TCOr (Discrete x) (Discrete y)`. This might mean an
   additional `_` is needed when using the lemma.
+* Strengthen `big_opL_zip_seq` by weakening the premise from `=` to `≤`.
+  (by Rudy Peterson)
+* Add lemmas `big_opL_zip_seqZ`, `big_opM_kmap`, `big_opM_map_seq` and
+  `big_opM_map_seqZ`. (by Rudy Peterson)
 
 **Changes in `bi`:**
 
@@ -19,6 +23,11 @@ lemma.
   to require `Timeless emp` instead of `BiAffine`.
 * Generalize the assumptions of `discrete_eq_1` from `Discrete x` to
   `TCOr (Discrete x) (Discrete y)`.
+* Strengthen `big_sepL_zip_seq`, `big_andL_zip_seq` and `big_orL_zip_seq` by
+  weakening the premise from `=` to `≤`. (by Rudy Peterson)
+* Add lemmas `big_sepL_zip_seqZ`, `big_andL_zip_seqZ`, `big_orL_zip_seqZ`,
+  `big_sepM_kmap`, `big_sepM_map_seq`, `big_sepM_map_seqZ`, `big_andM_kmap`,
+  `big_andM_map_seq` and `big_andM_map_seqZ`. (by Rudy Peterson)
 
 **Changes in `proofmode`:**
 
