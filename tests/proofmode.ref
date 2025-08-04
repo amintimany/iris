@@ -423,6 +423,16 @@ Tactic failure: iFrame: cannot frame (Φ 0 1).
   ============================
   --------------------------------------∗
   ▷ ∃ _ : nat, True
+"test_iFrame_useless"
+     : string
+The command has indeed failed with message:
+Tactic failure: iFrame: cannot frame Q.
+The command has indeed failed with message:
+Tactic failure: iFrame: cannot frame Q.
+"test_iDestruct_frame_useless"
+     : string
+The command has indeed failed with message:
+Tactic failure: iFrame: cannot frame Q.
 "test_iCombine_nested_no_gives"
      : string
 The command has indeed failed with message:

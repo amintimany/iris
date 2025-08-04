@@ -36,7 +36,12 @@ lemma.
   the tactic `iDestruct "H" as %H` succeeds if either `x` or `y` is discrete.
 * Add `FromAnd` and `FromSep` instances for `⌜φ ↔ ψ⌝` to enable `iSplit` and
   friends on `⌜φ ↔ ψ⌝`. (by Benjamin Peters)
-
+* Make helping tactics for framing (`iFrameFinish`, `iFramePure`, `iFrameHyp`,
+  `iFrameAnyPure`, `iFrameAnyIntuitionistic`, `iFrameAnySpatial`) internal.
+  Only the top-level `iFrame` tactic should be used.
+* Let `iFrame` fail if the goal turns into `True`/`emp` but more given
+  hypotheses remain.
+  
 **Changes in `base_logic`:**
 
 * Change `cinv` construction to add lemma `cinv_acc_1` to access the invariant
