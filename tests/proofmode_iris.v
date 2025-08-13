@@ -1,5 +1,5 @@
 From iris.algebra Require Import frac.
-From iris.proofmode Require Import tactics monpred.
+From iris.proofmode Require Import proofmode monpred.
 From iris.base_logic Require Import base_logic.
 From iris.base_logic.lib Require Import invariants cancelable_invariants na_invariants ghost_var.
 From iris.program_logic Require Import total_weakestpre.

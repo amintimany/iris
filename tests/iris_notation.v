@@ -1,5 +1,5 @@
 From iris.algebra Require Import frac.
-From iris.proofmode Require Import tactics monpred.
+From iris.proofmode Require Import proofmode monpred.
 From iris.base_logic Require Import base_logic lib.fancy_updates.
 
 Section base_logic_tests.
