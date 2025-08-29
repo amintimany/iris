@@ -7,9 +7,16 @@ bug-reports: "https://gitlab.mpi-sws.org/iris/iris/issues"
 dev-repo: "git+https://gitlab.mpi-sws.org/iris/iris.git"
 version: "dev"
 
-synopsis: "Compatibility package for rocq-iris-heap-lang"
+synopsis: "Unfinished Iris libraries"
+description: """
+This package contains libraries that have been proposed for inclusion in Iris, but more
+work is needed before they are ready for this.
+"""
 
 depends: [
-  "coq-iris" {= version}
+  "rocq-iris" {= version}
   "rocq-iris-heap-lang" {= version}
 ]
+
+build: ["./make-package" "iris_unstable" "-j%{jobs}%"]
+install: ["./make-package" "iris_unstable" "install"]

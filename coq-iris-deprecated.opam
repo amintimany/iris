@@ -7,15 +7,9 @@ bug-reports: "https://gitlab.mpi-sws.org/iris/iris/issues"
 dev-repo: "git+https://gitlab.mpi-sws.org/iris/iris.git"
 version: "dev"
 
-synopsis: "Deprecated Iris libraries"
-description: """
-This package contains libraries that have been deprecated from Iris, and are planned to be
-entirely removed at some point.
-"""
+synopsis: "Compatibility package for rocq-iris-deprecated"
 
 depends: [
   "coq-iris" {= version}
+  "rocq-iris-deprecated" {= version}
 ]
-
-build: ["./make-package" "iris_deprecated" "-j%{jobs}%"]
-install: ["./make-package" "iris_deprecated" "install"]
