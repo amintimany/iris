@@ -226,6 +226,10 @@ Modalities
     modality).
   + `iAlways` : a deprecated alias of `iModIntro` (intended to introduce the `□`
     modality).
+- `iNext n credit:"H"` : decrease the later credit `H` by `n` and strip `n`
+  laters from all the hypotheses. This tactic requires the goal to be a fancy
+  update modality.
+  + `iNext credit:"H"` : equivalent to `iNext 1 credit:"H"`.
 - `iMod pm_trm as (x1 ... xn) "ipat"` : eliminate a modality `pm_trm` that is
   an instance of the `ElimModal` type class, and destruct the resulting
   hypothesis using `ipat`. Instances include: later, except 0,
