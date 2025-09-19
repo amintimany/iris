@@ -257,6 +257,36 @@ Section gen_heap.
     pose proof (coPpick_elem_of (↑ N) (nclose_non_empty _)); set_solver.
   Qed.
 
+  Lemma meta_meta_token_valid `{Countable A} l (x : A) N E :
+    meta l N x -∗ meta_token l E -∗ ⌜↑N ⊈ E⌝.
+  Proof.
+    rewrite meta_token_unseal meta_unseal /meta_token_def /meta_def.
+    iIntros "(%γm & Hγm & Hm1) (%γm' & Hγm' & Hm2) %sub".
+    iCombine "Hγm Hγm'" gives "[_ <-]".
+    iCombine "Hm1 Hm2" gives "%valid".
+    rewrite reservation_map_valid_eq /= left_id_L right_id_L in valid.
+    case: valid=> _ /(_ (coPpick (↑ N))).
+    rewrite lookup_singleton decide_True //; case=> // N_E.
+    pose proof (coPpick_elem_of (↑ N) (nclose_infinite _)); set_solver.
+  Qed.
+
+  Global Instance combine_sep_gives_meta_meta_token
+    `{Countable A} l (x : A) N E :
+      CombineSepGives (meta l N x) (meta_token l E) (⌜↑N ⊈ E⌝).
+  Proof.
+    rewrite /CombineSepGives. iIntros "[#meta token]".
+    iPoseProof (meta_meta_token_valid with "meta token") as "%".
+    by eauto.
+  Qed.
+
+  Lemma meta_meta_token_valid_alt `{Countable A} l (x : A) N E :
+    ↑N ⊆ E → meta l N x -∗ meta_token l E -∗ False.
+  Proof.
+    iIntros (sub) "#meta token".
+    iCombine "meta token" gives "%".
+    tauto.
+  Qed.
+
   (** Update lemmas *)
   Lemma gen_heap_alloc σ l v :
     σ !! l = None →
