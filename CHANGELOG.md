@@ -45,7 +45,7 @@ The opam packages have been renamed from `coq-*` to `rocq-*`.
   hypotheses remain.
 * Add tactic `iNext credit:"H"` which consumes a later credit to strip a later
   from the hypotheses. (by @ffengyu)
-* Remove deprecated `proofmode/tactics.v`. (by Sanjit Bhat)
+* Remove deprecated `proofmode.tactics` module. (by Sanjit Bhat)
 
 **Changes in `base_logic`:**
 
