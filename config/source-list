@@ -120,7 +120,6 @@ iris/proofmode/reduction.v
 iris/proofmode/intro_patterns.v
 iris/proofmode/spec_patterns.v
 iris/proofmode/sel_patterns.v
-iris/proofmode/tactics.v
 iris/proofmode/notation.v
 iris/proofmode/classes.v
 iris/proofmode/classes_make.v
