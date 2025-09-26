@@ -3,7 +3,7 @@ to use than just directly using the RA, hence it is deprecated and will be
 removed entirely after some grace period. *)
 
 From iris.algebra Require Export sts.
-From iris.proofmode Require Import tactics.
+From iris.proofmode Require Import proofmode.
 From iris.base_logic.lib Require Export invariants.
 From iris.prelude Require Import options.
 Import uPred.

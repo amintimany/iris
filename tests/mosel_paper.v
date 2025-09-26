@@ -6,7 +6,7 @@ Robbert Krebbers, Jacques-Henri Jourdan, Ralf Jung, Joseph Tassarotti,
 Jan-Oliver Kaiser, Amin Timany, Arthur Charguéraud, Derek Dreyer
 ICFP 2018 *)
 From iris.bi Require Import monpred.
-From iris.proofmode Require Import tactics monpred.
+From iris.proofmode Require Import proofmode monpred.
 From iris.prelude Require Import options.
 
 Unset Mangle Names.

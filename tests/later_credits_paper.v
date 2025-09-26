@@ -1,4 +1,4 @@
-From iris.proofmode Require Import tactics.
+From iris.proofmode Require Import proofmode.
 From iris.base_logic Require Import invariants ghost_var.
 From iris.heap_lang Require Import proofmode notation.
 From iris.prelude Require Import options.

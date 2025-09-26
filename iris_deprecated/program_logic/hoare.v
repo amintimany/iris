@@ -4,7 +4,7 @@ verify that the proof rules we give on paper hold true.  Use Texan triples or
 This file will be removed when we find a good way to have a [Definition] with
 telescopes for Texan triples. *)
 
-From iris.proofmode Require Import tactics.
+From iris.proofmode Require Import proofmode.
 From iris.deprecated.base_logic Require Export viewshifts.
 From iris.program_logic Require Export weakestpre.
 From iris.prelude Require Import options.

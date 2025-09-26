@@ -45,6 +45,7 @@ The opam packages have been renamed from `coq-*` to `rocq-*`.
   hypotheses remain.
 * Add tactic `iNext credit:"H"` which consumes a later credit to strip a later
   from the hypotheses. (by @ffengyu)
+* Remove deprecated `proofmode.tactics` module. (by Sanjit Bhat)
 
 **Changes in `base_logic`:**
 
@@ -56,6 +57,16 @@ The opam packages have been renamed from `coq-*` to `rocq-*`.
 
 * Improve `wp_pure credit:"H"` so that if `H` is an existing credit, it gets
   incremented by 1. (by @ffengyu)
+
+The following `sed` script helps adjust your code to the renaming (on macOS,
+replace `sed` by `gsed`, installed via e.g. `brew install gnu-sed`).
+Note that the script is not idempotent, do not run it twice.
+```
+sed -i -E -f- $(find theories -name "*.v") <<EOF
+# iris.proofmode.tactics → iris.proofmode.proofmode
+s/(From +iris\.proofmode +Require +(Import|Export).*)\btactics\b/\1proofmode/
+EOF
+```
 
 ## Iris 4.4.0 (2025-06-04)
 

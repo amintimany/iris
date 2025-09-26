@@ -1,5 +1,5 @@
 From iris.algebra Require Import excl agree csum.
-From iris.proofmode Require Import tactics.
+From iris.proofmode Require Import proofmode.
 From iris.program_logic Require Export weakestpre.
 From iris.deprecated.program_logic Require Import hoare.
 From iris.heap_lang Require Export lang.

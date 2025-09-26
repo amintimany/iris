@@ -1,4 +1,4 @@
-From iris.proofmode Require Import tactics monpred.
+From iris.proofmode Require Import proofmode monpred.
 From iris.base_logic Require Import base_logic.
 From iris.base_logic.lib Require Import invariants cancelable_invariants na_invariants.
 From iris.prelude Require Import options.

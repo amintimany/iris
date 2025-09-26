@@ -1,6 +1,6 @@
 From stdpp Require Import gmap.
 From iris.bi Require Import interface.
-From iris.proofmode Require Import tactics.
+From iris.proofmode Require Import proofmode.
 From iris.prelude Require Import options.
 
 (** This file constructs a simple non step-indexed affine separation logic as
