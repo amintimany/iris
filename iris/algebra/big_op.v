@@ -654,10 +654,10 @@ Section gset.
     induction X as [|x X ? IH] using set_ind_L.
     { by rewrite filter_empty_L !big_opS_empty. }
     destruct (decide (φ x)).
-    - rewrite filter_union_L filter_singleton_L //.
+    - rewrite filter_union_L filter_singleton_True_L //.
       rewrite !big_opS_insert //; last set_solver.
       by rewrite decide_True // IH.
-    - rewrite filter_union_L filter_singleton_not_L // left_id_L.
+    - rewrite filter_union_L filter_singleton_False_L // left_id_L.
       by rewrite !big_opS_insert // decide_False // IH left_id.
   Qed.
 
