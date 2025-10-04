@@ -114,11 +114,12 @@ Section definitions.
   Local Definition meta_token_unseal :
     @meta_token = @meta_token_def := meta_token_aux.(seal_eq).
 
-  (** TODO: The use of [positives_flatten] violates the namespace abstraction
-  (see the proof of [meta_set]. *)
+  (** [reservation_map_data] uses a [positive] instead of a [namespace] as key.
+  For [meta_set] to hold, we can pick any positive in [↑ N], which we obtain
+  using [coPpick]. *)
   Local Definition meta_def `{Countable A} (l : L) (N : namespace) (x : A) : iProp Σ :=
     ∃ γm, l ↪[gen_meta_name hG]□ γm ∗
-          own γm (reservation_map_data (positives_flatten N) (to_agree (encode x))).
+          own γm (reservation_map_data (coPpick (↑ N)) (to_agree (encode x))).
   Local Definition meta_aux : seal (@meta_def). Proof. by eexists. Qed.
   Definition meta := meta_aux.(unseal).
   Local Definition meta_unseal : @meta = @meta_def := meta_aux.(seal_eq).
@@ -253,10 +254,7 @@ Section gen_heap.
     iDestruct 1 as (γm) "[Hγm Hm]". iExists γm. iFrame "Hγm".
     iApply (own_update with "Hm").
     apply reservation_map_alloc; last done.
-    cut (positives_flatten N ∈@{coPset} ↑N); first by set_solver.
-    (* TODO: Avoid unsealing here. *)
-    rewrite namespaces.nclose_unseal. apply elem_coPset_suffixes.
-    exists 1%positive. by rewrite left_id_L.
+    pose proof (coPpick_elem_of (↑ N) (nclose_non_empty _)); set_solver.
   Qed.
 
   (** Update lemmas *)
