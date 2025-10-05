@@ -5,6 +5,8 @@ lemma.
 
 ## Iris master
 
+This version drops support for Coq 8.19.
+
 The opam packages have been renamed from `coq-*` to `rocq-*`.
 
 **Changes in `algebra`:**
