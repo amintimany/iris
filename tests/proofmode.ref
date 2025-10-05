@@ -1058,11 +1058,11 @@ The term "true" has type "bool" while it is expected to have type "nat".
 "iStartProof_fail"
      : string
 The command has indeed failed with message:
-Tactic failure: iStartProof: not a BI assertion: (0 = 0).
+Tactic failure: iStartProof: goal (0 = 0) not a BI assertion.
 "iPoseProof_fail"
      : string
 The command has indeed failed with message:
-Tactic failure: iPoseProof: (0 = 0) not a BI assertion.
+Tactic failure: iPoseProof: (0 = 0) not a PROP assertion.
 The command has indeed failed with message:
 Tactic failure: iRename: "H" not fresh.
 "iPoseProof_not_found_fail"
@@ -1220,6 +1220,12 @@ Tactic failure: iStartProof: goal is a `let`, use `simpl`,
 The command has indeed failed with message:
 Tactic failure: iStartProof: goal is a `let`, use `simpl`,
 `intros x`, `iIntros (x)`, or `iIntros "%x".
+"test_iStartProof_iPoseProof_wrong_BI"
+     : string
+The command has indeed failed with message:
+Tactic failure: iStartProof: goal ((⊢ P1) → ⊢ P2) not a PROP1 assertion.
+The command has indeed failed with message:
+Tactic failure: iPoseProof: (⊢ P1) not a PROP2 assertion.
 "test_pure_name"
      : string
 1 goal

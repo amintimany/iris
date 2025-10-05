@@ -2203,6 +2203,17 @@ Proof.
   Fail iIntros "Q".
 Abort.
 
+Check "test_iStartProof_iPoseProof_wrong_BI".
+Lemma test_iStartProof_iPoseProof_wrong_BI
+    {PROP1 PROP2 : bi} (P1 : PROP1) (P2 : PROP2) :
+  (⊢@{PROP1} P1) →
+  ⊢@{PROP2} P2.
+Proof.
+  Fail iStartProof PROP1.
+  iStartProof PROP2.
+  iIntros (H).
+  Fail iDestruct H as "H".
+Abort.
 End error_tests.
 
 Section pure_name_tests.
