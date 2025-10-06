@@ -28,7 +28,7 @@ tags: [
 
 depends: [
   "coq" { (>= "8.19" & < "9.2~") | (= "dev") }
-  "rocq-stdpp" { (= "dev.2025-10-01.3.3e3a8aa0") | (= "dev") }
+  "rocq-stdpp" { (= "dev.2025-10-06.3.64e2c17a") | (= "dev") }
 ]
 conflicts: [
   "coq-iris" {< "dev.2025-08-29.0"}

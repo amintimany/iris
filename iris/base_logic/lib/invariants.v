@@ -45,7 +45,8 @@ Section inv.
     exists (coPpick (↑ N ∖ gset_to_coPset E)).
     rewrite -elem_of_gset_to_coPset (comm and) -elem_of_difference.
     apply coPpick_elem_of=> Hfin.
-    eapply nclose_infinite, (difference_finite_inv _ _), Hfin.
+    eapply nclose_not_finite, (difference_finite_inv _ _).
+    2:{ erewrite Hfin. apply empty_finite. }
     apply gset_to_coPset_finite.
   Qed.
 
