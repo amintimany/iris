@@ -16,6 +16,7 @@ The opam packages have been renamed from `coq-*` to `rocq-*`.
   (by Rudy Peterson)
 * Add lemmas `big_opL_zip_seqZ`, `big_opM_kmap`, `big_opM_map_seq` and
   `big_opM_map_seqZ`. (by Rudy Peterson)
+* Remove spurious parameter from `view_update_auth`. (by Jared Pincus)
 
 **Changes in `bi`:**
 

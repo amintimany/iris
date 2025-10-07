@@ -534,7 +534,7 @@ Section cmra.
     apply view_update=> n bf. rewrite left_id. apply Hup.
   Qed.
 
-  Lemma view_update_auth a a' b' :
+  Lemma view_update_auth a a' :
     (∀ n bf, rel n a bf → rel n a' bf) →
     ●V a ~~> ●V a'.
   Proof.
