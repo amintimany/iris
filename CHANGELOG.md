@@ -53,6 +53,8 @@ The opam packages have been renamed from `coq-*` to `rocq-*`.
 * Change `cinv` construction to add lemma `cinv_acc_1` to access the invariant
   non-atomically given full ownership of the token. (by Benjamin Peters)
 * Add `Contractive` instance for `na_inv`.
+* Add lemmas `meta_meta_token_valid` and `meta_meta_token_valid'` and
+  integrate them with `iCombine ... gives ...`. (by Arthur Azevedo de Amorim)
 
 **Changes in `heap_lang`:**
 

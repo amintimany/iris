@@ -257,6 +257,41 @@ Section gen_heap.
     pose proof (coPpick_elem_of (↑ N) (nclose_non_empty _)); set_solver.
   Qed.
 
+  Lemma meta_meta_token_valid `{Countable A} l (x : A) N E :
+    meta l N x -∗ meta_token l E -∗ ⌜↑N ⊈ E⌝.
+  Proof.
+    rewrite meta_token_unseal meta_unseal /meta_token_def /meta_def.
+    iIntros "(%γm & #Hγm & Hm1) (%γm' & #Hγm' & Hm2) %Hsub".
+    iCombine "Hγm Hγm'" gives %[_ <-].
+    iCombine "Hm1 Hm2" gives %Hvalid. iPureIntro.
+    rewrite reservation_map_valid_eq /= left_id_L right_id_L in Hvalid.
+    destruct Hvalid as [_ Hvalid]. specialize (Hvalid (coPpick (↑ N))).
+    rewrite lookup_singleton_eq in Hvalid.
+    pose proof (coPpick_elem_of (↑ N) (nclose_non_empty _)); set_solver.
+  Qed.
+  Lemma meta_meta_token_valid' `{Countable A} l (x : A) N E :
+    ↑N ⊆ E → meta l N x -∗ meta_token l E -∗ False.
+  Proof.
+    iIntros (?) "#Hmeta Htoken".
+    by iDestruct (meta_meta_token_valid with "Hmeta Htoken") as %?.
+  Qed.
+
+  Global Instance combine_sep_gives_meta_meta_token_1
+      `{Countable A} l (x : A) N E :
+    CombineSepGives (meta l N x) (meta_token l E) ⌜↑N ⊈ E⌝.
+  Proof.
+    rewrite /CombineSepGives. iIntros "[#Hmeta Htoken]".
+    iDestruct (meta_meta_token_valid with "Hmeta Htoken") as %?. by eauto.
+  Qed.
+
+  Global Instance combine_sep_gives_meta_meta_token_2
+      `{Countable A} l (x : A) N E :
+    CombineSepGives (meta_token l E) (meta l N x) ⌜↑N ⊈ E⌝.
+  Proof.
+    rewrite /CombineSepGives. iIntros "[Htoken #Hmeta]".
+    iCombine "Hmeta Htoken" gives %?; eauto.
+  Qed.
+
   (** Update lemmas *)
   Lemma gen_heap_alloc σ l v :
     σ !! l = None →
