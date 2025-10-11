@@ -89,3 +89,7 @@ Proof. apply _. Qed.
 Lemma list_bind_ne_test {A B : ofe} (f : A → list B) :
   NonExpansive f → NonExpansive (mbind f : list A → list B).
 Proof. apply _. Qed.
+
+(** Needs "new" unification for [Monoid] *)
+Definition big_op_test (l : list Qp) : option Qp :=
+  [^op list] x ∈ l, Some x.
