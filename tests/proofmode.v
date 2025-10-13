@@ -1774,6 +1774,35 @@ Proof.
   Fail iIntros (? x).
 Abort.
 
+Check "test_iExistDestruct_generic_error_1".
+Lemma test_iExistDestruct_generic_error_1 P :
+  P -∗ False.
+Proof. Fail iIntros "[%x ?]". Abort.
+
+Check "test_iExistDestruct_generic_error_2".
+Lemma test_iExistDestruct_generic_error_2 P :
+  (P ∗ ∃ x : nat, True) -∗ False.
+Proof. Fail iIntros "[%x ?]". Abort.
+
+Check "test_iExistDestruct_later_error_1".
+Lemma test_iExistDestruct_later_error_1 {A} (Φ : A → PROP) :
+  (▷ ∃ x, Φ x) -∗ False.
+Proof. Fail iIntros "[%x ?]". Abort.
+
+Check "test_iExistDestruct_later_error_2".
+Lemma test_iExistDestruct_later_error_2 {A B} (Φ : A → B → PROP) :
+  (▷ ∃ (x : A) (y : B), Φ x y) -∗ False.
+Proof. Fail iIntros "[%x ?]". (* Should report [A], not [B] *) Abort.
+
+Check "test_iExistDestruct_later_error_3".
+Lemma test_iExistDestruct_later_error_3 {A} (Φ : A → PROP) :
+  (▷ □ ∃ x, Φ x) -∗ False.
+Proof. Fail iIntros "[%x ?]". Abort.
+
+Check "test_iExistDestruct_later_error_4".
+Lemma test_iExistDestruct_later_error_4 {A} (Φ : A → PROP) :
+  (□ ▷ ∃ x, Φ x) -∗ False.
+Proof. Fail iIntros "[%x ?]". Abort.
 End tests.
 
 Section parsing_tests.

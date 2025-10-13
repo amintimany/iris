@@ -839,6 +839,35 @@ Tactic failure: iSplitL: (P ↔ P)%I not a separating conjunction.
      : string
 The command has indeed failed with message:
 x is already used.
+"test_iExistDestruct_generic_error_1"
+     : string
+The command has indeed failed with message:
+Tactic failure: iExistDestruct: cannot destruct P.
+"test_iExistDestruct_generic_error_2"
+     : string
+The command has indeed failed with message:
+Tactic failure: iExistDestruct: cannot destruct (P ∗ ∃ _ : nat, True)%I.
+"test_iExistDestruct_later_error_1"
+     : string
+The command has indeed failed with message:
+Tactic failure: iExistDestruct: cannot destruct (▷ ∃ x : A, Φ x)%I
+because no `Inhabited` instance for A could be found.
+"test_iExistDestruct_later_error_2"
+     : string
+The command has indeed failed with message:
+Tactic failure: iExistDestruct: cannot destruct
+(▷ ∃ (x : A) (y : B), Φ x y)%I because no `Inhabited` instance for A
+could be found.
+"test_iExistDestruct_later_error_3"
+     : string
+The command has indeed failed with message:
+Tactic failure: iExistDestruct: cannot destruct (▷ □ ∃ x : A, Φ x)%I
+because no `Inhabited` instance for A could be found.
+"test_iExistDestruct_later_error_4"
+     : string
+The command has indeed failed with message:
+Tactic failure: iExistDestruct: cannot destruct (□ ▷ ∃ x : A, Φ x)%I
+because no `Inhabited` instance for A could be found.
 "elim_mod_accessor"
      : string
 1 goal
