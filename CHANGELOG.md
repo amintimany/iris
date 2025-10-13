@@ -51,6 +51,8 @@ The opam packages have been renamed from `coq-*` to `rocq-*`.
 * Add tactic `iNext credit:"H"` which consumes a later credit to strip a later
   from the hypotheses. (by @ffengyu)
 * Remove deprecated `proofmode.tactics` module. (by Sanjit Bhat)
+* Provide proper error when performing `iDestruct` on `▷ ∃ : A, ..` without
+  `A` being inhabited.
 
 **Changes in `base_logic`:**
 
