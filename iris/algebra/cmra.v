@@ -705,7 +705,7 @@ Section ucmra.
   Definition cmra_monoid : Monoid (@op A _) := {| monoid_unit := ε |}.
 End ucmra.
 
-(** Use "new" unification, similar to [Hint Extern] for [Op] above *)
+(** Use "new" unification for the [cmra_monoid] instance, similar to [Hint Extern] for [cmra_op] etc. above *)
 Global Hint Extern 0 (Monoid _) => refine cmra_monoid; shelve : typeclass_instances.
 
 Global Hint Immediate cmra_unit_cmra_total : core.
