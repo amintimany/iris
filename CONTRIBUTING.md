@@ -126,7 +126,12 @@ Examples:
   against `myname/mybranch` from the main Iris repository.
 - `IRIS=user:branch ./iris-bot build examples` builds the [examples] against
   the `branch` in `user`'s fork of Iris.
+- `IRIS_REV=myname/mybranch ./iris-bot time all` measures the timing impact
+  of `myname/mybranch` from the main Iris repository on *all* reverse
+  dependencies with timing CI.
 - `IRIS_REV=myname/mybranch ./iris-bot time examples` measures the timing impact
   of `myname/mybranch` from the main Iris repository on the [examples].
+  You can add `--test-rev` in case the examples need to be patched to
+  still build against `myname/mybranch`.
 
 [examples]: https://gitlab.mpi-sws.org/iris/examples
