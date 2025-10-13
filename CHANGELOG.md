@@ -19,6 +19,8 @@ The opam packages have been renamed from `coq-*` to `rocq-*`.
 * Add lemmas `big_opL_zip_seqZ`, `big_opM_kmap`, `big_opM_map_seq` and
   `big_opM_map_seqZ`. (by Rudy Peterson)
 * Remove spurious parameter from `view_update_auth`. (by Jared Pincus)
+* Use Rocq's newer unification algorithm for type classes instance for `Monoid`
+  of camera.
 
 **Changes in `bi`:**
 
