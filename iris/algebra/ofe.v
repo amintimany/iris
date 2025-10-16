@@ -1867,8 +1867,6 @@ Section discrete_fun.
     intros ? n Hn c1 c2 m Hc x. apply lbcompl_ne=> ?? /=. by apply Hc.
   Qed.
 
-  Global Instance discrete_fun_inhabited `{∀ x, Inhabited (B x)} :
-    Inhabited discrete_funO := populate (λ _, inhabitant).
   Global Instance discrete_fun_lookup_discrete `{EqDecision A} f x :
     Discrete f → Discrete (f x).
   Proof.

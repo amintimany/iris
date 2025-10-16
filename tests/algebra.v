@@ -2,6 +2,12 @@ From iris.algebra Require Import auth excl lib.gmap_view.
 From iris.base_logic.lib Require Import invariants.
 From iris.prelude Require Import options.
 
+(* Should follow from [forall_inhabited] in std++, test that the the OFE
+abstractions are actually unfolded by type class search. *)
+Lemma discrete_fun_inhabited{SI : sidx} {A} (B : A → ofe)
+  `{∀ x, Inhabited (B x)} : Inhabited (discrete_funO B).
+Proof. apply _. Qed.
+
 Section test_dist_equiv_mode.
   (* check that the mode for [Dist] does not trigger https://github.com/coq/coq/issues/14441.
   From https://gitlab.mpi-sws.org/iris/iris/-/merge_requests/700#note_69303. *)

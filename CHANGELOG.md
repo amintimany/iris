@@ -21,6 +21,8 @@ The opam packages have been renamed from `coq-*` to `rocq-*`.
 * Remove spurious parameter from `view_update_auth`. (by Jared Pincus)
 * Use Rocq's newer unification algorithm for type classes instance for `Monoid`
   of camera.
+* Remove `discrete_fun_inhabited` since a more general `Inhabited` instance for
+  `discrete_fun` is now obtained from std++. (by Jan-Oliver Kaiser)
 
 **Changes in `bi`:**
 
