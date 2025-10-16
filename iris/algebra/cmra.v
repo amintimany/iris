@@ -702,11 +702,13 @@ Section ucmra.
   Proof. intros ???. by rewrite !left_id. Qed.
 
   (* For big ops *)
-  Definition cmra_monoid : Monoid (@op A _) := {| monoid_unit := ε |}.
+  Lemma cmra_monoid : Monoid (@op A _) ε.
+  Proof. split; apply _. Qed.
 End ucmra.
 
-(** Use "new" unification for the [cmra_monoid] instance, similar to [Hint Extern] for [cmra_op] etc. above *)
-Global Hint Extern 0 (Monoid _) => refine cmra_monoid; shelve : typeclass_instances.
+(** Use "new" unification for the [cmra_monoid] instance, similar to [Hint Extern]
+for [cmra_op] etc. above *)
+Global Hint Extern 0 (Monoid _ _) => refine cmra_monoid; shelve : typeclass_instances.
 
 Global Hint Immediate cmra_unit_cmra_total : core.
 Global Hint Extern 0 (ε ≼ _) => apply: ucmra_unit_least : core.

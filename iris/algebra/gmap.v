@@ -183,8 +183,8 @@ Proof.
       case _ : (m2 !! k)=> [x2|] /=; by inversion 1.
 Qed.
 
-Lemma big_opM_ne_2 {SI : sidx} {M: ofe} {o: M → M → M}
-    `{!Monoid o} `{Countable K} {A : ofe} (f g : K → A → M) m1 m2 n :
+Lemma big_opM_ne_2 {SI : sidx} {M : ofe} {o: M → M → M}
+    `{!Monoid o u} `{Countable K} {A : ofe} (f g : K → A → M) m1 m2 n :
   m1 ≡{n}≡ m2 →
   (∀ k y1 y2,
     m1 !! k = Some y1 → m2 !! k = Some y2 → y1 ≡{n}≡ y2 → f k y1 ≡{n}≡ g k y2) →

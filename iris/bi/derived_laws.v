@@ -1678,12 +1678,12 @@ Proof.
 Qed.
 
 (* For big ops *)
-Global Instance bi_and_monoid : Monoid (@bi_and PROP) :=
-  {| monoid_unit := True%I |}.
-Global Instance bi_or_monoid : Monoid (@bi_or PROP) :=
-  {| monoid_unit := False%I |}.
-Global Instance bi_sep_monoid : Monoid (@bi_sep PROP) :=
-  {| monoid_unit := emp%I |}.
+Global Instance bi_and_monoid : Monoid (@bi_and PROP) True%I.
+Proof. split; apply _. Qed.
+Global Instance bi_or_monoid : Monoid (@bi_or PROP) False%I.
+Proof. split; apply _. Qed.
+Global Instance bi_sep_monoid : Monoid (@bi_sep PROP) emp%I.
+Proof. split; apply _. Qed.
 
 Global Instance bi_persistently_and_homomorphism :
   MonoidHomomorphism bi_and bi_and (≡) (@bi_persistently PROP).

@@ -21,13 +21,13 @@ Since these big operators are like quantifiers, they have the same precedence as
 
 (** * Big ops over lists *)
 Fixpoint big_opL {SI : sidx} {M : ofe}
-    {o : M → M → M} `{!Monoid o} {A} (f : nat → A → M) (xs : list A) : M :=
+    (o : M → M → M) `{!MonoidOps o u} {A} (f : nat → A → M) (xs : list A) : M :=
   match xs with
-  | [] => monoid_unit
-  | x :: xs => o (f 0 x) (big_opL (λ n, f (S n)) xs)
+  | [] => u
+  | x :: xs => o (f 0 x) (big_opL o (λ n, f (S n)) xs)
   end.
-Global Instance: Params (@big_opL) 5 := {}.
-Global Arguments big_opL {SI} {M} o {_ A} _ !_ /.
+Global Instance: Params (@big_opL) 6 := {}.
+Global Arguments big_opL {SI} {M} o {u _ A} _ !_ /.
 Global Typeclasses Opaque big_opL.
 Notation "'[^' o 'list]' k ↦ x ∈ l , P" := (big_opL o (λ k x, P) l)
   (at level 200, o at level 1, l at level 10, k, x at level 1, right associativity,
@@ -37,14 +37,14 @@ Notation "'[^' o 'list]' x ∈ l , P" := (big_opL o (λ _ x, P) l)
    format "[^ o  list]  x  ∈  l ,  P") : stdpp_scope.
 
 Local Definition big_opM_def {SI : sidx} {M : ofe}
-  {o : M → M → M}  `{!Monoid o} `{Countable K} {A} (f : K → A → M)
+  {o : M → M → M} `{!MonoidOps o u} `{Countable K} {A} (f : K → A → M)
   (m : gmap K A) : M := big_opL o (λ _, uncurry f) (map_to_list m).
 Local Definition big_opM_aux : seal (@big_opM_def). Proof. by eexists. Qed.
 Definition big_opM := big_opM_aux.(unseal).
-Global Arguments big_opM {SI} {M} o {_ K _ _ A} _ _.
+Global Arguments big_opM {SI} {M} o {u _ K _ _ A} _ _.
 Local Definition big_opM_unseal :
   @big_opM = @big_opM_def := big_opM_aux.(seal_eq).
-Global Instance: Params (@big_opM) 8 := {}.
+Global Instance: Params (@big_opM) 9 := {}.
 Notation "'[^' o 'map]' k ↦ x ∈ m , P" := (big_opM o (λ k x, P) m)
   (at level 200, o at level 1, m at level 10, k, x at level 1, right associativity,
    format "[^  o  map]  k ↦ x  ∈  m ,  P") : stdpp_scope.
@@ -53,34 +53,34 @@ Notation "'[^' o 'map]' x ∈ m , P" := (big_opM o (λ _ x, P) m)
    format "[^ o  map]  x  ∈  m ,  P") : stdpp_scope.
 
 Local Definition big_opS_def {SI : sidx} {M : ofe}
-  {o : M → M → M} `{!Monoid o} `{Countable A} (f : A → M)
+  {o : M → M → M} `{!MonoidOps o u} `{Countable A} (f : A → M)
   (X : gset A) : M := big_opL o (λ _, f) (elements X).
 Local Definition big_opS_aux : seal (@big_opS_def). Proof. by eexists. Qed.
 Definition big_opS := big_opS_aux.(unseal).
-Global Arguments big_opS {SI} {M} o {_ A _ _} _ _.
+Global Arguments big_opS {SI} {M} o {u _ A _ _} _ _.
 Local Definition big_opS_unseal :
   @big_opS = @big_opS_def := big_opS_aux.(seal_eq).
-Global Instance: Params (@big_opS) 7 := {}.
+Global Instance: Params (@big_opS) 8 := {}.
 Notation "'[^' o 'set]' x ∈ X , P" := (big_opS o (λ x, P) X)
   (at level 200, o at level 1, X at level 10, x at level 1, right associativity,
    format "[^ o  set]  x  ∈  X ,  P") : stdpp_scope.
 
 Local Definition big_opMS_def {SI : sidx} {M : ofe}
-  {o : M → M → M} `{!Monoid o} `{Countable A} (f : A → M)
+  {o : M → M → M} `{!MonoidOps o u} `{Countable A} (f : A → M)
   (X : gmultiset A) : M := big_opL o (λ _, f) (elements X).
 Local Definition big_opMS_aux : seal (@big_opMS_def). Proof. by eexists. Qed.
 Definition big_opMS := big_opMS_aux.(unseal).
-Global Arguments big_opMS {SI} {M} o {_ A _ _} _ _.
+Global Arguments big_opMS {SI} {M} o {u _ A _ _} _ _.
 Local Definition big_opMS_unseal :
   @big_opMS = @big_opMS_def := big_opMS_aux.(seal_eq).
-Global Instance: Params (@big_opMS) 8 := {}.
+Global Instance: Params (@big_opMS) 9 := {}.
 Notation "'[^' o 'mset]' x ∈ X , P" := (big_opMS o (λ x, P) X)
   (at level 200, o at level 1, X at level 10, x at level 1, right associativity,
    format "[^ o  mset]  x  ∈  X ,  P") : stdpp_scope.
 
 (** * Properties about big ops *)
 Section big_op.
-Context {SI : sidx} {M : ofe} {o : M → M → M} `{!Monoid o}.
+Context {SI : sidx} {M : ofe} {o : M → M → M} `{!Monoid o u}.
 Implicit Types xs : list M.
 Infix "`o`" := o (at level 50, left associativity).
 
@@ -90,7 +90,7 @@ Section list.
   Implicit Types l : list A.
   Implicit Types f g : nat → A → M.
 
-  Lemma big_opL_nil f : ([^o list] k↦y ∈ [], f k y) = monoid_unit.
+  Lemma big_opL_nil f : ([^o list] k↦y ∈ [], f k y) = u.
   Proof. done. Qed.
   Lemma big_opL_cons f x l :
     ([^o list] k↦y ∈ x :: l, f k y) = f 0 x `o` [^o list] k↦y ∈ l, f (S k) y.
@@ -108,7 +108,7 @@ Section list.
     ([^o list] k↦y ∈ l ++ [x], f k y) ≡ ([^o list] k↦y ∈ l, f k y) `o` f (length l) x.
   Proof. rewrite big_opL_app big_opL_singleton Nat.add_0_r //. Qed.
 
-  Lemma big_opL_unit l : ([^o list] k↦y ∈ l, monoid_unit) ≡ (monoid_unit : M).
+  Lemma big_opL_unit l : ([^o list] k↦y ∈ l, u) ≡@{M} u.
   Proof. induction l; rewrite /= ?left_id //. Qed.
 
   Lemma big_opL_take_drop Φ l n :
@@ -123,7 +123,7 @@ Section list.
 
   Lemma big_opL_gen_proper_2 {B} (R : relation M) f (g : nat → B → M)
         l1 (l2 : list B) :
-    R monoid_unit monoid_unit →
+    R u u →
     Proper (R ==> R ==> R) o →
     (∀ k,
       match l1 !! k, l2 !! k with
@@ -214,7 +214,7 @@ Section list.
   Proof. revert f. induction l as [|x l IH]=> f; csimpl=> //. by rewrite IH. Qed.
 
   Lemma big_opL_omap {B} (h : A → option B) (f : B → M) l :
-    ([^o list] y ∈ omap h l, f y) ≡ ([^o list] y ∈ l, from_option f monoid_unit (h y)).
+    ([^o list] y ∈ omap h l, f y) ≡ ([^o list] y ∈ l, from_option f u (h y)).
   Proof.
     revert f. induction l as [|x l IH]=> f //; csimpl.
     case_match; csimpl; by rewrite IH // left_id.
@@ -243,7 +243,7 @@ Section list.
   (** Shows that some property [P] is closed under [big_opL]. Examples of [P]
   are [Persistent], [Affine], [Timeless]. *)
   Lemma big_opL_closed (P : M → Prop) f l :
-    P monoid_unit →
+    P u →
     (∀ x y, P x → P y → P (x `o` y)) →
     (∀ k x, l !! k = Some x → P (f k x)) →
     P ([^o list] k↦x ∈ l, f k x).
@@ -292,7 +292,7 @@ Proof. by apply big_opL_sep_zip_with. Qed.
 (** ** Big ops over finite maps *)
 
 Lemma big_opM_empty `{Countable K} {B} (f : K → B → M) :
-  ([^o map] k↦x ∈ ∅, f k x) = monoid_unit.
+  ([^o map] k↦x ∈ ∅, f k x) = u.
 Proof. by rewrite big_opM_unseal /big_opM_def map_to_list_empty. Qed.
 
 Lemma big_opM_insert `{Countable K} {B} (f : K → B → M) (m : gmap K B) i x :
@@ -409,7 +409,7 @@ Section gmap.
     by rewrite big_opM_empty right_id.
   Qed.
 
-  Lemma big_opM_unit m : ([^o map] k↦y ∈ m, monoid_unit) ≡ (monoid_unit : M).
+  Lemma big_opM_unit m : ([^o map] k↦y ∈ m, u) ≡@{M} u.
   Proof.
     by induction m using map_ind; rewrite /= ?big_opM_insert ?left_id // big_opM_unseal.
   Qed.
@@ -423,7 +423,7 @@ Section gmap.
 
   Lemma big_opM_omap {B} (h : A → option B) (f : K → B → M) m :
     ([^o map] k↦y ∈ omap h m, f k y)
-    ≡ [^o map] k↦y ∈ m, from_option (f k) monoid_unit (h y).
+    ≡ [^o map] k↦y ∈ m, from_option (f k) u (h y).
   Proof.
     revert f. induction m as [|i x m Hmi IH] using map_ind=> f.
     { by rewrite omap_empty !big_opM_empty. }
@@ -464,7 +464,7 @@ Section gmap.
 
   Lemma big_opM_filter' (φ : K * A → Prop) `{∀ kx, Decision (φ kx)} f m :
     ([^o map] k ↦ x ∈ filter φ m, f k x)
-    ≡ ([^o map] k ↦ x ∈ m, if decide (φ (k, x)) then f k x else monoid_unit).
+    ≡ ([^o map] k ↦ x ∈ m, if decide (φ (k, x)) then f k x else u).
   Proof.
     induction m as [|k v m ? IH] using map_ind.
     { by rewrite map_filter_empty !big_opM_empty. }
@@ -500,7 +500,7 @@ Section gmap.
   are [Persistent], [Affine], [Timeless]. *)
   Lemma big_opM_closed (P : M → Prop) f m :
     Proper ((≡) ==> iff) P →
-    P monoid_unit →
+    P u →
     (∀ x y, P x → P y → P (x `o` y)) →
     (∀ k x, m !! k = Some x → P (f k x)) →
     P ([^o map] k↦x ∈ m, f k x).
@@ -603,7 +603,7 @@ Section gset.
     ([^o set] x ∈ X, f x) ≡ [^o list] x ∈ elements X, f x.
   Proof. by rewrite big_opS_unseal. Qed.
 
-  Lemma big_opS_empty f : ([^o set] x ∈ ∅, f x) = monoid_unit.
+  Lemma big_opS_empty f : ([^o set] x ∈ ∅, f x) = u.
   Proof. by rewrite big_opS_unseal /big_opS_def elements_empty. Qed.
 
   Lemma big_opS_insert f X x :
@@ -642,14 +642,14 @@ Section gset.
   Lemma big_opS_singleton f x : ([^o set] y ∈ {[ x ]}, f y) ≡ f x.
   Proof. intros. by rewrite big_opS_elements elements_singleton /= right_id. Qed.
 
-  Lemma big_opS_unit X : ([^o set] y ∈ X, monoid_unit) ≡ (monoid_unit : M).
+  Lemma big_opS_unit X : ([^o set] y ∈ X, u) ≡@{M} u.
   Proof.
     by induction X using set_ind_L; rewrite /= ?big_opS_insert ?left_id // big_opS_unseal.
   Qed.
 
   Lemma big_opS_filter' (φ : A → Prop) `{∀ x, Decision (φ x)} f X :
     ([^o set] y ∈ filter φ X, f y)
-    ≡ ([^o set] y ∈ X, if decide (φ y) then f y else monoid_unit).
+    ≡ ([^o set] y ∈ X, if decide (φ y) then f y else u).
   Proof.
     induction X as [|x X ? IH] using set_ind_L.
     { by rewrite filter_empty_L !big_opS_empty. }
@@ -679,7 +679,7 @@ Section gset.
   are [Persistent], [Affine], [Timeless]. *)
   Lemma big_opS_closed (P : M → Prop) f X :
     Proper ((≡) ==> iff) P →
-    P monoid_unit →
+    P u →
     (∀ x y, P x → P y → P (x `o` y)) →
     (∀ x, x ∈ X → P (f x)) →
     P ([^o set] x ∈ X, f x).
@@ -762,7 +762,7 @@ Section gmultiset.
     ([^o mset] x ∈ X, f x) ≡ [^o list] x ∈ elements X, f x.
   Proof. by rewrite big_opMS_unseal. Qed.
 
-  Lemma big_opMS_empty f : ([^o mset] x ∈ ∅, f x) = monoid_unit.
+  Lemma big_opMS_empty f : ([^o mset] x ∈ ∅, f x) = u.
   Proof. by rewrite big_opMS_unseal /big_opMS_def gmultiset_elements_empty. Qed.
 
   Lemma big_opMS_disj_union f X Y :
@@ -785,7 +785,7 @@ Section gmultiset.
     by rewrite -gmultiset_disj_union_difference'.
   Qed.
 
-  Lemma big_opMS_unit X : ([^o mset] y ∈ X, monoid_unit) ≡ (monoid_unit : M).
+  Lemma big_opMS_unit X : ([^o mset] y ∈ X, u) ≡@{M} u.
   Proof.
     by induction X using gmultiset_ind;
       rewrite /= ?big_opMS_disj_union ?big_opMS_singleton ?left_id // big_opMS_unseal.
@@ -799,7 +799,7 @@ Section gmultiset.
   are [Persistent], [Affine], [Timeless]. *)
   Lemma big_opMS_closed (P : M → Prop) f X :
     Proper ((≡) ==> iff) P →
-    P monoid_unit →
+    P u →
     (∀ x y, P x → P y → P (x `o` y)) →
     (∀ x, x ∈ X → P (f x)) →
     P ([^o mset] x ∈ X, f x).
@@ -909,7 +909,7 @@ End big_op.
 
 Section homomorphisms.
   Context {SI : sidx} {M1 M2 : ofe}.
-  Context {o1 : M1 → M1 → M1} {o2 : M2 → M2 → M2} `{!Monoid o1, !Monoid o2}.
+  Context {o1 : M1 → M1 → M1} {o2 : M2 → M2 → M2} `{!Monoid o1 u1, !Monoid o2 u2}.
   Infix "`o1`" := o1 (at level 50, left associativity).
   Infix "`o2`" := o2 (at level 50, left associativity).
   (** The ssreflect rewrite tactic only works for relations that have a
