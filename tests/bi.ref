@@ -5,6 +5,15 @@ m : gmap nat nat
 The term "m" has type "gmap nat nat" while it is expected to have type
  "gmap nat Z"
 (cannot unify "nat" and "Z").
+"big_sepL_simpl"
+     : string
+1 goal
+  
+  PROP : bi
+  A : Type
+  Φ : A → PROP
+  ============================
+  ⊢ emp
 The command has indeed failed with message:
 In environment:
 PROP : bi

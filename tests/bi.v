@@ -76,6 +76,15 @@ Section big_sepM_implicit_type.
     [∗ map] x ∈ m, ⌜ 10%Z = x ⌝.
 End big_sepM_implicit_type.
 
+Check "big_sepL_simpl".
+Lemma big_sepL_simpl {PROP : bi} {A} (Φ : A → PROP) :
+  ⊢ ([∗ list] x ∈ [], Φ x).
+Proof.
+  simpl.
+  (* Should [simpl] to [emp] *)
+  Show.
+Abort.
+
 (** This tests that [bupd] is [Typeclasses Opaque]. If [bupd] were transparent,
 Coq would unify [bupd_instance] with [persistently]. *)
 Goal ∀ {PROP : bi} (P : PROP),
