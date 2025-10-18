@@ -23,6 +23,10 @@ The opam packages have been renamed from `coq-*` to `rocq-*`.
   of camera.
 * Remove `discrete_fun_inhabited` since a more general `Inhabited` instance for
   `discrete_fun` is now obtained from std++. (by Jan-Oliver Kaiser)
+* Unbundle the unit from the `Monoid` class to obtain more definitional
+  equalities for the big operators. Instances of `Monoid` need to be changed
+  because the unit is now an argument instead of a field, and definitions should
+  use the new class `MonoidOps` instead of `Monoid`.
 
 **Changes in `bi`:**
 
