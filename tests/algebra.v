@@ -1,4 +1,4 @@
-From iris.algebra Require Import auth excl lib.gmap_view.
+From iris.algebra Require Import frac ufrac auth excl lib.gmap_view.
 From iris.base_logic.lib Require Import invariants.
 From iris.prelude Require Import options.
 
@@ -99,3 +99,31 @@ Proof. apply _. Qed.
 (** Needs "new" unification for [Monoid] *)
 Definition big_op_test (l : list Qp) : option Qp :=
   [^op list] x ∈ l, Some x.
+
+(** [frac] and [ufrac] are different cameras on the same carrier (namely [Qp]).
+They have the same operator (namely, addition on [Qp]), but different validity
+predicates ([≤ 1] and [True], respectively). The big operators only rely on
+the "monoid" part of [frac] and [ufrac] (i.e., not their validity), so it should
+not matter via which camera we obtained the [Monoid] instance. We test that the
+difference in [Monoid] instance (which is not even visible, unless one enables
+printing of implicit arguments) does not affect definitional equality of big
+operators. *)
+Lemma big_opL_should_be_eq l :
+  ([^op list] x ∈ (l : list (option frac)), x) =
+  ([^op list] x ∈ (l : list (option ufrac)), x).
+Proof. reflexivity. Qed.
+
+Lemma big_opM_should_be_eq `{Countable K} m :
+  ([^op map] x ∈ (m : gmap K (option frac)), x) =
+  ([^op map] x ∈ (m : gmap K (option ufrac)), x).
+Proof. reflexivity. Qed.
+
+Lemma big_opS_should_be_eq X :
+  ([^op set] x ∈ (X : gset (option frac)), x) =
+  ([^op set] x ∈ (X : gset (option ufrac)), x).
+Proof. reflexivity. Qed.
+
+Lemma big_opMS_should_be_eq `{Countable K} X :
+  ([^op mset] x ∈ (X : gmultiset (option frac)), x) =
+  ([^op mset] x ∈ (X : gmultiset (option ufrac)), x).
+Proof. reflexivity. Qed.
