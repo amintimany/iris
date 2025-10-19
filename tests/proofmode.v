@@ -2041,6 +2041,14 @@ Lemma iSpecializeArgs_fail P :
   (∀ x : nat, P) -∗ P.
 Proof. iIntros "HP". Fail iSpecialize ("HP" $! true). Abort.
 
+Check "iSpecialize_nested_fail".
+Lemma iSpecialize_nested_fail P : P -∗ P.
+Proof.
+  iIntros "H".
+  (* Should report that "HH" is not found *)
+  Fail iSpecialize ("HH" with "(H H)").
+Abort.
+
 Check "iStartProof_fail".
 Lemma iStartProof_fail : 0 = 0.
 Proof. Fail iStartProof. Abort.

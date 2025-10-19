@@ -1084,6 +1084,10 @@ In environment
 PROP : bi
 P : PROP
 The term "true" has type "bool" while it is expected to have type "nat".
+"iSpecialize_nested_fail"
+     : string
+The command has indeed failed with message:
+Tactic failure: iSpecialize: "HH" not found.
 "iStartProof_fail"
      : string
 The command has indeed failed with message:
