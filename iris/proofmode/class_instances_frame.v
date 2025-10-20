@@ -466,7 +466,7 @@ Ltac solve_gather_evars_eq :=
     in
     let T' := lazymatch (type of c) with tele_arg ?T => T end in
     retcon_tele T' c;
-    exact (GatherEvarsEq_refl _)
+    notypeclasses refine (GatherEvarsEq_refl _)
   end.
 
 Global Hint Extern 0 (GatherEvarsEq _ _) =>
@@ -474,4 +474,4 @@ Global Hint Extern 0 (GatherEvarsEq _ _) =>
 
 Global Hint Extern 0 (TCCbnTele _ _) =>
   cbn [bi_texist tele_fold tele_bind tele_arg_head tele_arg_tail];
-  exact (TCCbnTele_refl _) : typeclass_instances.
+  notypeclasses refine (TCCbnTele_refl _) : typeclass_instances.
