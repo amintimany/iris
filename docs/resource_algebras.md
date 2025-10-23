@@ -14,14 +14,13 @@ Libraries typically bundle the `inG` they need in a `libG` typeclass, so they do
 not have to expose to clients what exactly their resource algebras are. For
 example, in the [one-shot example](../tests/one_shot.v), we have:
 ```coq
-Class one_shotG Σ := { one_shot_inG : inG Σ one_shotR }.
-Local Existing Instances one_shot_inG.
+Class one_shotG Σ := { #[local] one_shot_inG :: inG Σ one_shotR }.
 ```
 Here, the projection `one_shot_inG` is registered as an instance for type-class
 resolution. If you need several resource algebras, just add more `inG` fields.
 If you are using another module as part of yours, add a field like
-`one_shot_other : otherG Σ`. All of these fields should be added to the
-`Local Existing Instances` command.
+`#[local] one_shot_other :: otherG Σ`. All of these fields should be made local
+instances with the combination of `#[local]` and the `::` syntax.
 
 The code above enables these typeclass instances only in the surrounding file
 where they are used to define the new abstractions by the library. The
