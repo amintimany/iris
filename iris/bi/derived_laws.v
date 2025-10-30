@@ -1592,16 +1592,14 @@ Proof.
   - by rewrite persistent_and_affinely_sep_r_1 affinely_elim.
 Qed.
 
+Lemma persistent_sep_dup_1 P `{!Persistent P} :
+  P ⊢ P ∗ P.
+Proof. by rewrite -persistent_and_sep_1 idemp. Qed.
+
 Lemma persistent_sep_dup P
     `{HP : !TCOr (Affine P) (Absorbing P), !Persistent P} :
   P ⊣⊢ P ∗ P.
-Proof.
-  destruct HP; last by rewrite -(persistent_persistently P) -persistently_sep_dup.
-  apply (anti_symm (⊢)).
-  - by rewrite -{1}(intuitionistic_intuitionistically P)
-    intuitionistically_sep_dup intuitionistically_elim.
-  - by rewrite {1}(affine P) left_id.
-Qed.
+Proof. apply (anti_symm _); auto using persistent_sep_dup_1, sep_elim_l. Qed.
 
 Lemma persistent_entails_l P Q `{!Persistent Q} : (P ⊢ Q) → P ⊢ Q ∗ P.
 Proof. intros. rewrite -persistent_and_sep_1; auto. Qed.
