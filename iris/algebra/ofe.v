@@ -720,7 +720,7 @@ Section fixpoint.
   (** This lemma does not work well with [rewrite]; we usually define a specific
   unfolding lemma for each fixpoint and then [apply fixpoint_unfold] in the
   proof of that unfolding lemma. *)
-  Lemma fixpoint_unfold : fixpoint ≡ f (fixpoint).
+  Lemma fixpoint_unfold : fixpoint ≡ f fixpoint.
   Proof.
     apply equiv_dist=> n. rewrite fixpoint_unseal /fixpoint_def /=.
     rewrite !conv_compl /fixpoint_chain /=.
