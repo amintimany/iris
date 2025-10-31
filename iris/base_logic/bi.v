@@ -6,20 +6,38 @@ From iris.base_logic Require Export upred.
 From iris.prelude Require Import options.
 Import uPred_primitive.
 
+Local Existing Instance entails_po.
+
 (** BI instances for [uPred], and re-stating the remaining primitive laws in
 terms of the BI interface. This file does *not* unseal. *)
 
+(** [uPred_pure] is a derived notion on [uPred] in terms of [uPred_si_pure].
+However, in terms of the BI hierarchy, [bi_pure] it is a primitive notion that
+is "below" the concept of an [Sbi], so we cannot use the fact that [uPred] is an
+SBI to our advantage here. Below we define [uPred_pure] and derive its laws from
+those of [uPred_si_pure]. *)
 Definition uPred_pure {M} (φ : Prop) : uPred M := uPred_si_pure ⌜ φ ⌝.
 Definition uPred_emp {M} : uPred M := uPred_pure True.
 
-Local Existing Instance entails_po.
+Local Lemma pure_ne {M} n : Proper (iff ==> dist n) (@uPred_pure M).
+Proof. intros φ1 φ2 Hφ. apply si_pure_ne. by rewrite Hφ. Qed.
 
-(* We need this property multiple times, so let's prove it once. *)
-Local Lemma True_intro M P : uPred_entails (M:=M) P (uPred_pure True).
+Local Lemma pure_intro {M} (φ : Prop) (P : uPred M) :
+  φ → uPred_entails P (uPred_pure φ).
 Proof.
-  trans (uPred_si_pure (∀ x : False, True) : uPred M).
+  intros. trans (uPred_si_pure (∀ x : False, True) : uPred M).
   - etrans; last apply si_pure_forall_2. by apply forall_intro.
-  - by apply si_pure_mono, bi.True_intro.
+  - by apply si_pure_mono, bi.pure_intro.
+Qed.
+
+Local Lemma pure_elim' {M} (φ : Prop) (P : uPred M) :
+  (φ → uPred_entails (uPred_pure True) P) →
+  uPred_entails (uPred_pure φ) P.
+Proof.
+  intros HφP. etrans; last apply persistently_elim.
+  etrans; last apply si_pure_si_emp_valid.
+  apply si_pure_mono. apply bi.pure_elim'=> ?.
+  rewrite -(si_emp_valid_si_pure True). by apply si_emp_valid_mono, HφP.
 Qed.
 
 Lemma uPred_bi_mixin (M : ucmra) :
@@ -30,7 +48,7 @@ Proof.
   split.
   - exact: entails_po.
   - exact: equiv_entails.
-  - intros n φ1 φ2 Hφ. apply si_pure_ne. by rewrite Hφ.
+  - exact: pure_ne.
   - exact: and_ne.
   - exact: or_ne.
   - exact: impl_ne.
@@ -38,14 +56,8 @@ Proof.
   - exact: exist_ne.
   - exact: sep_ne.
   - exact: wand_ne.
-  - (* φ → P ⊢ ⌜ φ ⌝ (ADMISSIBLE) *)
-    intros φ P ?. etrans; first by apply True_intro.
-    by apply si_pure_mono, bi.pure_intro.
-  - (* (φ → True ⊢ P) → (⌜ φ ⌝ ⊢ P) (ADMISSIBLE) *)
-    intros φ P HφP. etrans; last apply persistently_elim.
-    etrans; last apply si_pure_si_emp_valid.
-    apply si_pure_mono. apply bi.pure_elim'=> ?.
-    rewrite -(si_emp_valid_si_pure True). by apply si_emp_valid_mono, HφP.
+  - exact: pure_intro.
+  - exact: pure_elim'.
   - exact: and_elim_l.
   - exact: and_elim_r.
   - exact: and_intro.
@@ -80,7 +92,7 @@ Proof.
     trans (uPred_forall (M:=M) (λ _ : False, uPred_persistently uPred_emp)).
     + apply forall_intro=>-[].
     + etrans; first exact: persistently_forall_2.
-      apply persistently_mono, True_intro.
+      by apply persistently_mono, pure_intro.
   - (* ((<pers> P) ∧ (<pers> Q)) ⊢ <pers> (P ∧ Q) (ADMISSIBLE) *)
     intros P Q.
     trans (uPred_forall (M:=M) (λ b : bool, uPred_persistently (if b then P else Q))).
@@ -95,7 +107,7 @@ Proof.
   - (* <pers> P ∗ Q ⊢ <pers> P (ADMISSIBLE) *)
     intros. etrans; first exact: sep_comm'.
     etrans; last exact: True_sep_2.
-    apply sep_mono; last done. apply True_intro.
+    apply sep_mono; last done. by apply pure_intro.
   - exact: persistently_and_sep_l_1.
 Qed.
 
