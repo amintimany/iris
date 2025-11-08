@@ -580,11 +580,13 @@ Definition bin_op_eval (op : bin_op) (v1 v2 : val) : option val :=
     | _, _ => None
     end.
 
-Definition state_upd_heap (f: gmap loc (option val) → gmap loc (option val)) (σ: state) : state :=
+Definition state_upd_heap (f : gmap loc (option val) → gmap loc (option val))
+    (σ : state) : state :=
   {| heap := f σ.(heap); used_proph_id := σ.(used_proph_id) |}.
 Global Arguments state_upd_heap _ !_ /.
 
-Definition state_upd_used_proph_id (f: gset proph_id → gset proph_id) (σ: state) : state :=
+Definition state_upd_used_proph_id (f : gset proph_id → gset proph_id)
+    (σ : state) : state :=
   {| heap := σ.(heap); used_proph_id := f σ.(used_proph_id) |}.
 Global Arguments state_upd_used_proph_id _ !_ /.
 
@@ -620,7 +622,7 @@ Qed.
 
 Lemma heap_array_map_disjoint (h : gmap loc (option val)) (l : loc) (vs : list val) :
   (∀ i, (0 ≤ i)%Z → (i < length vs)%Z → h !! (l +ₗ i) = None) →
-  (heap_array l vs) ##ₘ h.
+  heap_array l vs ##ₘ h.
 Proof.
   intros Hdisj. apply map_disjoint_spec=> l' v1 v2.
   intros (j&w&?&->&?&Hj%lookup_lt_Some%inj_lt)%heap_array_lookup.
