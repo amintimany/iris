@@ -161,6 +161,8 @@ Global Instance agree_cmra_total : CmraTotal agreeR.
 Proof. rewrite /CmraTotal; eauto. Qed.
 Global Instance agree_core_id x : CoreId x.
 Proof. by constructor. Qed.
+Lemma agree_pcore x : pcore x = Some x.
+Proof. done. Qed.
 
 Global Instance agree_cmra_discrete : OfeDiscrete A → CmraDiscrete agreeR.
 Proof.

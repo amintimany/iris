@@ -27,6 +27,7 @@ The opam packages have been renamed from `coq-*` to `rocq-*`.
   equalities for the big operators. Instances of `Monoid` need to be changed
   because the unit is now an argument instead of a field, and definitions should
   use the new class `MonoidOps` instead of `Monoid`.
+* Add new unfolding lemma `agree_pcore`.
 
 **Changes in `bi`:**
 
