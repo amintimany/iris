@@ -7,7 +7,7 @@ Set Default Proof Using "Type*".
 
 (** This file contains an alternative version of basic updates, that is
 expression in terms of just the plain modality [■]. *)
-Definition bupd_alt {PROP : bi} `{!BiPlainly PROP} (P : PROP) : PROP :=
+Definition bupd_alt {PROP : bi} `{!Sbi PROP} (P : PROP) : PROP :=
   ∀ R, (P -∗ ■ R) -∗ ■ R.
 
 (** This definition is stated for any BI with a plain modality. The above
@@ -28,7 +28,7 @@ The first two points are shown for any BI with a plain modality. *)
 Local Coercion uPred_holds : uPred >-> Funclass.
 
 Section bupd_alt.
-  Context {PROP : bi} `{!BiPlainly PROP}.
+  Context {PROP : bi} `{!Sbi PROP}.
   Implicit Types P Q R : PROP.
   Notation bupd_alt := (@bupd_alt PROP _).
 
@@ -57,7 +57,8 @@ Section bupd_alt.
 
   (** Any modality conforming with [BiBUpdPlainly] entails the alternative
   definition *)
-  Lemma bupd_bupd_alt `{!BiBUpd PROP, !BiBUpdPlainly PROP} P : (|==> P) ⊢ bupd_alt P.
+  Lemma bupd_bupd_alt `{!BiBUpd PROP, !BiBUpdSbi PROP, !BiAffine PROP} P :
+    (|==> P) ⊢ bupd_alt P.
   Proof. iIntros "HP" (R) "H". by iMod ("H" with "HP") as "?". Qed.
 
   (** We get the usual rule for frame preserving updates if we have an [own]
@@ -79,7 +80,7 @@ End bupd_alt.
 (** The alternative definition entails the ordinary basic update *)
 Lemma bupd_alt_bupd {M} (P : uPred M) : bupd_alt P ⊢ |==> P.
 Proof.
-  rewrite /bupd_alt. uPred.unseal; split=> n x Hx H k y ? Hxy.
+  rewrite /bupd_alt /plainly. uPred.unseal; split=> n x Hx H k y ? Hxy.
   unshelve refine (H {| uPred_holds k _ :=
     ∃ x' : M, ✓{k} (x' ⋅ y) ∧ P k x' |} k y _ _ _).
   - intros n1 n2 x1 x2 (z&?&?) _ ?.
@@ -101,7 +102,8 @@ Lemma ownM_updateP {M : ucmra} x (Φ : M → Prop) (R : uPred M) :
   x ~~>: Φ →
   uPred_ownM x ∗ (∀ y, ⌜Φ y⌝ -∗ uPred_ownM y -∗ ■ R) ⊢ ■ R.
 Proof.
-  uPred.unseal=> Hup; split; intros n z Hv (?&z2&?&[z1 ?]&HR); ofe_subst.
+  intros Hup. rewrite /plainly. uPred.unseal.
+  split. intros n z Hv (?&z2&?&[z1 ?]&HR); ofe_subst.
   destruct (Hup n (Some (z1 ⋅ z2))) as (y&?&?); simpl in *.
   { by rewrite assoc. }
   refine (HR y n z1 _ _ _ n y _ _ _); auto.

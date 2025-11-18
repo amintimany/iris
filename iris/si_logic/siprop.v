@@ -1,4 +1,4 @@
-From iris.algebra Require Export ofe stepindex_finite.
+From iris.algebra Require Export cmra stepindex_finite.
 From iris.bi Require Import notation.
 From iris.prelude Require Import options.
 
@@ -119,6 +119,16 @@ Definition siProp_internal_eq {A} := unseal siProp_internal_eq_aux A.
 Local Definition siProp_internal_eq_unseal :
   @siProp_internal_eq = @siProp_internal_eq_def := seal_eq siProp_internal_eq_aux.
 
+Local Program Definition siProp_cmra_valid_def {A : cmra} (a : A) : siProp :=
+  {| siProp_holds n := ✓{n} a |}.
+Solve Obligations with naive_solver eauto 2 using cmra_validN_le.
+Local Definition siProp_cmra_valid_aux : seal (@siProp_cmra_valid_def).
+Proof. by eexists. Qed.
+Definition siProp_cmra_valid := siProp_cmra_valid_aux.(unseal).
+Global Arguments siProp_cmra_valid {A}.
+Local Definition siProp_cmra_valid_unseal :
+  @siProp_cmra_valid = @siProp_cmra_valid_def := siProp_cmra_valid_aux.(seal_eq).
+
 (** Primitive logical rules.
     These are not directly usable later because they do not refer to the BI
     connectives. *)
@@ -126,7 +136,7 @@ Module siProp_primitive.
 Local Definition siProp_unseal :=
   (siProp_pure_unseal, siProp_and_unseal, siProp_or_unseal,
   siProp_impl_unseal, siProp_forall_unseal, siProp_exist_unseal,
-  siProp_later_unseal, siProp_internal_eq_unseal).
+  siProp_later_unseal, siProp_internal_eq_unseal, siProp_cmra_valid_unseal).
 Ltac unseal := rewrite !siProp_unseal /=.
 
 Section primitive.
@@ -147,6 +157,7 @@ Section primitive.
     (siProp_exist (λ x, .. (siProp_exist (λ y, P%I)) ..)) : bi_scope.
   Notation "▷ P" := (siProp_later P) : bi_scope.
   Notation "x ≡ y" := (siProp_internal_eq x y) : bi_scope.
+  Notation "✓ x" := (siProp_cmra_valid x) : bi_scope.
 
   (** Below there follow the primitive laws for [siProp]. There are no derived laws
   in this file. *)
@@ -207,6 +218,11 @@ Section primitive.
     - by rewrite -(dist_le _ _ _ _ Hx) -?(dist_le _ _ _ _ Hy); auto.
     - by rewrite (dist_le _ _ _ _ Hx) ?(dist_le _ _ _ _ Hy); auto.
   Qed.
+  Lemma cmra_valid_ne (A : cmra) : NonExpansive (@siProp_cmra_valid A).
+  Proof.
+    intros n x x' Hx. unseal; split=> /= n' z.
+    by rewrite (dist_le _ _ _ _ Hx).
+  Qed.
 
   (** Introduction and elimination rules *)
   Lemma pure_intro (φ : Prop) P : φ → P ⊢ ⌜ φ ⌝.
@@ -258,18 +274,6 @@ Section primitive.
   Proof. unseal; intros HΨ; split=> n [a ?]; by apply HΨ with a. Qed.
 
   (** Later *)
-  Lemma later_eq_1 {A : ofe} (x y : A) : Next x ≡ Next y ⊢ ▷ (x ≡ y).
-  Proof.
-    unseal. split. intros [|n]; simpl; first done.
-    intros Heq; apply Heq, SIdx.lt_succ_diag_r.
-  Qed.
-  Lemma later_eq_2 {A : ofe} (x y : A) : ▷ (x ≡ y) ⊢ Next x ≡ Next y.
-  Proof.
-    unseal. split. intros n Hn; split; intros m Hlt; simpl in *.
-    destruct n as [|n]; first lia.
-    eapply dist_le; first done. lia.
-  Qed.
-
   Lemma later_mono P Q : (P ⊢ Q) → ▷ P ⊢ ▷ Q.
   Proof. unseal=> HP; split=>-[|n]; [done|apply HP; eauto using cmra_validN_S]. Qed.
   Lemma later_intro P : P ⊢ ▷ P.
@@ -295,22 +299,52 @@ Section primitive.
     intros Hnonexp. unseal; split=> n Hab n' ? HΨ. eapply Hnonexp with n a; auto.
   Qed.
 
-  Lemma fun_ext {A} {B : A → ofe} (f g : discrete_fun B) : (∀ x, f x ≡ g x) ⊢ f ≡ g.
-  Proof. by unseal. Qed.
-  Lemma sig_eq {A : ofe} (P : A → Prop) (x y : sig P) : `x ≡ `y ⊢ x ≡ y.
-  Proof. by unseal. Qed.
-  Lemma discrete_eq_1 {A : ofe} (a b : A) :
-    TCOr (Discrete a) (Discrete b) →
-    a ≡ b ⊢ ⌜a ≡ b⌝.
-  Proof. unseal=> ?. split=> n. by apply (discrete_iff n). Qed.
-
   Lemma prop_ext_2 P Q : ((P → Q) ∧ (Q → P)) ⊢ P ≡ Q.
   Proof.
     unseal; split=> n /= HPQ. split=> n' ?.
     move: HPQ=> [] /(_ n') ? /(_ n'). naive_solver.
   Qed.
 
-  (** Consistency/soundness statement *)
+  Lemma fun_extI {A} {B : A → ofe} (g1 g2 : discrete_fun B) :
+    (∀ i, g1 i ≡ g2 i) ⊢ g1 ≡ g2.
+  Proof. by unseal. Qed.
+  Lemma sig_equivI_1 {A : ofe} (P : A → Prop) (x y : sigO P) :
+    proj1_sig x ≡ proj1_sig y ⊢ x ≡ y.
+  Proof. by unseal. Qed.
+
+  Lemma later_equivI_1 {A : ofe} (x y : A) : Next x ≡ Next y ⊢ ▷ (x ≡ y).
+  Proof.
+    unseal. split. intros [|n]; simpl; [done|].
+    intros Heq; apply Heq; auto using SIdx.lt_succ_diag_r.
+  Qed.
+  Lemma later_equivI_2 {A : ofe} (x y : A) : ▷ (x ≡ y) ⊢ Next x ≡ Next y.
+  Proof.
+    unseal. split. intros n ?; split; intros m Hlt; simpl in *.
+    destruct n as [|n]; first lia.
+    by eapply dist_le, SIdx.lt_succ_r.
+  Qed.
+
+  Lemma discrete_eq_1 {A : ofe} (a b : A) :
+    TCOr (Discrete a) (Discrete b) →
+    a ≡ b ⊢ ⌜a ≡ b⌝.
+  Proof. unseal=> ?. split=> n. by apply (discrete_iff n). Qed.
+
+  Lemma internal_eq_entails {A B : ofe} (a1 a2 : A) (b1 b2 : B) :
+    (a1 ≡ a2 ⊢ b1 ≡ b2) ↔ (∀ n, a1 ≡{n}≡ a2 → b1 ≡{n}≡ b2).
+  Proof. unseal. split; [by intros []|done]. Qed.
+
+  (** Validity *)
+  Lemma cmra_valid_intro {A : cmra} P (a : A) : ✓ a → P ⊢ (✓ a).
+  Proof. unseal=> ?; split=> n ? /=; by apply cmra_valid_validN. Qed.
+  Lemma cmra_valid_elim {A : cmra} (a : A) : ✓ a ⊢ ⌜ ✓{0} a ⌝.
+  Proof. unseal; split=> n ?; by apply cmra_validN_le with n, SIdx.le_0_l. Qed.
+  Lemma cmra_valid_weaken {A : cmra} (a b : A) : ✓ (a ⋅ b) ⊢ ✓ a.
+  Proof. unseal; split=> n; apply cmra_validN_op_l. Qed.
+  Lemma valid_entails {A B : cmra} (a : A) (b : B) :
+    (✓ a ⊢ ✓ b) ↔ ∀ n, ✓{n} a → ✓{n} b.
+  Proof. unseal. split; [by intros []|done]. Qed.
+
+  (** Consistency/soundness statements *)
   Lemma pure_soundness φ : (True ⊢ ⌜ φ ⌝) → φ.
   Proof. unseal=> -[H]. by apply (H 0). Qed.
 

@@ -9,17 +9,6 @@ Section class_instances.
   Context {M : ucmra}.
   Implicit Types P Q R : uPred M.
 
-  Global Instance into_pure_cmra_valid `{!CmraDiscrete A} (a : A) :
-    @IntoPure (uPredI M) (✓ a) (✓ a).
-  Proof. rewrite /IntoPure. by rewrite uPred.discrete_valid. Qed.
-
-  Global Instance from_pure_cmra_valid {A : cmra} (a : A) :
-    @FromPure (uPredI M) false (✓ a) (✓ a).
-  Proof.
-    rewrite /FromPure /=. eapply bi.pure_elim=> // ?.
-    rewrite -uPred.cmra_valid_intro //.
-  Qed.
-
   Global Instance from_sep_ownM (a b1 b2 : M) :
     IsOp a b1 b2 →
     FromSep (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).

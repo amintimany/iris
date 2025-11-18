@@ -4,10 +4,10 @@ From iris.bi Require Import bi plainly big_op.
 Unset Mangle Names.
 
 (** See https://gitlab.mpi-sws.org/iris/iris/-/merge_requests/610 *)
-Lemma test_impl_persistent_1 `{!BiPlainly PROP, !BiPersistentlyImplPlainly PROP} :
+Lemma test_impl_persistent_1 `{!Sbi PROP, !BiPersistentlyImplSiPure PROP} :
   Persistent (PROP:=PROP) (True → True).
 Proof. apply _. Qed.
-Lemma test_impl_persistent_2 `{!BiPlainly PROP, !BiPersistentlyImplPlainly PROP} :
+Lemma test_impl_persistent_2 `{!Sbi PROP, !BiPersistentlyImplSiPure PROP} :
   Persistent (PROP:=PROP) (True → True → True).
 Proof. apply _. Qed.
 
@@ -90,13 +90,14 @@ Coq would unify [bupd_instance] with [persistently]. *)
 Goal ∀ {PROP : bi} (P : PROP),
   ∃ bupd_instance, Persistent (@bupd PROP bupd_instance P).
 Proof. intros. eexists _. Fail apply _. Abort.
-(* Similarly for [plainly]. *)
+(* Similarly for [plainly], but here it should leave the [Sbi] instance that
+was introduced by [eexists _] unshelved. *)
 Goal ∀ {PROP : bi} (P : PROP),
-  ∃ plainly_instance, Persistent (@plainly PROP plainly_instance P).
-Proof. intros. eexists _. Fail apply _. Abort.
+  ∃ sbi_instance, Persistent (@plainly PROP sbi_instance P).
+Proof. intros. eexists _. apply _. Unshelve. Abort.
 
 Section internal_eq_ne.
-  Context `{!BiInternalEq PROP} {A : ofe} (a : A).
+  Context `{!Sbi PROP} {A : ofe} (a : A).
 
   Goal NonExpansive (λ x, (a ≡ x : PROP)%I).
   Proof. solve_proper. Qed.
@@ -126,7 +127,7 @@ Section instances_for_match.
   Lemma match_timeless :
     Timeless (PROP:=PROP) (∃ b : bool, if b then False else False).
   Proof. apply _. Qed.
-  Lemma match_plain `{!BiPlainly PROP} :
+  Lemma match_plain `{!Sbi PROP} :
     Plain (PROP:=PROP) (∃ b : bool, if b then False else False).
   Proof. apply _. Qed.
 

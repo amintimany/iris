@@ -3,9 +3,9 @@ From iris.bi Require Import interface derived_laws_later big_op.
 From iris.bi Require Import plainly updates internal_eq.
 From iris.prelude Require Import options.
 
-(* We enable primitive projections in this file to improve the performance of the Iris proofmode:
-    primitive projections for the bi-records makes the proofmode faster.
-*)
+(* We enable primitive projections in this file to improve the performance of
+the Iris proofmode: primitive projections for the bi-records makes the proofmode
+faster. *)
 Local Set Primitive Projections.
 
 (* The sections add extra BI assumptions, which is only picked up with [Type*]. *)
@@ -26,13 +26,6 @@ Record BiEmbedMixin (PROP1 PROP2 : bi) `(Embed PROP1 PROP2) := {
   bi_embed_mixin_mono : Proper ((⊢) ==> (⊢)) (embed (A:=PROP1) (B:=PROP2));
   bi_embed_mixin_emp_valid_inj (P : PROP1) :
     (⊢@{PROP2} ⎡P⎤) → ⊢ P;
-  (** The following axiom expresses that the embedding is injective in the OFE
-  sense. Instead of this axiom being expressed in terms of [siProp] or
-  externally (i.e., as [Inj (dist n) (dist n) embed]), it is expressed using the
-  internal equality of _any other_ BI [PROP']. This is more general, as we do
-  not have any machinary to embed [siProp] into a BI with internal equality. *)
-  bi_embed_mixin_interal_inj {PROP' : bi} `{!BiInternalEq PROP'} (P Q : PROP1) :
-    ⎡P⎤ ≡ ⎡Q⎤ ⊢@{PROP'} (P ≡ Q);
   bi_embed_mixin_emp_2 : emp ⊢@{PROP2} ⎡emp⎤;
   bi_embed_mixin_impl_2 (P Q : PROP1) :
     (⎡P⎤ → ⎡Q⎤) ⊢@{PROP2} ⎡P → Q⎤;
@@ -66,12 +59,6 @@ Class BiEmbedLater (PROP1 PROP2 : bi) `{!BiEmbed PROP1 PROP2} :=
 Global Hint Mode BiEmbedLater ! - - : typeclass_instances.
 Global Hint Mode BiEmbedLater - ! - : typeclass_instances.
 
-Class BiEmbedInternalEq (PROP1 PROP2 : bi)
-    `{!BiEmbed PROP1 PROP2, !BiInternalEq PROP1, !BiInternalEq PROP2} :=
-  embed_internal_eq_1 (A : ofe) (x y : A) : ⎡x ≡ y⎤ ⊢@{PROP2} x ≡ y.
-Global Hint Mode BiEmbedInternalEq ! - - - - : typeclass_instances.
-Global Hint Mode BiEmbedInternalEq - ! - - - : typeclass_instances.
-
 Class BiEmbedBUpd (PROP1 PROP2 : bi)
     `{!BiEmbed PROP1 PROP2, !BiBUpd PROP1, !BiBUpd PROP2} :=
   embed_bupd P : ⎡|==> P⎤ ⊣⊢@{PROP2} |==> ⎡P⎤.
@@ -84,11 +71,14 @@ Class BiEmbedFUpd (PROP1 PROP2 : bi)
 Global Hint Mode BiEmbedFUpd - ! - - - : typeclass_instances.
 Global Hint Mode BiEmbedFUpd ! - - - - : typeclass_instances.
 
-Class BiEmbedPlainly (PROP1 PROP2 : bi)
-    `{!BiEmbed PROP1 PROP2, !BiPlainly PROP1, !BiPlainly PROP2} :=
-  embed_plainly (P : PROP1) : ⎡■ P⎤ ⊣⊢@{PROP2} ■ ⎡P⎤.
-Global Hint Mode BiEmbedPlainly - ! - - - : typeclass_instances.
-Global Hint Mode BiEmbedPlainly ! - - - - : typeclass_instances.
+Class BiEmbedSbi (PROP1 PROP2 : bi)
+    `{!BiEmbed PROP1 PROP2, !Sbi PROP1, !Sbi PROP2} := {
+  embed_si_emp_valid (P : PROP1) :
+    <si_emp_valid> ⎡ P ⎤ ⊣⊢@{siPropI} <si_emp_valid> P;
+  embed_si_pure_1 Pi : ⎡ <si_pure> Pi ⎤ ⊢@{PROP2} <si_pure> Pi;
+}.
+Global Hint Mode BiEmbedSbi - ! - - - : typeclass_instances.
+Global Hint Mode BiEmbedSbi ! - - - - : typeclass_instances.
 
 Section embed_laws.
   Context {PROP1 PROP2 : bi} `{!BiEmbed PROP1 PROP2}.
@@ -102,9 +92,6 @@ Section embed_laws.
   Proof. eapply bi_embed_mixin_mono, bi_embed_mixin. Qed.
   Lemma embed_emp_valid_inj P : (⊢@{PROP2} ⎡P⎤) → ⊢ P.
   Proof. eapply bi_embed_mixin_emp_valid_inj, bi_embed_mixin. Qed.
-  Lemma embed_interal_inj `{!BiInternalEq PROP'} (P Q : PROP1) :
-    ⎡P⎤ ≡ ⎡Q⎤ ⊢@{PROP'} (P ≡ Q).
-  Proof. eapply bi_embed_mixin_interal_inj, bi_embed_mixin. Qed.
   Lemma embed_emp_2 : emp ⊢ ⎡emp⎤.
   Proof. eapply bi_embed_mixin_emp_2, bi_embed_mixin. Qed.
   Lemma embed_impl_2 P Q : (⎡P⎤ → ⎡Q⎤) ⊢ ⎡P → Q⎤.
@@ -293,27 +280,36 @@ Section embed.
     Qed.
   End later.
 
-  Section internal_eq.
-    Context `{!BiInternalEq PROP1, !BiInternalEq PROP2, !BiEmbedInternalEq PROP1 PROP2}.
+  Section sbi.
+    Context `{!Sbi PROP1, !Sbi PROP2, !BiEmbedSbi PROP1 PROP2}.
+
+    Lemma embed_si_pure Pi : ⎡<si_pure> Pi⎤ ⊣⊢ <si_pure> Pi.
+    Proof.
+      apply (anti_symm _); [apply embed_si_pure_1|].
+      rewrite -(si_pure_si_emp_valid_elim ⎡ _ ⎤).
+      by rewrite embed_si_emp_valid si_emp_valid_si_pure.
+    Qed.
+
+    Lemma embed_internal_inj `{!Sbi PROP3} P Q : ⎡P⎤ ≡ ⎡Q⎤ ⊢@{PROP3} P ≡ Q.
+    Proof.
+      intros. rewrite -(si_pure_internal_eq ⎡ _ ⎤%I) -(si_pure_internal_eq P).
+      f_equiv. rewrite !prop_ext_si_emp_valid.
+      rewrite /bi_wand_iff !si_emp_valid_and.
+      by rewrite -!embed_wand !embed_si_emp_valid.
+    Qed.
 
     Lemma embed_internal_eq (A : ofe) (x y : A) : ⎡x ≡ y⎤ ⊣⊢@{PROP2} x ≡ y.
-    Proof.
-      apply bi.equiv_entails; split; [apply embed_internal_eq_1|].
-      etrans; [apply (internal_eq_rewrite x y (λ y, ⎡x ≡ y⎤%I)); solve_proper|].
-      rewrite -(internal_eq_refl True%I) embed_pure.
-      eapply bi.impl_elim; [done|]. apply bi.True_intro.
-    Qed.
-  End internal_eq.
+    Proof. apply embed_si_pure. Qed.
 
-  Section plainly.
-    Context `{!BiPlainly PROP1, !BiPlainly PROP2, !BiEmbedPlainly PROP1 PROP2}.
+    Lemma embed_plainly P : ⎡■ P⎤ ⊣⊢ ■ ⎡P⎤.
+    Proof. by rewrite /plainly embed_si_pure embed_si_emp_valid. Qed.
 
     Lemma embed_plainly_if p P : ⎡■?p P⎤ ⊣⊢ ■?p ⎡P⎤.
     Proof. destruct p; simpl; auto using embed_plainly. Qed.
 
     Lemma embed_plain (P : PROP1) : Plain P → Plain (PROP:=PROP2) ⎡P⎤.
     Proof. intros ?. by rewrite /Plain {1}(plain P) embed_plainly. Qed.
-  End plainly.
+  End sbi.
 End embed.
 
 (* Not defined using an ordinary [Instance] because the default
@@ -339,7 +335,6 @@ Section embed_embed.
     - solve_proper.
     - solve_proper.
     - intros P. by rewrite !embed_emp_valid.
-    - intros PROP' ? P Q. by rewrite !embed_interal_inj.
     - by rewrite -!embed_emp_2.
     - intros P Q. by rewrite -!embed_impl.
     - intros A Φ. by rewrite -!embed_forall.
@@ -362,11 +357,14 @@ Section embed_embed.
     BiEmbedLater PROP1 PROP2 → BiEmbedLater PROP2 PROP3 →
     BiEmbedLater PROP1 PROP3.
   Proof. intros ?? P. by rewrite !embed_embed_alt !embed_later. Qed.
-  Lemma embed_embed_internal_eq
-      `{!BiInternalEq PROP1, !BiInternalEq PROP2, !BiInternalEq PROP3} :
-    BiEmbedInternalEq PROP1 PROP2 → BiEmbedInternalEq PROP2 PROP3 →
-    BiEmbedInternalEq PROP1 PROP3.
-  Proof. intros ?? A x y. by rewrite !embed_embed_alt !embed_internal_eq. Qed.
+  Lemma embed_embed_sbi `{!Sbi PROP1, !Sbi PROP2, !Sbi PROP3} :
+    BiEmbedSbi PROP1 PROP2 → BiEmbedSbi PROP2 PROP3 →
+    BiEmbedSbi PROP1 PROP3.
+  Proof.
+    intros ??; split.
+    - intros P. by rewrite embed_embed_alt !embed_si_emp_valid.
+    - intros Pi. by rewrite embed_embed_alt !embed_si_pure.
+  Qed.
   Lemma embed_embed_bupd `{!BiBUpd PROP1, !BiBUpd PROP2, !BiBUpd PROP3} :
     BiEmbedBUpd PROP1 PROP2 → BiEmbedBUpd PROP2 PROP3 →
     BiEmbedBUpd PROP1 PROP3.
@@ -375,9 +373,4 @@ Section embed_embed.
     BiEmbedFUpd PROP1 PROP2 → BiEmbedFUpd PROP2 PROP3 →
     BiEmbedFUpd PROP1 PROP3.
   Proof. intros ?? E1 E2 P. by rewrite !embed_embed_alt !embed_fupd. Qed.
-  Lemma embed_embed_plainly
-      `{!BiPlainly PROP1, !BiPlainly PROP2, !BiPlainly PROP3} :
-    BiEmbedPlainly PROP1 PROP2 → BiEmbedPlainly PROP2 PROP3 →
-    BiEmbedPlainly PROP1 PROP3.
-  Proof. intros ?? P. by rewrite !embed_embed_alt !embed_plainly. Qed.
 End embed_embed.

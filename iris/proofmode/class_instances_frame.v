@@ -388,8 +388,8 @@ Proof.
   rewrite persistently_elim impl_elim_r //.
 Qed.
 
-Global Instance frame_eq_embed `{!BiEmbed PROP PROP', !BiInternalEq PROP,
-    !BiInternalEq PROP', !BiEmbedInternalEq PROP PROP'}
+Global Instance frame_eq_embed `{!BiEmbed PROP PROP', !Sbi PROP,
+    !Sbi PROP', !BiEmbedSbi PROP PROP'}
     p P Q (Q' : PROP') {A : ofe} (a b : A) :
   Frame p (a ≡ b) P Q → MakeEmbed Q Q' →
   Frame p (a ≡ b) ⎡P⎤ Q'. (* Default cost > 1 *)

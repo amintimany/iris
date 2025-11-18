@@ -1,15 +1,44 @@
-From iris.bi Require Export derived_connectives extensions
-  updates internal_eq plainly lib.cmra.
+From iris.bi Require Export derived_connectives extensions.
+From iris.bi Require Export sbi updates internal_eq plainly cmra.
+From iris.si_logic Require Export bi.
+From iris.bi Require Import derived_laws derived_laws_later.
 From iris.base_logic Require Export upred.
 From iris.prelude Require Import options.
 Import uPred_primitive.
 
+Local Existing Instance entails_po.
+
 (** BI instances for [uPred], and re-stating the remaining primitive laws in
 terms of the BI interface. This file does *not* unseal. *)
 
+(** [uPred_pure] is a derived notion on [uPred] in terms of [uPred_si_pure].
+However, in terms of the BI hierarchy, [bi_pure] it is a primitive notion that
+is "below" the concept of an [Sbi], so we cannot use the fact that [uPred] is an
+SBI to our advantage here. Below we define [uPred_pure] and derive its laws from
+those of [uPred_si_pure]. *)
+Definition uPred_pure {M} (φ : Prop) : uPred M := uPred_si_pure ⌜ φ ⌝.
 Definition uPred_emp {M} : uPred M := uPred_pure True.
 
-Local Existing Instance entails_po.
+Local Lemma pure_ne {M} n : Proper (iff ==> dist n) (@uPred_pure M).
+Proof. intros φ1 φ2 Hφ. apply si_pure_ne. by rewrite Hφ. Qed.
+
+Local Lemma pure_intro {M} (φ : Prop) (P : uPred M) :
+  φ → uPred_entails P (uPred_pure φ).
+Proof.
+  intros. trans (uPred_si_pure (∀ x : False, True) : uPred M).
+  - etrans; last apply si_pure_forall_2. by apply forall_intro.
+  - by apply si_pure_mono, bi.pure_intro.
+Qed.
+
+Local Lemma pure_elim' {M} (φ : Prop) (P : uPred M) :
+  (φ → uPred_entails (uPred_pure True) P) →
+  uPred_entails (uPred_pure φ) P.
+Proof.
+  intros HφP. etrans; last apply persistently_elim.
+  etrans; last apply si_pure_si_emp_valid.
+  apply si_pure_mono. apply bi.pure_elim'=> ?.
+  rewrite -(si_emp_valid_si_pure True). by apply si_emp_valid_mono, HφP.
+Qed.
 
 Lemma uPred_bi_mixin (M : ucmra) :
   BiMixin
@@ -63,7 +92,7 @@ Proof.
     trans (uPred_forall (M:=M) (λ _ : False, uPred_persistently uPred_emp)).
     + apply forall_intro=>-[].
     + etrans; first exact: persistently_forall_2.
-      apply persistently_mono. exact: pure_intro.
+      by apply persistently_mono, pure_intro.
   - (* ((<pers> P) ∧ (<pers> Q)) ⊢ <pers> (P ∧ Q) (ADMISSIBLE) *)
     intros P Q.
     trans (uPred_forall (M:=M) (λ b : bool, uPred_persistently (if b then P else Q))).
@@ -78,8 +107,7 @@ Proof.
   - (* <pers> P ∗ Q ⊢ <pers> P (ADMISSIBLE) *)
     intros. etrans; first exact: sep_comm'.
     etrans; last exact: True_sep_2.
-    apply sep_mono; last done.
-    exact: pure_intro.
+    apply sep_mono; last done. by apply pure_intro.
   - exact: persistently_and_sep_l_1.
 Qed.
 
@@ -107,46 +135,30 @@ Canonical Structure uPredI (M : ucmra) : bi :=
      bi_bi_later_mixin := uPred_bi_later_mixin M;
      bi_bi_persistently_mixin := uPred_bi_persistently_mixin M |}.
 
-Lemma uPred_internal_eq_mixin M : BiInternalEqMixin (uPredI M) (@uPred_internal_eq M).
+Lemma uPred_sbi_mixin M : SbiMixin (uPredI M) uPred_si_pure uPred_si_emp_valid.
 Proof.
   split.
-  - exact: internal_eq_ne.
-  - exact: @internal_eq_refl.
-  - exact: @internal_eq_rewrite.
-  - exact: @fun_ext.
-  - exact: @sig_eq.
-  - exact: @discrete_eq_1.
-  - exact: @later_eq_1.
-  - exact: @later_eq_2.
+  - exact: si_pure_ne.
+  - exact: si_emp_valid_ne.
+  - exact: si_pure_mono.
+  - exact: si_emp_valid_mono.
+  - exact: si_emp_valid_si_pure.
+  - exact: si_pure_si_emp_valid.
+  - exact: si_pure_impl_2.
+  - exact: @si_pure_forall_2.
+  - exact: si_pure_later.
+  - (* Absorbing (<si_pure> Pi) (ADMISSIBLE) *)
+    intros Pi. apply True_sep_2.
+  - exact: @si_emp_valid_later_1.
+  - (* <si_emp_valid> P -∗ <si_emp_valid> <affine> P (ADMISSIBLE) *)
+    intros P. apply si_emp_valid_mono, and_intro; [|done].
+    apply bi.True_intro.
 Qed.
-Global Instance uPred_internal_eq M : BiInternalEq (uPredI M) :=
-  {| bi_internal_eq_mixin := uPred_internal_eq_mixin M |}.
-
-Lemma uPred_plainly_mixin M : BiPlainlyMixin (uPredI M) uPred_plainly.
-Proof.
-  split.
-  - exact: plainly_ne.
-  - exact: plainly_mono.
-  - exact: plainly_elim_persistently.
-  - exact: plainly_idemp_2.
-  - exact: @plainly_forall_2.
-  - exact: plainly_impl_plainly.
-  - (* P ⊢ ■ emp (ADMISSIBLE) *)
-    intros P.
-    trans (uPred_forall (M:=M) (λ _ : False , uPred_plainly uPred_emp)).
-    + apply forall_intro=>[[]].
-    + etrans; first exact: plainly_forall_2.
-      apply plainly_mono. exact: pure_intro.
-  - (* ■ P ∗ Q ⊢ ■ P (ADMISSIBLE) *)
-    intros P Q. etrans; last exact: True_sep_2.
-    etrans; first exact: sep_comm'.
-    apply sep_mono; last done.
-    exact: pure_intro.
-  - exact: later_plainly_1.
-  - exact: later_plainly_2.
-Qed.
-Global Instance uPred_plainly M : BiPlainly (uPredI M) :=
-  {| bi_plainly_mixin := uPred_plainly_mixin M |}.
+Lemma uPred_sbi_prop_ext_mixin M : SbiPropExtMixin (uPredI M) uPred_si_emp_valid.
+Proof. apply sbi_prop_ext_mixin. apply prop_ext_2. Qed.
+Global Instance uPred_sbi M : Sbi (uPredI M) :=
+  {| sbi_sbi_mixin := uPred_sbi_mixin M;
+     sbi_sbi_prop_ext_mixin := uPred_sbi_prop_ext_mixin M |}.
 
 Lemma uPred_bupd_mixin M : BiBUpdMixin (uPredI M) uPred_bupd.
 Proof.
@@ -157,12 +169,13 @@ Proof.
   - exact: bupd_trans.
   - exact: bupd_frame_r.
 Qed.
-Global Instance uPred_bi_bupd M : BiBUpd (uPredI M) := {| bi_bupd_mixin := uPred_bupd_mixin M |}.
+Global Instance uPred_bi_bupd M : BiBUpd (uPredI M) :=
+  {| bi_bupd_mixin := uPred_bupd_mixin M |}.
 
 (** extra BI instances *)
 
 Global Instance uPred_affine M : BiAffine (uPredI M) | 0.
-Proof. intros P. exact: pure_intro. Qed.
+Proof. intros P. exact: bi.pure_intro. Qed.
 (* Also add this to the global hint database, otherwise [eauto] won't work for
 many lemmas that have [BiAffine] as a premise. *)
 Global Hint Immediate uPred_affine : core.
@@ -171,22 +184,23 @@ Global Instance uPred_persistently_forall M : BiPersistentlyForall (uPredI M).
 Proof. exact: @persistently_forall_2. Qed.
 
 Global Instance uPred_pure_forall M : BiPureForall (uPredI M).
-Proof. exact: @pure_forall_2. Qed.
+Proof.
+  intros A φ. etrans; [apply si_pure_forall_2|].
+  apply si_pure_mono, pure_forall_2.
+Qed.
 
 Global Instance uPred_later_contractive {M} : BiLaterContractive (uPredI M).
 Proof. exact: @later_contractive. Qed.
 
-Global Instance uPred_persistently_impl_plainly M : BiPersistentlyImplPlainly (uPredI M).
-Proof. exact: persistently_impl_plainly. Qed.
+Global Instance uPred_sbi_emp_valid_exist {M} : SbiEmpValidExist (uPredI M).
+Proof. exact: @si_emp_valid_exist_1. Qed.
 
-Global Instance uPred_plainly_exist_1 M : BiPlainlyExist (uPredI M).
-Proof. exact: @plainly_exist_1. Qed.
+Global Instance uPred_persistently_impl_si_pure M :
+  BiPersistentlyImplSiPure (uPredI M).
+Proof. exact: persistently_impl_si_pure. Qed.
 
-Global Instance uPred_prop_ext M : BiPropExt (uPredI M).
-Proof. exact: prop_ext_2. Qed.
-
-Global Instance uPred_bi_bupd_plainly M : BiBUpdPlainly (uPredI M).
-Proof. exact: bupd_plainly. Qed.
+Global Instance uPred_bi_bupd_sbi M : BiBUpdSbi (uPredI M).
+Proof. exact: bupd_si_pure. Qed.
 
 (** Re-state/export lemmas about Iris-specific primitive connectives (own, valid) *)
 
@@ -203,16 +217,16 @@ Section restate.
   Notation "P ⊣⊢ Q" := (equiv (A:=uPredI M) P%I Q%I).
 
   Global Instance ownM_ne : NonExpansive (@uPred_ownM M) := uPred_primitive.ownM_ne.
-  Global Instance cmra_valid_ne {A : cmra} : NonExpansive (@uPred_cmra_valid M A) :=
-    uPred_primitive.cmra_valid_ne.
 
   (** Re-exporting primitive lemmas that are not in any interface *)
+  Lemma ownM_valid (a : M) : uPred_ownM a ⊢ ✓ a.
+  Proof. exact: uPred_primitive.ownM_valid. Qed.
   Lemma ownM_op (a1 a2 : M) :
     uPred_ownM (a1 ⋅ a2) ⊣⊢ uPred_ownM a1 ∗ uPred_ownM a2.
   Proof. exact: uPred_primitive.ownM_op. Qed.
   Lemma persistently_ownM_core (a : M) : uPred_ownM a ⊢ <pers> uPred_ownM (core a).
   Proof. exact: uPred_primitive.persistently_ownM_core. Qed.
-  Lemma ownM_unit P : P ⊢ (uPred_ownM ε).
+  Lemma ownM_unit P : P ⊢ uPred_ownM ε.
   Proof. exact: uPred_primitive.ownM_unit. Qed.
   Lemma later_ownM a : ▷ uPred_ownM a ⊢ ∃ b, uPred_ownM b ∧ ▷ (a ≡ b).
   Proof. exact: uPred_primitive.later_ownM. Qed.
@@ -223,49 +237,19 @@ Section restate.
     (∀ a, uPred_ownM (f a)) ⊢ ∃ z, uPred_ownM z ∧ (∀ a, f a ≼ z).
   Proof. exact: uPred_primitive.ownM_forall. Qed.
 
-  (** This is really just a special case of an entailment
-  between two [siProp], but we do not have the infrastructure
-  to express the more general case. This temporary proof rule will
-  be replaced by the proper one eventually. *)
-  Lemma internal_eq_entails {A B : ofe} (a1 a2 : A) (b1 b2 : B) :
-    (a1 ≡ a2 ⊢ b1 ≡ b2) ↔ (∀ n, a1 ≡{n}≡ a2 → b1 ≡{n}≡ b2).
-  Proof. exact: uPred_primitive.internal_eq_entails. Qed.
-
-  Lemma ownM_valid (a : M) : uPred_ownM a ⊢ ✓ a.
-  Proof. exact: uPred_primitive.ownM_valid. Qed.
-  Lemma cmra_valid_intro {A : cmra} P (a : A) : ✓ a → P ⊢ (✓ a).
-  Proof. exact: uPred_primitive.cmra_valid_intro. Qed.
-  Lemma cmra_valid_elim {A : cmra} (a : A) : ✓ a ⊢ ⌜ ✓{0} a ⌝.
-  Proof. exact: uPred_primitive.cmra_valid_elim. Qed.
-  Lemma plainly_cmra_valid_1 {A : cmra} (a : A) : ✓ a ⊢ ■ ✓ a.
-  Proof. exact: uPred_primitive.plainly_cmra_valid_1. Qed.
-  Lemma cmra_valid_weaken {A : cmra} (a b : A) : ✓ (a ⋅ b) ⊢ ✓ a.
-  Proof. exact: uPred_primitive.cmra_valid_weaken. Qed.
-
-  (** This is really just a special case of an entailment
-  between two [siProp], but we do not have the infrastructure
-  to express the more general case. This temporary proof rule will
-  be replaced by the proper one eventually. *)
-  Lemma valid_entails {A B : cmra} (a : A) (b : B) :
-    (∀ n, ✓{n} a → ✓{n} b) → ✓ a ⊢ ✓ b.
-  Proof. exact: uPred_primitive.valid_entails. Qed.
-
-  (** Consistency/soundness statement *)
-  Lemma pure_soundness φ : (⊢@{uPredI M} ⌜ φ ⌝) → φ.
-  Proof. apply pure_soundness. Qed.
-
-  Lemma internal_eq_soundness {A : ofe} (x y : A) : (⊢@{uPredI M} x ≡ y) → x ≡ y.
-  Proof. apply internal_eq_soundness. Qed.
-
-  Lemma later_soundness P : (⊢ ▷ P) → ⊢ P.
-  Proof. apply later_soundness. Qed.
-
   (** We restate the unsealing lemmas for the BI layer. The sealing lemmas
   are partially applied so that they also rewrite under binders. *)
-  Local Lemma uPred_emp_unseal : bi_emp = @upred.uPred_pure_def M True.
-  Proof. by rewrite -upred.uPred_pure_unseal. Qed.
-  Local Lemma uPred_pure_unseal : bi_pure = @upred.uPred_pure_def M.
-  Proof. by rewrite -upred.uPred_pure_unseal. Qed.
+  Local Lemma uPred_emp_unseal :
+    bi_emp = @upred.uPred_si_pure_def M (siprop.siProp_pure_def True).
+  Proof. by rewrite -upred.uPred_si_pure_unseal -siprop.siProp_pure_unseal. Qed.
+  Local Lemma uPred_pure_unseal :
+    bi_pure = λ φ, @upred.uPred_si_pure_def M (siprop.siProp_pure_def φ).
+  Proof. by rewrite -upred.uPred_si_pure_unseal -siprop.siProp_pure_unseal. Qed.
+  Local Lemma uPred_si_pure_unseal : si_pure = @upred.uPred_si_pure_def M.
+  Proof. by rewrite -upred.uPred_si_pure_unseal. Qed.
+  Local Lemma uPred_si_emp_valid_unseal :
+    si_emp_valid = @upred.uPred_si_emp_valid_def M.
+  Proof. by rewrite -upred.uPred_si_emp_valid_unseal. Qed.
   Local Lemma uPred_and_unseal : bi_and = @upred.uPred_and_def M.
   Proof. by rewrite -upred.uPred_and_unseal. Qed.
   Local Lemma uPred_or_unseal : bi_or = @upred.uPred_or_def M.
@@ -276,15 +260,10 @@ Section restate.
   Proof. by rewrite -upred.uPred_forall_unseal. Qed.
   Local Lemma uPred_exist_unseal : @bi_exist _ = @upred.uPred_exist_def M.
   Proof. by rewrite -upred.uPred_exist_unseal. Qed.
-  Local Lemma uPred_internal_eq_unseal :
-    @internal_eq _ _ = @upred.uPred_internal_eq_def M.
-  Proof. by rewrite -upred.uPred_internal_eq_unseal. Qed.
   Local Lemma uPred_sep_unseal : bi_sep = @upred.uPred_sep_def M.
   Proof. by rewrite -upred.uPred_sep_unseal. Qed.
   Local Lemma uPred_wand_unseal : bi_wand = @upred.uPred_wand_def M.
   Proof. by rewrite -upred.uPred_wand_unseal. Qed.
-  Local Lemma uPred_plainly_unseal : plainly = @upred.uPred_plainly_def M.
-  Proof. by rewrite -upred.uPred_plainly_unseal. Qed.
   Local Lemma uPred_persistently_unseal :
     bi_persistently = @upred.uPred_persistently_def M.
   Proof. by rewrite -upred.uPred_persistently_unseal. Qed.
@@ -294,11 +273,13 @@ Section restate.
   Proof. by rewrite -upred.uPred_bupd_unseal. Qed.
 
   Local Definition uPred_unseal :=
-    (uPred_emp_unseal, uPred_pure_unseal, uPred_and_unseal, uPred_or_unseal,
+    (uPred_emp_unseal, uPred_pure_unseal,
+    uPred_si_pure_unseal, uPred_si_emp_valid_unseal,
+    uPred_and_unseal, uPred_or_unseal,
     uPred_impl_unseal, uPred_forall_unseal, uPred_exist_unseal,
-    uPred_internal_eq_unseal, uPred_sep_unseal, uPred_wand_unseal,
-    uPred_plainly_unseal, uPred_persistently_unseal, uPred_later_unseal,
-    upred.uPred_ownM_unseal, upred.uPred_cmra_valid_unseal, @uPred_bupd_unseal).
+    uPred_sep_unseal, uPred_wand_unseal,
+    uPred_persistently_unseal, uPred_later_unseal,
+    upred.uPred_ownM_unseal, @uPred_bupd_unseal).
 End restate.
 
 (** A tactic for rewriting with the above lemmas. Unfolds [uPred] goals that use

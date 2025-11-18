@@ -6,7 +6,7 @@ Import bi.
 (** The "core" of an assertion is its maximal persistent part,
     i.e. the conjunction of all persistent assertions that are weaker
     than P (as in, implied by P). *)
-Definition coreP `{!BiPlainly PROP} (P : PROP) : PROP :=
+Definition coreP `{!Sbi PROP} (P : PROP) : PROP :=
   (* TODO: Looks like we want notation for affinely-plainly; that lets us avoid
   using conjunction/implication here. *)
   ∀ Q : PROP, <affine> ■ (Q -∗ <pers> Q) -∗ <affine> ■ (P -∗ Q) -∗ Q.
@@ -14,7 +14,7 @@ Global Instance: Params (@coreP) 1 := {}.
 Global Typeclasses Opaque coreP.
 
 Section core.
-  Context {PROP : bi} `{!BiPlainly PROP}.
+  Context `{!Sbi PROP}.
   Implicit Types P Q : PROP.
 
   Lemma coreP_intro P : P -∗ coreP P.
@@ -27,7 +27,7 @@ Section core.
   Qed.
 
   Global Instance coreP_persistent
-      `{!BiPersistentlyForall PROP, !BiPersistentlyImplPlainly PROP} P :
+      `{!BiPersistentlyForall PROP, !BiPersistentlyImplSiPure PROP} P :
     Persistent (coreP P).
   Proof.
     rewrite /coreP /Persistent. iIntros "HC" (Q).
@@ -65,7 +65,7 @@ Section core.
     [<affine>] modality makes it stronger since it appears in the LHS of the
     [⊢] in the premise. As a user, you have to prove [<affine> coreP P ⊢ Q],
     which is weaker than [coreP P ⊢ Q]. *)
-  Lemma coreP_entails `{!BiPersistentlyForall PROP, !BiPersistentlyImplPlainly PROP} P Q :
+  Lemma coreP_entails `{!BiPersistentlyForall PROP, !BiPersistentlyImplSiPure PROP} P Q :
     (<affine> coreP P ⊢ Q) ↔ (P ⊢ <pers> Q).
   Proof.
     split.
@@ -74,7 +74,7 @@ Section core.
     - iIntros (->) "HcQ". by iDestruct (coreP_elim with "HcQ") as "#HQ".
   Qed.
   (** A more convenient variant of the above lemma for affine [P]. *)
-  Lemma coreP_entails' `{!BiPersistentlyForall PROP, !BiPersistentlyImplPlainly PROP}
+  Lemma coreP_entails' `{!BiPersistentlyForall PROP, !BiPersistentlyImplSiPure PROP}
       P Q `{!Affine P} :
     (coreP P ⊢ Q) ↔ (P ⊢ □ Q).
   Proof.

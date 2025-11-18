@@ -84,7 +84,7 @@ Proof. by exists φ. Qed.
 Global Hint Extern 0 (FromPureT _ _ _) =>
   notypeclasses refine (from_pureT_hint _ _ _ _) : typeclass_instances.
 
-Class IntoInternalEq `{BiInternalEq PROP} {A : ofe} (P : PROP) (x y : A) :=
+Class IntoInternalEq `{!Sbi PROP} {A : ofe} (P : PROP) (x y : A) :=
   into_internal_eq : P ⊢ x ≡ y.
 Global Arguments IntoInternalEq {_ _ _} _%_I _%_type_scope _%_type_scope : simpl never.
 Global Arguments into_internal_eq {_ _ _} _%_I _%_type_scope _%_type_scope {_}.

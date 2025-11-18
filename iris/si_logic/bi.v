@@ -1,4 +1,4 @@
-From iris.bi Require Export bi.
+From iris.bi Require Export interface extensions.
 From iris.si_logic Require Export siprop.
 From iris.prelude Require Import options.
 Import siProp_primitive.
@@ -136,36 +136,6 @@ Proof. exact: @pure_forall_2. Qed.
 Global Instance siProp_later_contractive : BiLaterContractive siPropI.
 Proof. exact: @later_contractive. Qed.
 
-Lemma siProp_internal_eq_mixin : BiInternalEqMixin siPropI (@siProp_internal_eq).
-Proof.
-  split.
-  - exact: internal_eq_ne.
-  - exact: @internal_eq_refl.
-  - exact: @internal_eq_rewrite.
-  - exact: @fun_ext.
-  - exact: @sig_eq.
-  - exact: @discrete_eq_1.
-  - exact: @later_eq_1.
-  - exact: @later_eq_2.
-Qed.
-Global Instance siProp_internal_eq : BiInternalEq siPropI :=
-  {| bi_internal_eq_mixin := siProp_internal_eq_mixin |}.
-
-Lemma siProp_plainly_mixin : BiPlainlyMixin siPropI siProp_plainly.
-Proof.
-  split; try done.
-  - solve_proper.
-  - (* P ⊢ ■ emp *)
-    intros P. by apply pure_intro.
-  - (* ■ P ∗ Q ⊢ ■ P *)
-    intros P Q. apply and_elim_l.
-Qed.
-Global Instance siProp_plainlyC : BiPlainly siPropI :=
-  {| bi_plainly_mixin := siProp_plainly_mixin |}.
-
-Global Instance siProp_prop_ext : BiPropExt siPropI.
-Proof. exact: prop_ext_2. Qed.
-
 (** extra BI instances *)
 
 Global Instance siProp_affine : BiAffine siPropI | 0.
@@ -174,26 +144,16 @@ Proof. intros P. exact: pure_intro. Qed.
 many lemmas that have [BiAffine] as a premise. *)
 Global Hint Immediate siProp_affine : core.
 
-Global Instance siProp_plain (P : siProp) : Plain P | 0.
-Proof. done. Qed.
 Global Instance siProp_persistent (P : siProp) : Persistent P.
 Proof. done. Qed.
 
-Global Instance siProp_plainly_exist_1 : BiPlainlyExist siPropI.
-Proof. done. Qed.
-
 (** Re-state/export soundness lemmas *)
-
 Module siProp.
 Section restate.
-  Lemma pure_soundness φ : (⊢@{siPropI} ⌜ φ ⌝) → φ.
-  Proof. apply pure_soundness. Qed.
-
-  Lemma internal_eq_soundness {A : ofe} (x y : A) : (⊢@{siPropI} x ≡ y) → x ≡ y.
-  Proof. apply internal_eq_soundness. Qed.
-
-  Lemma later_soundness (P : siProp) : (⊢ ▷ P) → ⊢ P.
-  Proof. apply later_soundness. Qed.
+  (** The internal equality, internal validity, and soundness lemmas are
+  lifted to any BI with equality in [iris.bi.internal_eq], [iris.bi.cmra] and
+  [iris.bi.sbi]. The versions specific for [siProp] should never be used by
+  end-users and are therefore not restated here. *)
 
   (** We restate the unsealing lemmas so that they also unfold the BI layer. The
   sealing lemmas are partially applied so that they also work under binders. *)
@@ -215,22 +175,23 @@ Section restate.
   Proof. by rewrite -siprop.siProp_and_unseal. Qed.
   Local Lemma siProp_wand_unseal : bi_wand = @siprop.siProp_impl_def.
   Proof. by rewrite -siprop.siProp_impl_unseal. Qed.
-  Local Lemma siProp_plainly_unseal : plainly = @id siProp.
-  Proof. done. Qed.
   Local Lemma siProp_persistently_unseal : bi_persistently = @id siProp.
   Proof. done. Qed.
   Local Lemma siProp_later_unseal : bi_later = @siprop.siProp_later_def.
   Proof. by rewrite -siprop.siProp_later_unseal. Qed.
   Local Lemma siProp_internal_eq_unseal :
-    @internal_eq _ _ = @siprop.siProp_internal_eq_def.
-  Proof. by rewrite -siprop.siProp_internal_eq_unseal. Qed.
+    @siProp_internal_eq = @siprop.siProp_internal_eq_def.
+  Proof. apply siprop.siProp_internal_eq_unseal. Qed.
+  Local Lemma siProp_cmra_valid_unseal :
+    @siProp_cmra_valid = @siprop.siProp_cmra_valid_def.
+  Proof. apply siprop.siProp_cmra_valid_unseal. Qed.
 
   Local Definition siProp_unseal :=
     (siProp_emp_unseal, siProp_pure_unseal, siProp_and_unseal, siProp_or_unseal,
     siProp_impl_unseal, siProp_forall_unseal, siProp_exist_unseal,
     siProp_sep_unseal, siProp_wand_unseal,
-    siProp_plainly_unseal, siProp_persistently_unseal, siProp_later_unseal,
-    siProp_internal_eq_unseal).
+    siProp_persistently_unseal, siProp_later_unseal,
+    siProp_internal_eq_unseal, siProp_cmra_valid_unseal).
 End restate.
 
 (** The final unseal tactic that also unfolds the BI layer. *)
