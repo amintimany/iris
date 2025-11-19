@@ -31,7 +31,7 @@ depends: [
   "rocq-stdpp" { (= "dev.2025-11-18.2.f049a0f8") | (= "dev") }
 ]
 conflicts: [
-  "coq-iris" {< "dev.2025-08-29.0"}
+  "coq-iris"
 ]
 
 build: ["./make-package" "iris" "-j%{jobs}%"]
