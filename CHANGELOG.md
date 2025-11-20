@@ -5,7 +5,7 @@ lemma.
 
 ## Iris master
 
-This version newly supports Rocq 9.1, and drops support for Coq 8.19.
+This version newly supports Rocq 9.1, and drops support for Coq 8.19 and 8.20.
 
 The opam packages have been renamed from `coq-*` to `rocq-*`.
 
