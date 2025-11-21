@@ -1,4 +1,4 @@
-Require Import Coq.Strings.String.
+Require Import Stdlib.Strings.String.
 Require Import iris.bi.bi.
 Require Import iris.bi.ascii.
 

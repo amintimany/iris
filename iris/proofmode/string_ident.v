@@ -1,6 +1,6 @@
 From Ltac2 Require Ltac2.
-From Coq Require Import Strings.String.
-From Coq Require Import Init.Byte Ascii.
+From Stdlib Require Import Strings.String.
+From Stdlib Require Import Init.Byte Ascii.
 From iris.prelude Require Import options.
 
 Import List.ListNotations.

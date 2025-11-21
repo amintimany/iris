@@ -1,4 +1,4 @@
-From Coq Require Export Ascii.
+From Stdlib Require Export Ascii.
 From stdpp Require Export strings.
 From iris.prelude Require Export prelude.
 From iris.prelude Require Import options.

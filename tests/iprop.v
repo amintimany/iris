@@ -2,7 +2,7 @@
 of [gFunctors]:
 See [!782](https://gitlab.mpi-sws.org/iris/iris/-/merge_requests/782) *)
 
-From Coq Require Import Logic.Eqdep.
+From Stdlib Require Import Logic.Eqdep.
 
 (** A [sigT] that is partially applied and template-polymorphic causes universe
 inconsistency errors, which is why [sigT] should be avoided for the definition
