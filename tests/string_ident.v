@@ -1,5 +1,5 @@
 From iris.proofmode Require Import string_ident.
-From Coq Require Import Strings.String.
+From Stdlib Require Import Strings.String.
 From stdpp Require Import base.
 Local Open Scope string.
 
